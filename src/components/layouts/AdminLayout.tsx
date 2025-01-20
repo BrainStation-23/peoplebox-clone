@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { useNavigate, Outlet, Link } from "react-router-dom";
+import { useNavigate, Outlet, Link, useLocation } from "react-router-dom";
 import { LayoutDashboard, Settings2, UserRound, LogOut } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import {
@@ -41,8 +41,37 @@ const navigationItems = [
   },
 ];
 
+const getBreadcrumbs = (pathname: string) => {
+  const paths = pathname.split('/').filter(Boolean);
+  const breadcrumbs = [];
+  
+  let currentPath = '';
+  
+  paths.forEach((path, index) => {
+    currentPath += `/${path}`;
+    
+    // Skip the first "admin" part
+    if (index === 0 && path === 'admin') return;
+    
+    // Format the title
+    let title = path.charAt(0).toUpperCase() + path.slice(1);
+    if (path === 'sbus') title = 'SBUs';
+    if (path === 'smtp') title = 'SMTP';
+    
+    breadcrumbs.push({
+      title,
+      path: currentPath,
+      isLast: index === paths.length - 1
+    });
+  });
+  
+  return breadcrumbs;
+};
+
 export default function AdminLayout() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const breadcrumbs = getBreadcrumbs(location.pathname);
   
   useEffect(() => {
     const checkAdmin = async () => {
@@ -112,12 +141,22 @@ export default function AdminLayout() {
               <Breadcrumb>
                 <BreadcrumbList>
                   <BreadcrumbItem>
-                    <Link to="/admin">Admin</Link>
+                    <BreadcrumbLink as={Link} to="/admin">
+                      Admin
+                    </BreadcrumbLink>
                   </BreadcrumbItem>
-                  <BreadcrumbSeparator />
-                  <BreadcrumbItem>
-                    <BreadcrumbPage>Dashboard</BreadcrumbPage>
-                  </BreadcrumbItem>
+                  {breadcrumbs.map((crumb, index) => (
+                    <BreadcrumbItem key={crumb.path}>
+                      <BreadcrumbSeparator />
+                      {crumb.isLast ? (
+                        <BreadcrumbPage>{crumb.title}</BreadcrumbPage>
+                      ) : (
+                        <BreadcrumbLink as={Link} to={crumb.path}>
+                          {crumb.title}
+                        </BreadcrumbLink>
+                      )}
+                    </BreadcrumbItem>
+                  ))}
                 </BreadcrumbList>
               </Breadcrumb>
             </div>
