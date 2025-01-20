@@ -141,9 +141,9 @@ export default function AdminLayout() {
               <Breadcrumb>
                 <BreadcrumbList>
                   <BreadcrumbItem>
-                    <BreadcrumbLink as={Link} to="/admin">
+                    <Link to="/admin" className="text-muted-foreground hover:text-foreground">
                       Admin
-                    </BreadcrumbLink>
+                    </Link>
                   </BreadcrumbItem>
                   {breadcrumbs.map((crumb, index) => (
                     <BreadcrumbItem key={crumb.path}>
@@ -151,9 +151,9 @@ export default function AdminLayout() {
                       {crumb.isLast ? (
                         <BreadcrumbPage>{crumb.title}</BreadcrumbPage>
                       ) : (
-                        <BreadcrumbLink as={Link} to={crumb.path}>
+                        <Link to={crumb.path} className="text-muted-foreground hover:text-foreground">
                           {crumb.title}
-                        </BreadcrumbLink>
+                        </Link>
                       )}
                     </BreadcrumbItem>
                   ))}
