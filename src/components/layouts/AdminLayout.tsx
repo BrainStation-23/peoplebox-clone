@@ -112,7 +112,7 @@ export default function AdminLayout() {
               <Breadcrumb>
                 <BreadcrumbList>
                   <BreadcrumbItem>
-                    <BreadcrumbLink as={Link} to="/admin">Admin</BreadcrumbLink>
+                    <Link to="/admin">Admin</Link>
                   </BreadcrumbItem>
                   <BreadcrumbSeparator />
                   <BreadcrumbItem>
