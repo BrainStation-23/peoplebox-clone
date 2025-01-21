@@ -52,6 +52,16 @@ export function AssignSurveyDialog({ surveyId, onAssigned }: AssignSurveyDialogP
   const [open, setOpen] = useState(false);
   const form = useForm<FormData>();
 
+  // Get the current user's session
+  const { data: session } = useQuery({
+    queryKey: ["session"],
+    queryFn: async () => {
+      const { data: { session }, error } = await supabase.auth.getSession();
+      if (error) throw error;
+      return session;
+    },
+  });
+
   const { data: sbus } = useQuery({
     queryKey: ["sbus"],
     queryFn: async () => {
@@ -78,11 +88,16 @@ export function AssignSurveyDialog({ surveyId, onAssigned }: AssignSurveyDialogP
 
   const onSubmit = async (data: FormData) => {
     try {
+      if (!session?.user?.id) {
+        throw new Error("No authenticated user found");
+      }
+
       const { error } = await supabase.from("survey_assignments").insert({
         survey_id: surveyId,
         assignment_type: data.assignmentType,
         target_id: data.targetId,
         due_date: data.dueDate?.toISOString(),
+        created_by: session.user.id // Add the authenticated user's ID
       });
 
       if (error) throw error;
