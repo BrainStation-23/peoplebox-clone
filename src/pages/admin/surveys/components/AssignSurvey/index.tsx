@@ -80,14 +80,10 @@ export function AssignSurveyDialog({ surveyId, onAssigned }: AssignSurveyDialogP
         throw new Error("No authenticated user found");
       }
 
-      // For organization type, we don't need a target_id
-      // For individual type, we use the current user's id
-      // For SBU type, we'll handle targets separately
+      // Set target_id based on assignment type according to the constraint
       const targetId = data.assignmentType === "individual" 
-        ? session.user.id 
-        : data.assignmentType === "organization"
-          ? null
-          : null; // For SBU type, we'll handle targets separately
+        ? session.user.id  // Must have target_id for individual
+        : null;  // Must be null for organization and sbu
 
       // Create the main assignment
       const { data: assignment, error: assignmentError } = await supabase
