@@ -7,13 +7,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useSBUs } from "../../hooks/useSBUs";
 
 interface SearchFiltersProps {
   searchTerm: string;
   setSearchTerm: (value: string) => void;
   selectedSBU: string;
   setSelectedSBU: (value: string) => void;
-  uniqueSBUs: string[];
 }
 
 export function SearchFilters({
@@ -21,8 +21,9 @@ export function SearchFilters({
   setSearchTerm,
   selectedSBU,
   setSelectedSBU,
-  uniqueSBUs,
 }: SearchFiltersProps) {
+  const { data: sbus = [] } = useSBUs();
+
   return (
     <div className="flex gap-4">
       <div className="relative flex-1">
@@ -34,15 +35,15 @@ export function SearchFilters({
           className="pl-8"
         />
       </div>
-      <Select value={selectedSBU} onValueChange={setSelectedSBU}>
+      <Select value={selectedSBU} onValueChange={setSelectedSBU} defaultValue="all">
         <SelectTrigger className="w-[200px]">
           <SelectValue placeholder="Filter by Primary SBU" />
         </SelectTrigger>
         <SelectContent>
           <SelectItem value="all">All SBUs</SelectItem>
-          {uniqueSBUs.map((sbu) => (
-            <SelectItem key={sbu} value={sbu}>
-              {sbu}
+          {sbus.map((sbu) => (
+            <SelectItem key={sbu.id} value={sbu.name}>
+              {sbu.name}
             </SelectItem>
           ))}
         </SelectContent>

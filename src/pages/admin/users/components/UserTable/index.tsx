@@ -55,16 +55,6 @@ export default function UserTable({
   const queryClient = useQueryClient();
   const totalPages = Math.ceil(total / pageSize);
 
-  // Get unique SBUs from users
-  const uniqueSBUs = Array.from(
-    new Set(
-      users
-        .flatMap((user) => user.user_sbus || [])
-        .filter((sbu) => sbu.is_primary)
-        .map((sbu) => sbu.sbu.name)
-    )
-  );
-
   // Filter users based on search term and selected SBU
   const filteredUsers = users.filter((user) => {
     const matchesSearch =
@@ -83,7 +73,6 @@ export default function UserTable({
     return matchesSearch && matchesSBU;
   });
 
-  // Mutation for updating user role
   const updateRoleMutation = useMutation({
     mutationFn: async ({ userId, isAdmin }: { userId: string; isAdmin: boolean }) => {
       const { error } = await supabase
@@ -163,7 +152,6 @@ export default function UserTable({
         setSearchTerm={setSearchTerm}
         selectedSBU={selectedSBU}
         setSelectedSBU={setSelectedSBU}
-        uniqueSBUs={uniqueSBUs}
       />
 
       <Table>
