@@ -7,9 +7,17 @@ export interface User {
   email: string;
   first_name: string | null;
   last_name: string | null;
+  profile_image_url?: string | null;
+  level_id?: string | null;
+  level?: {
+    id: string;
+    name: string;
+    status: 'active' | 'inactive';
+  } | null;
   user_roles: {
     role: UserRole;
   };
+  user_sbus?: UserSBU[];
 }
 
 export interface UserSBU {

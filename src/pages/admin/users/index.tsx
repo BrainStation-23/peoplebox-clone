@@ -19,16 +19,29 @@ export default function UsersPage() {
       console.log("Fetching users...");
       const { data: profiles, error: profilesError } = await supabase
         .from("profiles")
-        .select("id, email, first_name, last_name");
+        .select(`
+          id,
+          email,
+          first_name,
+          last_name,
+          profile_image_url,
+          level_id,
+          levels (
+            id,
+            name,
+            status
+          )
+        `);
 
       if (profilesError) {
         console.error("Error fetching profiles:", profilesError);
         throw profilesError;
       }
 
-      // Fetch roles separately and combine the data
-      const usersWithRoles = await Promise.all(
+      // Fetch roles and SBUs for each user
+      const usersWithData = await Promise.all(
         profiles.map(async (profile) => {
+          // Fetch role
           const { data: roleData, error: roleError } = await supabase
             .from("user_roles")
             .select("role")
@@ -39,19 +52,44 @@ export default function UsersPage() {
             console.error("Error fetching role for user:", profile.id, roleError);
             return {
               ...profile,
-              user_roles: { role: "user" as const }, // Default to user if error
+              user_roles: { role: "user" as const },
+            };
+          }
+
+          // Fetch SBUs
+          const { data: sbuData, error: sbuError } = await supabase
+            .from("user_sbus")
+            .select(`
+              id,
+              user_id,
+              sbu_id,
+              is_primary,
+              sbu:sbus (
+                id,
+                name
+              )
+            `)
+            .eq("user_id", profile.id);
+
+          if (sbuError) {
+            console.error("Error fetching SBUs for user:", profile.id, sbuError);
+            return {
+              ...profile,
+              user_roles: roleData,
+              user_sbus: [],
             };
           }
 
           return {
             ...profile,
             user_roles: roleData,
+            user_sbus: sbuData,
           };
         })
       );
 
-      console.log("Users with roles:", usersWithRoles);
-      return usersWithRoles as User[];
+      console.log("Users with complete data:", usersWithData);
+      return usersWithData as User[];
     },
   });
 
