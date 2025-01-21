@@ -19,6 +19,7 @@ import SMTPConfig from "./pages/admin/config/smtp";
 import LevelConfig from "./pages/admin/config/level";
 import SurveysPage from "./pages/admin/surveys";
 import CreateSurveyPage from "./pages/admin/surveys/create";
+import EditSurveyPage from "./pages/admin/surveys/[id]/edit";
 
 const queryClient = new QueryClient();
 
@@ -39,6 +40,7 @@ const App = () => (
             <Route path="users" element={<Users />} />
             <Route path="surveys" element={<SurveysPage />} />
             <Route path="surveys/create" element={<CreateSurveyPage />} />
+            <Route path="surveys/:id/edit" element={<EditSurveyPage />} />
             <Route path="config" element={<PlatformConfigLayout />}>
               <Route index element={<AdminConfig />} />
               <Route path="sbus" element={<SBUsConfig />} />
