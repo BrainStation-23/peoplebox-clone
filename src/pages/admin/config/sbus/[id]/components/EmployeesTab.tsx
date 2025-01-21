@@ -26,17 +26,23 @@ export default function EmployeesTab({ sbuId }: EmployeesTabProps) {
       let query = supabase
         .from("user_sbus")
         .select(`
-          *,
-          profile:profiles(
+          id,
+          is_primary,
+          profile:profiles!inner(
             id,
             first_name,
             last_name,
             email,
             profile_image_url,
-            level:levels(id, name),
-            user_roles(role),
+            level:levels(
+              id,
+              name
+            ),
+            user_roles!profiles_id_fkey(
+              role
+            ),
             user_supervisors(
-              supervisor:profiles(
+              supervisor:profiles!user_supervisors_supervisor_id_fkey(
                 id,
                 first_name,
                 last_name
@@ -54,7 +60,7 @@ export default function EmployeesTab({ sbuId }: EmployeesTabProps) {
       }
 
       if (roleFilter) {
-        query = query.contains("profile.user_roles", [{ role: roleFilter }]);
+        query = query.eq("profile.user_roles.role", roleFilter);
       }
 
       if (levelFilter) {
