@@ -20,6 +20,7 @@ import LevelConfig from "./pages/admin/config/level";
 import SurveysPage from "./pages/admin/surveys";
 import SurveyFormPage from "./pages/admin/surveys/SurveyFormPage";
 import PreviewSurveyPage from "./pages/admin/surveys/[id]/preview";
+import AssignSurveyPage from "./pages/admin/surveys/assign";
 
 const queryClient = new QueryClient();
 
@@ -42,6 +43,7 @@ const App = () => (
             <Route path="surveys/create" element={<SurveyFormPage />} />
             <Route path="surveys/:id/edit" element={<SurveyFormPage />} />
             <Route path="surveys/:id/preview" element={<PreviewSurveyPage />} />
+            <Route path="surveys/assign" element={<AssignSurveyPage />} />
             <Route path="config" element={<PlatformConfigLayout />}>
               <Route index element={<AdminConfig />} />
               <Route path="sbus" element={<SBUsConfig />} />
