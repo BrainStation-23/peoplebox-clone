@@ -26,8 +26,6 @@ export default function EditUserDialog({
   open,
   onOpenChange,
 }: EditUserDialogProps) {
-  console.log("EditUserDialog rendered with user:", user);
-
   const {
     firstName,
     setFirstName,
@@ -37,18 +35,18 @@ export default function EditUserDialog({
     setProfileImageUrl,
     selectedLevel,
     setSelectedLevel,
-    selectedSBUs,
-    primarySBU,
-    setPrimarySBU,
     profileError,
     updateProfileMutation,
-    handleSBUChange
   } = useProfileManagement(user);
 
   const {
     sbus,
     sbuSearch,
     setSbuSearch,
+    selectedSBUs,
+    primarySBU,
+    handleSBUChange,
+    handlePrimarySBUChange,
   } = useSBUManagement(user);
 
   // Handle profile fetch error
@@ -64,8 +62,6 @@ export default function EditUserDialog({
       firstName,
       lastName,
       selectedLevel,
-      selectedSBUs,
-      primarySBU
     });
     updateProfileMutation.mutate();
   };
@@ -90,7 +86,7 @@ export default function EditUserDialog({
             <BasicInfoTab
               firstName={firstName}
               setFirstName={setFirstName}
-              lastName={lastName}
+              lastName={setLastName}
               setLastName={setLastName}
               profileImageUrl={profileImageUrl}
               setProfileImageUrl={setProfileImageUrl}
@@ -107,7 +103,7 @@ export default function EditUserDialog({
               selectedSBUs={selectedSBUs}
               handleSBUChange={handleSBUChange}
               primarySBU={primarySBU}
-              setPrimarySBU={setPrimarySBU}
+              handlePrimarySBUChange={handlePrimarySBUChange}
             />
           </TabsContent>
         </Tabs>
