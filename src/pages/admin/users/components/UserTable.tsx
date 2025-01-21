@@ -33,6 +33,7 @@ import {
   PaginationItem,
   PaginationNext,
   PaginationPrevious,
+  PaginationLink,
 } from "@/components/ui/pagination";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
@@ -191,6 +192,37 @@ export default function UserTable({
         newPassword: passwordDialog.newPassword,
       });
     }
+  };
+
+  const renderPaginationItems = () => {
+    const items = [];
+    const maxVisiblePages = 5;
+    const halfVisible = Math.floor(maxVisiblePages / 2);
+    
+    let startPage = Math.max(1, page - halfVisible);
+    let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
+    
+    if (endPage - startPage + 1 < maxVisiblePages) {
+      startPage = Math.max(1, endPage - maxVisiblePages + 1);
+    }
+
+    for (let i = startPage; i <= endPage; i++) {
+      items.push(
+        <PaginationItem key={i}>
+          <Button
+            variant={i === page ? "outline" : "ghost"}
+            onClick={() => onPageChange(i)}
+            className="cursor-pointer"
+          >
+            <PaginationLink isActive={i === page}>
+              {i}
+            </PaginationLink>
+          </Button>
+        </PaginationItem>
+      );
+    }
+    
+    return items;
   };
 
   if (isLoading) {
