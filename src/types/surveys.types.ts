@@ -1,4 +1,19 @@
 import { Database } from "./database.types";
+import { Json } from "./database.types";
+
+export type SurveyStatus = 'draft' | 'published' | 'archived';
+
+export type Survey = {
+  id: string;
+  name: string;
+  description: string | null;
+  tags: string[];
+  json_data: Json;
+  status: SurveyStatus;
+  created_by: string;
+  created_at: string;
+  updated_at: string;
+};
 
 export type SurveysTable = {
   Row: {

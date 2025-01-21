@@ -23,6 +23,13 @@ interface EditUserDialogProps {
   onOpenChange: (open: boolean) => void;
 }
 
+type SupervisorType = {
+  id: string;
+  first_name: string | null;
+  last_name: string | null;
+  is_primary: boolean;
+};
+
 export default function EditUserDialog({
   user,
   open,
@@ -55,7 +62,11 @@ export default function EditUserDialog({
     supervisors,
     handleSupervisorChange,
     handlePrimarySupervisorChange,
-  } = useSupervisorManagement(user);
+  } = useSupervisorManagement(user) as {
+    supervisors: SupervisorType[];
+    handleSupervisorChange: (supervisorId: string, action: 'add' | 'remove') => void;
+    handlePrimarySupervisorChange: (supervisorId: string) => void;
+  };
 
   useEffect(() => {
     if (profileError) {
