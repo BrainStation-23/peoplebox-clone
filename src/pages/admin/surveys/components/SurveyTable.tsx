@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Survey } from "../types";
+import { AssignSurveyDialog } from "./AssignSurveyDialog";
 
 interface SurveyTableProps {
   surveys: Survey[];
@@ -28,7 +29,7 @@ export function SurveyTable({ surveys, onDelete, onStatusChange }: SurveyTablePr
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'published':
-        return 'secondary'; // Changed from 'success' to 'secondary'
+        return 'secondary';
       case 'archived':
         return 'destructive';
       default:
@@ -44,7 +45,7 @@ export function SurveyTable({ surveys, onDelete, onStatusChange }: SurveyTablePr
           <TableHead>Description</TableHead>
           <TableHead>Tags</TableHead>
           <TableHead>Status</TableHead>
-          <TableHead className="w-[100px]">Actions</TableHead>
+          <TableHead className="w-[180px]">Actions</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
@@ -66,6 +67,14 @@ export function SurveyTable({ surveys, onDelete, onStatusChange }: SurveyTablePr
             </TableCell>
             <TableCell>
               <div className="flex items-center gap-2">
+                {survey.status === 'published' && (
+                  <AssignSurveyDialog 
+                    surveyId={survey.id} 
+                    onAssigned={() => {
+                      // Optionally refresh data
+                    }} 
+                  />
+                )}
                 <Button variant="ghost" size="icon" asChild>
                   <Link to={`/admin/surveys/${survey.id}/preview`}>
                     <Eye className="h-4 w-4" />
