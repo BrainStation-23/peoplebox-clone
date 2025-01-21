@@ -31,6 +31,7 @@ import { toast } from "sonner";
 import { SBUSelector } from "./SBUSelector";
 import { UserSelector } from "./UserSelector";
 import { RecurringSchedule } from "./RecurringSchedule";
+import { DateRangePicker } from "./RecurringSchedule/DateRangePicker";
 import { assignSurveySchema, type AssignSurveyFormData } from "./types";
 
 interface AssignSurveyDialogProps {
