@@ -14,6 +14,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { UserSelector } from "../components/AssignSurvey/UserSelector";
@@ -24,10 +25,10 @@ import { assignSurveySchema, type AssignSurveyFormData } from "../components/Ass
 
 export default function AssignSurveyPage() {
   const navigate = useNavigate();
-  const { surveyId } = useParams();
+  const { id: surveyId } = useParams();
   
-  // Fetch survey details to show in the header
-  const { data: survey } = useQuery({
+  // Fetch survey details
+  const { data: survey, isLoading: surveyLoading } = useQuery({
     queryKey: ["survey", surveyId],
     queryFn: async () => {
       if (!surveyId) throw new Error("No survey ID provided");
@@ -136,29 +137,31 @@ export default function AssignSurveyPage() {
     }
   };
 
-  const isOrganizationWide = form.watch("isOrganizationWide");
-
   if (!surveyId) {
     return (
       <div className="container mx-auto py-6">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold mb-4">Error</h1>
-          <p>No survey ID provided. Please select a survey to assign.</p>
-          <Button 
-            onClick={() => navigate("/admin/surveys")}
-            className="mt-4"
-          >
-            Back to Surveys
-          </Button>
-        </div>
+        <Alert variant="destructive">
+          <AlertTitle>Error</AlertTitle>
+          <AlertDescription>
+            No survey ID provided. Please select a survey to assign.
+          </AlertDescription>
+        </Alert>
+        <Button 
+          onClick={() => navigate("/admin/surveys")}
+          className="mt-4"
+        >
+          Back to Surveys
+        </Button>
       </div>
     );
   }
 
+  const isOrganizationWide = form.watch("isOrganizationWide");
+
   return (
     <div className="container mx-auto py-6 max-w-2xl">
       <h1 className="text-2xl font-bold mb-6">
-        Assign Survey: {survey?.name || 'Loading...'}
+        Assign Survey: {surveyLoading ? 'Loading...' : survey?.name}
       </h1>
       <Card>
         <CardHeader>
