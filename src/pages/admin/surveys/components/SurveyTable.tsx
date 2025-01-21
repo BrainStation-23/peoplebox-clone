@@ -28,7 +28,7 @@ export function SurveyTable({ surveys, onDelete, onStatusChange }: SurveyTablePr
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'published':
-        return 'success';
+        return 'secondary'; // Changed from 'success' to 'secondary'
       case 'archived':
         return 'destructive';
       default:
