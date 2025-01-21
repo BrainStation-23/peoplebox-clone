@@ -3,17 +3,6 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { User } from "../types";
 import { toast } from "sonner";
-import { SupervisorType } from "../components/EditUserDialog";
-
-type SupervisorQueryResult = {
-  supervisor_id: string;
-  is_primary: boolean;
-  supervisor: {
-    id: string;
-    first_name: string | null;
-    last_name: string | null;
-  };
-}
 
 export function useSupervisorManagement(user: User | null) {
   const queryClient = useQueryClient();
@@ -39,15 +28,10 @@ export function useSupervisorManagement(user: User | null) {
 
       if (error) throw error;
 
-      // Ensure the data matches our expected type structure
-      const typedData = data as unknown as SupervisorQueryResult[];
-      
-      return typedData.map((item) => ({
-        id: item.supervisor.id,
-        first_name: item.supervisor.first_name,
-        last_name: item.supervisor.last_name,
-        is_primary: item.is_primary,
-      })) as SupervisorType[];
+      return data.map(({ supervisor, is_primary }) => ({
+        ...supervisor,
+        is_primary,
+      }));
     },
     enabled: !!user,
   });
@@ -82,7 +66,9 @@ export function useSupervisorManagement(user: User | null) {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["supervisors", user?.id] });
-      toast.success("Supervisor list updated successfully");
+      toast.success(
+        "Supervisor list updated successfully"
+      );
     },
     onError: (error) => {
       console.error("Supervisor update error:", error);

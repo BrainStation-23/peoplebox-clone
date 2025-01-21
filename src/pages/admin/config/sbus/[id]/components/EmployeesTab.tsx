@@ -10,46 +10,10 @@ import {
 } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import EmployeeCard from "./EmployeeCard";
-import { Database } from "@/integrations/supabase/types";
 
 interface EmployeesTabProps {
   sbuId: string | undefined;
 }
-
-type Employee = {
-  id: string;
-  first_name: string | null;
-  last_name: string | null;
-  email: string;
-  profile_image_url: string | null;
-  level: {
-    name: string;
-  } | null;
-  user_roles: {
-    role: Database["public"]["Enums"]["user_role"];
-  }[];
-  user_supervisors: {
-    supervisor: {
-      id: string;
-      first_name: string | null;
-      last_name: string | null;
-    };
-    is_primary: boolean | null;
-  }[];
-  user_sbus?: {
-    sbu: {
-      id: string;
-      name: string;
-    };
-    is_primary: boolean | null;
-  }[];
-};
-
-type EmployeeResponse = {
-  id: string;
-  is_primary: boolean | null;
-  profile: Employee;
-};
 
 export default function EmployeesTab({ sbuId }: EmployeesTabProps) {
   const [search, setSearch] = useState("");
@@ -107,7 +71,7 @@ export default function EmployeesTab({ sbuId }: EmployeesTabProps) {
 
       // Fetch user roles separately for each employee
       const employeesWithRoles = await Promise.all(
-        (employeesData as any[])?.map(async (employee) => {
+        employeesData?.map(async (employee) => {
           const { data: roles } = await supabase
             .from("user_roles")
             .select("role")
@@ -123,7 +87,7 @@ export default function EmployeesTab({ sbuId }: EmployeesTabProps) {
         }) || []
       );
 
-      return employeesWithRoles as EmployeeResponse[];
+      return employeesWithRoles;
     },
     enabled: !!sbuId,
   });

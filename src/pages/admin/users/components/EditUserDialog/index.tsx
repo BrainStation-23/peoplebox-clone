@@ -23,13 +23,6 @@ interface EditUserDialogProps {
   onOpenChange: (open: boolean) => void;
 }
 
-export type SupervisorType = {
-  id: string;
-  first_name: string | null;
-  last_name: string | null;
-  is_primary: boolean;
-};
-
 export default function EditUserDialog({
   user,
   open,
