@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { User, UserSBU, Level } from "../../types";
+import { User, UserSBU } from "../../types";
 import { BasicInfoTab } from "./BasicInfoTab";
 import { SBUAssignmentTab } from "./SBUAssignmentTab";
 
@@ -26,6 +26,8 @@ export default function EditUserDialog({
   open,
   onOpenChange,
 }: EditUserDialogProps) {
+  console.log("EditUserDialog rendered with user:", user);
+
   const [sbuSearch, setSbuSearch] = useState("");
   const queryClient = useQueryClient();
 
@@ -37,38 +39,53 @@ export default function EditUserDialog({
   const [selectedSBUs, setSelectedSBUs] = useState<Set<string>>(new Set());
   const [primarySBU, setPrimarySBU] = useState<string>("");
 
-  // Update form state when user changes
+  // Fetch complete profile data
+  const { data: profileData, error: profileError } = useQuery({
+    queryKey: ['profile', user?.id],
+    queryFn: async () => {
+      console.log("Fetching profile data for user:", user?.id);
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*, levels(*)')
+        .eq('id', user?.id)
+        .single();
+      
+      if (error) {
+        console.error("Error fetching profile:", error);
+        throw error;
+      }
+      console.log("Fetched profile data:", data);
+      return data;
+    },
+    enabled: !!user?.id && open,
+  });
+
+  // Update form state when profile data changes
   useEffect(() => {
-    if (user) {
-      setFirstName(user.first_name || "");
-      setLastName(user.last_name || "");
-      // Fetch additional user profile data
-      const fetchUserProfile = async () => {
-        const { data: profileData } = await supabase
-          .from("profiles")
-          .select("level_id")
-          .eq("id", user.id)
-          .single();
-        
-        if (profileData?.level_id) {
-          setSelectedLevel(profileData.level_id);
-        }
-      };
-      fetchUserProfile();
+    console.log("Profile data changed:", profileData);
+    if (profileData) {
+      setFirstName(profileData.first_name || '');
+      setLastName(profileData.last_name || '');
+      setSelectedLevel(profileData.level_id || '');
     }
-  }, [user]);
+  }, [profileData]);
 
   // Fetch levels
   const { data: levels } = useQuery({
     queryKey: ["levels"],
     queryFn: async () => {
+      console.log("Fetching levels");
       const { data, error } = await supabase
         .from("levels")
         .select("*")
         .eq("status", "active");
       
-      if (error) throw error;
-      return data as Level[];
+      if (error) {
+        console.error("Error fetching levels:", error);
+        throw error;
+      }
+      console.log("Fetched levels:", data);
+      return data;
     },
     enabled: open,
   });
@@ -77,6 +94,7 @@ export default function EditUserDialog({
   const { data: sbus } = useQuery({
     queryKey: ["sbus", sbuSearch],
     queryFn: async () => {
+      console.log("Fetching SBUs with search:", sbuSearch);
       let query = supabase.from("sbus").select("*");
       
       if (sbuSearch) {
@@ -84,7 +102,11 @@ export default function EditUserDialog({
       }
       
       const { data, error } = await query;
-      if (error) throw error;
+      if (error) {
+        console.error("Error fetching SBUs:", error);
+        throw error;
+      }
+      console.log("Fetched SBUs:", data);
       return data;
     },
     enabled: open,
@@ -94,12 +116,17 @@ export default function EditUserDialog({
   const { data: userSBUs } = useQuery({
     queryKey: ["user_sbus", user?.id],
     queryFn: async () => {
+      console.log("Fetching user SBUs for user:", user?.id);
       const { data, error } = await supabase
         .from("user_sbus")
         .select("*, sbu:sbus(id, name)")
         .eq("user_id", user?.id);
       
-      if (error) throw error;
+      if (error) {
+        console.error("Error fetching user SBUs:", error);
+        throw error;
+      }
+      console.log("Fetched user SBUs:", data);
       return data as UserSBU[];
     },
     enabled: !!user?.id && open,
@@ -107,6 +134,7 @@ export default function EditUserDialog({
 
   // Update effect when userSBUs data changes
   useEffect(() => {
+    console.log("UserSBUs changed:", userSBUs);
     if (userSBUs) {
       const sbuIds = new Set(userSBUs.map(us => us.sbu_id));
       setSelectedSBUs(sbuIds);
@@ -121,6 +149,11 @@ export default function EditUserDialog({
   const updateProfileMutation = useMutation({
     mutationFn: async () => {
       if (!user) return;
+      console.log("Updating profile with data:", {
+        first_name: firstName,
+        last_name: lastName,
+        level_id: selectedLevel,
+      });
 
       // Update profile
       const { error: profileError } = await supabase
@@ -132,15 +165,22 @@ export default function EditUserDialog({
         })
         .eq("id", user.id);
 
-      if (profileError) throw profileError;
+      if (profileError) {
+        console.error("Error updating profile:", profileError);
+        throw profileError;
+      }
 
       // Update SBU assignments
+      console.log("Deleting existing SBU assignments for user:", user.id);
       const { error: sbuDeleteError } = await supabase
         .from("user_sbus")
         .delete()
         .eq("user_id", user.id);
 
-      if (sbuDeleteError) throw sbuDeleteError;
+      if (sbuDeleteError) {
+        console.error("Error deleting SBUs:", sbuDeleteError);
+        throw sbuDeleteError;
+      }
 
       if (selectedSBUs.size > 0) {
         const sbuInserts = Array.from(selectedSBUs).map(sbuId => ({
@@ -148,31 +188,44 @@ export default function EditUserDialog({
           sbu_id: sbuId,
           is_primary: sbuId === primarySBU
         }));
+        console.log("Inserting new SBU assignments:", sbuInserts);
 
         const { error: sbuInsertError } = await supabase
           .from("user_sbus")
           .insert(sbuInserts);
 
-        if (sbuInsertError) throw sbuInsertError;
+        if (sbuInsertError) {
+          console.error("Error inserting SBUs:", sbuInsertError);
+          throw sbuInsertError;
+        }
       }
     },
     onSuccess: () => {
+      console.log("Profile update successful");
       queryClient.invalidateQueries({ queryKey: ["users"] });
       queryClient.invalidateQueries({ queryKey: ["user_sbus"] });
       toast.success("Profile updated successfully");
       onOpenChange(false);
     },
     onError: (error) => {
+      console.error("Error in update mutation:", error);
       toast.error("Failed to update profile");
-      console.error("Error updating profile:", error);
     }
   });
 
   const handleSave = () => {
+    console.log("Save button clicked with state:", {
+      firstName,
+      lastName,
+      selectedLevel,
+      selectedSBUs,
+      primarySBU
+    });
     updateProfileMutation.mutate();
   };
 
   const handleSBUChange = (sbuId: string, checked: boolean) => {
+    console.log("SBU selection changed:", { sbuId, checked });
     const newSelectedSBUs = new Set(selectedSBUs);
     if (checked) {
       newSelectedSBUs.add(sbuId);
@@ -184,6 +237,11 @@ export default function EditUserDialog({
     }
     setSelectedSBUs(newSelectedSBUs);
   };
+
+  if (profileError) {
+    console.error("Profile fetch error:", profileError);
+    toast.error("Failed to load profile data");
+  }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
