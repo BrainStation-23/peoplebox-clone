@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Search } from "lucide-react";
 import { toast } from "sonner";
@@ -84,15 +84,19 @@ export default function EditUserDialog({
       return data as UserSBU[];
     },
     enabled: !!user?.id && open,
-    onSuccess: (data) => {
-      const sbuIds = new Set(data.map(us => us.sbu_id));
+  });
+
+  // Update effect when userSBUs data changes
+  useEffect(() => {
+    if (userSBUs) {
+      const sbuIds = new Set(userSBUs.map(us => us.sbu_id));
       setSelectedSBUs(sbuIds);
-      const primary = data.find(us => us.is_primary);
+      const primary = userSBUs.find(us => us.is_primary);
       if (primary) {
         setPrimarySBU(primary.sbu_id);
       }
     }
-  });
+  }, [userSBUs]);
 
   // Update profile mutation
   const updateProfileMutation = useMutation({
