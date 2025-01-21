@@ -36,9 +36,10 @@ export default function EmployeesTab({ sbuId }: EmployeesTabProps) {
             email,
             profile_image_url,
             level:levels(
+              id,
               name
             ),
-            user_roles!profiles_id_fkey(
+            user_roles(
               role
             ),
             user_supervisors(
@@ -78,7 +79,7 @@ export default function EmployeesTab({ sbuId }: EmployeesTabProps) {
           last_name: employee.profile.last_name,
           email: employee.profile.email,
           profile_image_url: employee.profile.profile_image_url,
-          level: employee.profile.level,
+          level: employee.profile.level?.[0] || null,
           user_roles: Array.isArray(employee.profile.user_roles) 
             ? employee.profile.user_roles 
             : [],
