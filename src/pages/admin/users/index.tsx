@@ -38,7 +38,8 @@ export default function Users() {
       
       if (profilesError) throw profilesError;
 
-      // Then, get user roles for these profiles
+      // Then, get user roles for these profiles using their IDs
+      // Note: profile.id is the same as user_id in user_roles because profiles.id references auth.users.id
       const { data: userRoles, error: rolesError } = await supabase
         .from("user_roles")
         .select("user_id, role")
