@@ -118,6 +118,7 @@ export type Database = {
           created_by: string
           due_date: string | null
           id: string
+          is_organization_wide: boolean | null
           is_recurring: boolean | null
           recurring_days: number[] | null
           recurring_ends_at: string | null
@@ -134,6 +135,7 @@ export type Database = {
           created_by: string
           due_date?: string | null
           id?: string
+          is_organization_wide?: boolean | null
           is_recurring?: boolean | null
           recurring_days?: number[] | null
           recurring_ends_at?: string | null
@@ -150,6 +152,7 @@ export type Database = {
           created_by?: string
           due_date?: string | null
           id?: string
+          is_organization_wide?: boolean | null
           is_recurring?: boolean | null
           recurring_days?: number[] | null
           recurring_ends_at?: string | null
@@ -226,6 +229,42 @@ export type Database = {
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      survey_sbu_assignments: {
+        Row: {
+          assignment_id: string
+          created_at: string
+          id: string
+          sbu_id: string
+        }
+        Insert: {
+          assignment_id: string
+          created_at?: string
+          id?: string
+          sbu_id: string
+        }
+        Update: {
+          assignment_id?: string
+          created_at?: string
+          id?: string
+          sbu_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "survey_sbu_assignments_assignment_id_fkey"
+            columns: ["assignment_id"]
+            isOneToOne: false
+            referencedRelation: "survey_assignments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "survey_sbu_assignments_sbu_id_fkey"
+            columns: ["sbu_id"]
+            isOneToOne: false
+            referencedRelation: "sbus"
             referencedColumns: ["id"]
           },
         ]

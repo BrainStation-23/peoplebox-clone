@@ -7,6 +7,8 @@ export const assignSurveySchema = z.object({
   recurringFrequency: z.enum(["one_time", "daily", "weekly", "monthly"]).optional(),
   recurringEndsAt: z.date().optional(),
   recurringDays: z.array(z.number()).optional(),
+  isOrganizationWide: z.boolean().default(false),
+  selectedSBUs: z.array(z.string().uuid()).default([]),
 });
 
 export type AssignSurveyFormData = z.infer<typeof assignSurveySchema>;

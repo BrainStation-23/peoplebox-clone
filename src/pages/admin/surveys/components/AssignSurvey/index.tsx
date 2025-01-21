@@ -4,6 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useQuery } from "@tanstack/react-query";
 import { Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Dialog,
   DialogContent,
@@ -16,6 +17,7 @@ import {
   FormControl,
   FormField,
   FormItem,
+  FormLabel,
   FormMessage,
 } from "@/components/ui/form";
 import { supabase } from "@/integrations/supabase/client";
@@ -23,6 +25,7 @@ import { toast } from "sonner";
 import { UserSelector } from "./UserSelector";
 import { RecurringSchedule } from "./RecurringSchedule";
 import { DateRangePicker } from "./RecurringSchedule/DateRangePicker";
+import { SBUSelector } from "./SBUSelector";
 import { assignSurveySchema, type AssignSurveyFormData } from "./types";
 
 interface AssignSurveyDialogProps {
@@ -38,6 +41,8 @@ export function AssignSurveyDialog({ surveyId, onAssigned }: AssignSurveyDialogP
     defaultValues: {
       isRecurring: false,
       recurringFrequency: "one_time",
+      isOrganizationWide: false,
+      selectedSBUs: [],
     },
   });
 
@@ -48,6 +53,18 @@ export function AssignSurveyDialog({ surveyId, onAssigned }: AssignSurveyDialogP
         .from("profiles")
         .select("id, email, first_name, last_name")
         .order("first_name");
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  const { data: sbus } = useQuery({
+    queryKey: ["sbus"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("sbus")
+        .select("id, name")
+        .order("name");
       if (error) throw error;
       return data;
     },
@@ -72,7 +89,8 @@ export function AssignSurveyDialog({ surveyId, onAssigned }: AssignSurveyDialogP
         throw new Error("No survey ID provided");
       }
 
-      const { error: assignmentError } = await supabase
+      // Create the survey assignment
+      const { data: assignment, error: assignmentError } = await supabase
         .from("survey_assignments")
         .insert({
           survey_id: surveyId,
@@ -83,9 +101,26 @@ export function AssignSurveyDialog({ surveyId, onAssigned }: AssignSurveyDialogP
           recurring_frequency: data.isRecurring ? data.recurringFrequency : null,
           recurring_ends_at: data.isRecurring ? data.recurringEndsAt?.toISOString() : null,
           recurring_days: data.isRecurring ? data.recurringDays : null,
-        });
+          is_organization_wide: data.isOrganizationWide,
+        })
+        .select()
+        .single();
 
       if (assignmentError) throw assignmentError;
+
+      // If SBUs are selected, create SBU assignments
+      if (data.selectedSBUs.length > 0) {
+        const sbuAssignments = data.selectedSBUs.map(sbuId => ({
+          assignment_id: assignment.id,
+          sbu_id: sbuId,
+        }));
+
+        const { error: sbuError } = await supabase
+          .from("survey_sbu_assignments")
+          .insert(sbuAssignments);
+
+        if (sbuError) throw sbuError;
+      }
 
       toast.success("Survey assigned successfully");
       setOpen(false);
@@ -95,6 +130,8 @@ export function AssignSurveyDialog({ surveyId, onAssigned }: AssignSurveyDialogP
       toast.error("Failed to assign survey");
     }
   };
+
+  const isOrganizationWide = form.watch("isOrganizationWide");
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -112,18 +149,55 @@ export function AssignSurveyDialog({ surveyId, onAssigned }: AssignSurveyDialogP
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
             <FormField
               control={form.control}
-              name="targetId"
+              name="isOrganizationWide"
               render={({ field }) => (
-                <FormItem>
-                  <UserSelector
-                    users={users || []}
-                    selectedUserId={field.value}
-                    onChange={field.onChange}
-                  />
-                  <FormMessage />
+                <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                  <FormControl>
+                    <Checkbox
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                    />
+                  </FormControl>
+                  <div className="space-y-1 leading-none">
+                    <FormLabel>Organization-wide</FormLabel>
+                  </div>
                 </FormItem>
               )}
             />
+
+            {!isOrganizationWide && (
+              <>
+                <FormField
+                  control={form.control}
+                  name="targetId"
+                  render={({ field }) => (
+                    <FormItem>
+                      <UserSelector
+                        users={users || []}
+                        selectedUserId={field.value}
+                        onChange={field.onChange}
+                      />
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="selectedSBUs"
+                  render={({ field }) => (
+                    <FormItem>
+                      <SBUSelector
+                        sbus={sbus || []}
+                        selectedSBUs={field.value}
+                        onChange={field.onChange}
+                      />
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </>
+            )}
 
             <FormField
               control={form.control}
