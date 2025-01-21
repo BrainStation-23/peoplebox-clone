@@ -39,7 +39,10 @@ export function useSupervisorManagement(user: User | null) {
 
       if (error) throw error;
 
-      return (data as SupervisorQueryResult[]).map((item) => ({
+      // Ensure the data matches our expected type structure
+      const typedData = data as unknown as SupervisorQueryResult[];
+      
+      return typedData.map((item) => ({
         id: item.supervisor.id,
         first_name: item.supervisor.first_name,
         last_name: item.supervisor.last_name,
