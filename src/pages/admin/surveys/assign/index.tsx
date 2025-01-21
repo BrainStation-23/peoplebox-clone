@@ -27,7 +27,6 @@ export default function AssignSurveyPage() {
   const navigate = useNavigate();
   const { id: surveyId } = useParams();
   
-  // Fetch survey details
   const { data: survey, isLoading: surveyLoading } = useQuery({
     queryKey: ["survey", surveyId],
     queryFn: async () => {
@@ -159,7 +158,7 @@ export default function AssignSurveyPage() {
   const isOrganizationWide = form.watch("isOrganizationWide");
 
   return (
-    <div className="container mx-auto py-6 max-w-2xl">
+    <div className="container mx-auto py-6">
       <h1 className="text-2xl font-bold mb-6">
         Assign Survey: {surveyLoading ? 'Loading...' : survey?.name}
       </h1>
@@ -170,35 +169,71 @@ export default function AssignSurveyPage() {
         <CardContent>
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-              <FormField
-                control={form.control}
-                name="isOrganizationWide"
-                render={({ field }) => (
-                  <FormItem className="flex flex-row items-start space-x-3 space-y-0">
-                    <FormControl>
-                      <Checkbox
-                        checked={field.value}
-                        onCheckedChange={field.onChange}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-6">
+                  <FormField
+                    control={form.control}
+                    name="isOrganizationWide"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                        <FormControl>
+                          <Checkbox
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
+                          />
+                        </FormControl>
+                        <div className="space-y-1 leading-none">
+                          <FormLabel>Organization-wide</FormLabel>
+                        </div>
+                      </FormItem>
+                    )}
+                  />
+
+                  {!isOrganizationWide && (
+                    <>
+                      <FormField
+                        control={form.control}
+                        name="targetId"
+                        render={({ field }) => (
+                          <FormItem>
+                            <UserSelector
+                              users={users || []}
+                              selectedUserId={field.value}
+                              onChange={field.onChange}
+                            />
+                            <FormMessage />
+                          </FormItem>
+                        )}
                       />
-                    </FormControl>
-                    <div className="space-y-1 leading-none">
-                      <FormLabel>Organization-wide</FormLabel>
-                    </div>
-                  </FormItem>
-                )}
-              />
 
-              {!isOrganizationWide && (
-                <>
+                      <FormField
+                        control={form.control}
+                        name="selectedSBUs"
+                        render={({ field }) => (
+                          <FormItem>
+                            <SBUSelector
+                              sbus={sbus || []}
+                              selectedSBUs={field.value}
+                              onChange={field.onChange}
+                            />
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </>
+                  )}
+                </div>
+
+                <div className="space-y-6">
                   <FormField
                     control={form.control}
-                    name="targetId"
+                    name="dueDate"
                     render={({ field }) => (
                       <FormItem>
-                        <UserSelector
-                          users={users || []}
-                          selectedUserId={field.value}
-                          onChange={field.onChange}
+                        <DateRangePicker
+                          date={field.value}
+                          onDateChange={field.onChange}
+                          label="Due Date"
                         />
                         <FormMessage />
                       </FormItem>
@@ -207,55 +242,25 @@ export default function AssignSurveyPage() {
 
                   <FormField
                     control={form.control}
-                    name="selectedSBUs"
+                    name="isRecurring"
                     render={({ field }) => (
                       <FormItem>
-                        <SBUSelector
-                          sbus={sbus || []}
-                          selectedSBUs={field.value}
-                          onChange={field.onChange}
+                        <RecurringSchedule
+                          isRecurring={field.value}
+                          frequency={form.watch("recurringFrequency") || "one_time"}
+                          endsAt={form.watch("recurringEndsAt")}
+                          onIsRecurringChange={field.onChange}
+                          onFrequencyChange={(value) => form.setValue("recurringFrequency", value as any)}
+                          onEndsAtChange={(date) => form.setValue("recurringEndsAt", date)}
                         />
                         <FormMessage />
                       </FormItem>
                     )}
                   />
-                </>
-              )}
+                </div>
+              </div>
 
-              <FormField
-                control={form.control}
-                name="dueDate"
-                render={({ field }) => (
-                  <FormItem>
-                    <DateRangePicker
-                      date={field.value}
-                      onDateChange={field.onChange}
-                      label="Due Date"
-                    />
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="isRecurring"
-                render={({ field }) => (
-                  <FormItem>
-                    <RecurringSchedule
-                      isRecurring={field.value}
-                      frequency={form.watch("recurringFrequency") || "one_time"}
-                      endsAt={form.watch("recurringEndsAt")}
-                      onIsRecurringChange={field.onChange}
-                      onFrequencyChange={(value) => form.setValue("recurringFrequency", value as any)}
-                      onEndsAtChange={(date) => form.setValue("recurringEndsAt", date)}
-                    />
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <div className="flex justify-end space-x-4">
+              <div className="flex justify-end space-x-4 mt-8">
                 <Button 
                   type="button" 
                   variant="outline"
