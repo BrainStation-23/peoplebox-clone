@@ -37,7 +37,7 @@ export default function EmployeesTab({ sbuId }: EmployeesTabProps) {
             level:levels(
               name
             ),
-            user_supervisors(
+            user_supervisors!user_supervisors_user_id_fkey(
               is_primary,
               supervisor:profiles!user_supervisors_supervisor_id_fkey(
                 id,
