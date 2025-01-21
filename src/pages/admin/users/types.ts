@@ -36,3 +36,10 @@ export interface Level {
   name: string;
   status: 'active' | 'inactive';
 }
+
+export interface Supervisor {
+  id: string;
+  first_name: string | null;
+  last_name: string | null;
+  is_primary: boolean;
+}

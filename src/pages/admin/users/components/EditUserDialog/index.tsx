@@ -11,8 +11,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { User } from "../../types";
 import { BasicInfoTab } from "./BasicInfoTab";
 import { SBUAssignmentTab } from "./SBUAssignmentTab";
+import { ManagementTab } from "./ManagementTab";
 import { useProfileManagement } from "../../hooks/useProfileManagement";
 import { useSBUManagement } from "../../hooks/useSBUManagement";
+import { useSupervisorManagement } from "../../hooks/useSupervisorManagement";
 import { toast } from "sonner";
 
 interface EditUserDialogProps {
@@ -49,7 +51,12 @@ export default function EditUserDialog({
     handlePrimarySBUChange,
   } = useSBUManagement(user);
 
-  // Handle profile fetch error
+  const {
+    supervisors,
+    handleSupervisorChange,
+    handlePrimarySupervisorChange,
+  } = useSupervisorManagement(user);
+
   useEffect(() => {
     if (profileError) {
       console.error("Profile fetch error:", profileError);
@@ -80,6 +87,7 @@ export default function EditUserDialog({
           <TabsList>
             <TabsTrigger value="basic">Basic Information</TabsTrigger>
             <TabsTrigger value="sbus">SBU Assignment</TabsTrigger>
+            <TabsTrigger value="management">Management</TabsTrigger>
           </TabsList>
 
           <TabsContent value="basic">
@@ -106,19 +114,24 @@ export default function EditUserDialog({
               handlePrimarySBUChange={handlePrimarySBUChange}
             />
           </TabsContent>
+
+          <TabsContent value="management">
+            {user && (
+              <ManagementTab
+                user={user}
+                supervisors={supervisors}
+                onSupervisorChange={handleSupervisorChange}
+                onPrimarySupervisorChange={handlePrimarySupervisorChange}
+              />
+            )}
+          </TabsContent>
         </Tabs>
 
         <div className="flex justify-end space-x-2">
-          <Button
-            variant="outline"
-            onClick={() => onOpenChange(false)}
-          >
+          <Button variant="outline" onClick={() => onOpenChange(false)}>
             Cancel
           </Button>
-          <Button
-            onClick={handleSave}
-            disabled={updateProfileMutation.isPending}
-          >
+          <Button onClick={handleSave} disabled={updateProfileMutation.isPending}>
             Save Changes
           </Button>
         </div>
