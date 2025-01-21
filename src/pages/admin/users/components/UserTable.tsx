@@ -110,7 +110,7 @@ export default function UserTable({
         .includes(searchTerm.toLowerCase());
 
     const matchesSBU =
-      selectedSBU === "" ||
+      selectedSBU === "all" ||
       user.user_sbus?.some(
         (sbu) => sbu.is_primary && sbu.sbu.name === selectedSBU
       );
@@ -252,7 +252,7 @@ export default function UserTable({
             <SelectValue placeholder="Filter by Primary SBU" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">All SBUs</SelectItem>
+            <SelectItem value="all">All SBUs</SelectItem>
             {uniqueSBUs.map((sbu) => (
               <SelectItem key={sbu} value={sbu}>
                 {sbu}
