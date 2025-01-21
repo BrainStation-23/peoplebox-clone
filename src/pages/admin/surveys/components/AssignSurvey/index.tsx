@@ -1,9 +1,9 @@
 import { useState } from "react";
 import { useForm } from "react-hook-form";
-import { CalendarIcon, Users } from "lucide-react";
-import { format } from "date-fns";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
+import { Users } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -27,38 +27,29 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Calendar } from "@/components/ui/calendar";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { CalendarIcon } from "lucide-react";
+import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { AssignmentType } from "../types/assignments";
+import { SBUSelector } from "./SBUSelector";
+import { RecurringSchedule } from "./RecurringSchedule";
+import { assignSurveySchema, type AssignSurveyFormData } from "./types";
 
 interface AssignSurveyDialogProps {
   surveyId: string;
   onAssigned: () => void;
 }
 
-type FormData = {
-  assignmentType: AssignmentType;
-  targetId?: string;
-  dueDate?: Date;
-};
-
 export function AssignSurveyDialog({ surveyId, onAssigned }: AssignSurveyDialogProps) {
   const [open, setOpen] = useState(false);
-  const form = useForm<FormData>();
-
-  // Get the current user's session
-  const { data: session } = useQuery({
-    queryKey: ["session"],
-    queryFn: async () => {
-      const { data: { session }, error } = await supabase.auth.getSession();
-      if (error) throw error;
-      return session;
+  const form = useForm<AssignSurveyFormData>({
+    resolver: zodResolver(assignSurveySchema),
+    defaultValues: {
+      assignmentType: "individual",
+      isRecurring: false,
+      recurringFrequency: "one_time",
     },
   });
 
@@ -74,42 +65,64 @@ export function AssignSurveyDialog({ surveyId, onAssigned }: AssignSurveyDialogP
     },
   });
 
-  const { data: users } = useQuery({
-    queryKey: ["users"],
+  const { data: session } = useQuery({
+    queryKey: ["session"],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("profiles")
-        .select("*")
-        .order("email");
+      const { data: { session }, error } = await supabase.auth.getSession();
       if (error) throw error;
-      return data;
+      return session;
     },
   });
 
-  const onSubmit = async (data: FormData) => {
+  const onSubmit = async (data: AssignSurveyFormData) => {
     try {
       if (!session?.user?.id) {
         throw new Error("No authenticated user found");
       }
 
-      const { error } = await supabase.from("survey_assignments").insert({
-        survey_id: surveyId,
-        assignment_type: data.assignmentType,
-        target_id: data.targetId,
-        due_date: data.dueDate?.toISOString(),
-        created_by: session.user.id // Add the authenticated user's ID
-      });
+      // Create the main assignment
+      const { data: assignment, error: assignmentError } = await supabase
+        .from("survey_assignments")
+        .insert({
+          survey_id: surveyId,
+          assignment_type: data.assignmentType,
+          due_date: data.dueDate?.toISOString(),
+          created_by: session.user.id,
+          is_recurring: data.isRecurring,
+          recurring_frequency: data.recurringFrequency,
+          recurring_ends_at: data.recurringEndsAt?.toISOString(),
+          recurring_days: data.recurringDays,
+        })
+        .select()
+        .single();
 
-      if (error) throw error;
+      if (assignmentError) throw assignmentError;
+
+      // If SBU type and targets selected, create assignment targets
+      if (data.assignmentType === "sbu" && data.targetIds?.length) {
+        const { error: targetsError } = await supabase
+          .from("survey_assignment_targets")
+          .insert(
+            data.targetIds.map((targetId) => ({
+              assignment_id: assignment.id,
+              target_id: targetId,
+            }))
+          );
+
+        if (targetsError) throw targetsError;
+      }
 
       toast.success("Survey assigned successfully");
       setOpen(false);
       onAssigned();
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error assigning survey:", error);
       toast.error("Failed to assign survey");
     }
   };
+
+  const assignmentType = form.watch("assignmentType");
+  const isRecurring = form.watch("isRecurring");
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -124,7 +137,7 @@ export function AssignSurveyDialog({ surveyId, onAssigned }: AssignSurveyDialogP
           <DialogTitle>Assign Survey</DialogTitle>
         </DialogHeader>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
             <FormField
               control={form.control}
               name="assignmentType"
@@ -151,60 +164,17 @@ export function AssignSurveyDialog({ surveyId, onAssigned }: AssignSurveyDialogP
               )}
             />
 
-            {form.watch("assignmentType") === "individual" && (
+            {assignmentType === "sbu" && (
               <FormField
                 control={form.control}
-                name="targetId"
+                name="targetIds"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Select User</FormLabel>
-                    <Select
-                      onValueChange={field.onChange}
-                      defaultValue={field.value}
-                    >
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select user" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {users?.map((user) => (
-                          <SelectItem key={user.id} value={user.id}>
-                            {user.email}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            )}
-
-            {form.watch("assignmentType") === "sbu" && (
-              <FormField
-                control={form.control}
-                name="targetId"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Select SBU</FormLabel>
-                    <Select
-                      onValueChange={field.onChange}
-                      defaultValue={field.value}
-                    >
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select SBU" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {sbus?.map((sbu) => (
-                          <SelectItem key={sbu.id} value={sbu.id}>
-                            {sbu.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <SBUSelector
+                      sbus={sbus || []}
+                      selectedSBUs={field.value || []}
+                      onChange={field.onChange}
+                    />
                     <FormMessage />
                   </FormItem>
                 )}
@@ -221,7 +191,7 @@ export function AssignSurveyDialog({ surveyId, onAssigned }: AssignSurveyDialogP
                     <PopoverTrigger asChild>
                       <FormControl>
                         <Button
-                          variant={"outline"}
+                          variant="outline"
                           className={cn(
                             "w-full pl-3 text-left font-normal",
                             !field.value && "text-muted-foreground"
@@ -241,13 +211,29 @@ export function AssignSurveyDialog({ surveyId, onAssigned }: AssignSurveyDialogP
                         mode="single"
                         selected={field.value}
                         onSelect={field.onChange}
-                        disabled={(date) =>
-                          date < new Date()
-                        }
+                        disabled={(date) => date < new Date()}
                         initialFocus
                       />
                     </PopoverContent>
                   </Popover>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="isRecurring"
+              render={({ field }) => (
+                <FormItem>
+                  <RecurringSchedule
+                    isRecurring={field.value}
+                    frequency={form.watch("recurringFrequency") || "one_time"}
+                    endsAt={form.watch("recurringEndsAt")}
+                    onIsRecurringChange={field.onChange}
+                    onFrequencyChange={(value) => form.setValue("recurringFrequency", value as any)}
+                    onEndsAtChange={(date) => form.setValue("recurringEndsAt", date)}
+                  />
                   <FormMessage />
                 </FormItem>
               )}

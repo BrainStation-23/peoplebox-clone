@@ -112,6 +112,38 @@ export type Database = {
           },
         ]
       }
+      survey_assignment_targets: {
+        Row: {
+          assignment_id: string | null
+          created_at: string | null
+          id: string
+          target_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          assignment_id?: string | null
+          created_at?: string | null
+          id?: string
+          target_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          assignment_id?: string | null
+          created_at?: string | null
+          id?: string
+          target_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "survey_assignment_targets_assignment_id_fkey"
+            columns: ["assignment_id"]
+            isOneToOne: false
+            referencedRelation: "survey_assignments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       survey_assignments: {
         Row: {
           assignment_type: Database["public"]["Enums"]["assignment_type"]
@@ -119,6 +151,12 @@ export type Database = {
           created_by: string
           due_date: string | null
           id: string
+          is_recurring: boolean | null
+          recurring_days: number[] | null
+          recurring_ends_at: string | null
+          recurring_frequency:
+            | Database["public"]["Enums"]["recurring_frequency"]
+            | null
           status: Database["public"]["Enums"]["assignment_status"] | null
           survey_id: string
           target_id: string | null
@@ -130,6 +168,12 @@ export type Database = {
           created_by: string
           due_date?: string | null
           id?: string
+          is_recurring?: boolean | null
+          recurring_days?: number[] | null
+          recurring_ends_at?: string | null
+          recurring_frequency?:
+            | Database["public"]["Enums"]["recurring_frequency"]
+            | null
           status?: Database["public"]["Enums"]["assignment_status"] | null
           survey_id: string
           target_id?: string | null
@@ -141,6 +185,12 @@ export type Database = {
           created_by?: string
           due_date?: string | null
           id?: string
+          is_recurring?: boolean | null
+          recurring_days?: number[] | null
+          recurring_ends_at?: string | null
+          recurring_frequency?:
+            | Database["public"]["Enums"]["recurring_frequency"]
+            | null
           status?: Database["public"]["Enums"]["assignment_status"] | null
           survey_id?: string
           target_id?: string | null
@@ -373,6 +423,7 @@ export type Database = {
       assignment_status: "pending" | "completed" | "expired"
       assignment_type: "individual" | "sbu" | "organization"
       level_status: "active" | "inactive"
+      recurring_frequency: "one_time" | "daily" | "weekly" | "monthly"
       survey_status: "draft" | "published" | "archived"
       user_role: "admin" | "user"
     }
