@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import EmployeeCard from "./EmployeeCard";
+import { UserRole } from "@/pages/admin/users/types";
 
 interface EmployeesTabProps {
   sbuId: string | undefined;
@@ -17,7 +18,7 @@ interface EmployeesTabProps {
 
 export default function EmployeesTab({ sbuId }: EmployeesTabProps) {
   const [search, setSearch] = useState("");
-  const [roleFilter, setRoleFilter] = useState<string>("");
+  const [roleFilter, setRoleFilter] = useState<UserRole | "">("");
   const [levelFilter, setLevelFilter] = useState<string>("");
 
   const { data: employees, isLoading } = useQuery({
@@ -35,19 +36,18 @@ export default function EmployeesTab({ sbuId }: EmployeesTabProps) {
             email,
             profile_image_url,
             level:levels(
-              id,
               name
             ),
-            user_roles!profiles_id_fkey(
+            user_roles(
               role
             ),
             user_supervisors(
+              is_primary,
               supervisor:profiles!user_supervisors_supervisor_id_fkey(
                 id,
                 first_name,
                 last_name
-              ),
-              is_primary
+              )
             )
           )
         `)
@@ -69,7 +69,19 @@ export default function EmployeesTab({ sbuId }: EmployeesTabProps) {
 
       const { data, error } = await query;
       if (error) throw error;
-      return data;
+      
+      // Transform the data to match the expected type
+      return data.map((employee) => ({
+        ...employee,
+        profile: {
+          ...employee.profile,
+          user_roles: employee.profile.user_roles || [],
+          user_supervisors: employee.profile.user_supervisors.map((sup) => ({
+            supervisor: sup.supervisor,
+            is_primary: sup.is_primary || false,
+          })),
+        },
+      }));
     },
     enabled: !!sbuId,
   });
@@ -100,7 +112,7 @@ export default function EmployeesTab({ sbuId }: EmployeesTabProps) {
           onChange={(e) => setSearch(e.target.value)}
           className="flex-1"
         />
-        <Select value={roleFilter} onValueChange={setRoleFilter}>
+        <Select value={roleFilter} onValueChange={(value: UserRole | "") => setRoleFilter(value)}>
           <SelectTrigger className="w-[180px]">
             <SelectValue placeholder="Filter by role" />
           </SelectTrigger>
