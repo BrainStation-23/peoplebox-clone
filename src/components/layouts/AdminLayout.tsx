@@ -22,6 +22,7 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
+import { useToast } from "@/hooks/use-toast";
 
 const navigationItems = [
   {
@@ -76,34 +77,84 @@ const getBreadcrumbs = (pathname: string) => {
 export default function AdminLayout() {
   const navigate = useNavigate();
   const location = useLocation();
+  const { toast } = useToast();
   const breadcrumbs = getBreadcrumbs(location.pathname);
   
   useEffect(() => {
     const checkAdmin = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
+      console.log("Checking admin status...");
+      
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      
+      if (sessionError) {
+        console.error("Session error:", sessionError);
+        toast({
+          variant: "destructive",
+          title: "Authentication Error",
+          description: "Please try logging in again",
+        });
+        navigate('/login');
+        return;
+      }
       
       if (!session) {
+        console.log("No session found, redirecting to login");
         navigate('/login');
         return;
       }
 
-      const { data: roleData } = await supabase
-        .from('user_roles')
-        .select('role')
-        .eq('user_id', session.user.id)
-        .single();
+      console.log("Session found:", session.user.id);
 
-      if (roleData?.role !== 'admin') {
+      try {
+        const { data: roleData, error: roleError } = await supabase
+          .from('user_roles')
+          .select('role')
+          .eq('user_id', session.user.id)
+          .single();
+
+        if (roleError) {
+          console.error("Role fetch error:", roleError);
+          throw roleError;
+        }
+
+        console.log("User role:", roleData?.role);
+
+        if (roleData?.role !== 'admin') {
+          console.log("User is not admin, redirecting to dashboard");
+          toast({
+            variant: "destructive",
+            title: "Access Denied",
+            description: "You need admin privileges to access this area",
+          });
+          navigate('/dashboard');
+        }
+      } catch (error: any) {
+        console.error("Error checking admin status:", error);
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Failed to verify admin access",
+        });
         navigate('/dashboard');
       }
     };
 
     checkAdmin();
-  }, [navigate]);
+  }, [navigate, toast]);
 
   const handleSignOut = async () => {
-    await supabase.auth.signOut();
-    navigate('/login');
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
+      navigate('/login');
+    } catch (error: any) {
+      console.error("Sign out error:", error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to sign out",
+      });
+    }
   };
 
   return (
