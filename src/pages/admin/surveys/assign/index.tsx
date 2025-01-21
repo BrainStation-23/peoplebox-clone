@@ -37,6 +37,18 @@ export default function AssignSurveyPage() {
   const [selectedSBUFilter, setSelectedSBUFilter] = useState("all");
   const [selectedUsers, setSelectedUsers] = useState<Set<string>>(new Set());
   
+  const form = useForm({
+    resolver: zodResolver(assignSurveySchema),
+    defaultValues: {
+      selectedUsers: [],
+      isRecurring: false,
+      recurringFrequency: "one_time",
+      dueDate: undefined,
+      recurringEndsAt: undefined,
+      recurringDays: [],
+    },
+  });
+
   const { data: survey, isLoading: surveyLoading } = useQuery({
     queryKey: ["survey", surveyId],
     queryFn: async () => {
@@ -50,15 +62,6 @@ export default function AssignSurveyPage() {
       return data;
     },
     enabled: !!surveyId,
-  });
-
-  const form = useForm({
-    resolver: zodResolver(assignSurveySchema),
-    defaultValues: {
-      isRecurring: false,
-      recurringFrequency: "one_time",
-      selectedUsers: [],
-    },
   });
 
   const { data: users } = useQuery({
@@ -109,6 +112,7 @@ export default function AssignSurveyPage() {
       const newSelectedUsers = new Set(selectedUsers);
       filteredUsers.forEach(user => newSelectedUsers.add(user.id));
       setSelectedUsers(newSelectedUsers);
+      form.setValue("selectedUsers", Array.from(newSelectedUsers));
     }
   };
 
@@ -117,6 +121,7 @@ export default function AssignSurveyPage() {
       const newSelectedUsers = new Set(selectedUsers);
       filteredUsers.forEach(user => newSelectedUsers.delete(user.id));
       setSelectedUsers(newSelectedUsers);
+      form.setValue("selectedUsers", Array.from(newSelectedUsers));
     }
   };
 
@@ -128,9 +133,10 @@ export default function AssignSurveyPage() {
       newSelectedUsers.add(userId);
     }
     setSelectedUsers(newSelectedUsers);
+    form.setValue("selectedUsers", Array.from(newSelectedUsers));
   };
 
-  const onSubmit = async () => {
+  const onSubmit = async (data: AssignSurveyFormData) => {
     try {
       if (!surveyId) throw new Error("No survey ID provided");
       if (!session?.user?.id) throw new Error("No authenticated user found");
@@ -142,12 +148,12 @@ export default function AssignSurveyPage() {
       const assignments = Array.from(selectedUsers).map(userId => ({
         survey_id: surveyId,
         user_id: userId,
-        due_date: form.getValues("dueDate")?.toISOString(),
+        due_date: data.dueDate?.toISOString(),
         created_by: session.user.id,
-        is_recurring: form.getValues("isRecurring"),
-        recurring_frequency: form.getValues("isRecurring") ? form.getValues("recurringFrequency") : null,
-        recurring_ends_at: form.getValues("isRecurring") ? form.getValues("recurringEndsAt")?.toISOString() : null,
-        recurring_days: form.getValues("isRecurring") ? form.getValues("recurringDays") : null,
+        is_recurring: data.isRecurring,
+        recurring_frequency: data.isRecurring ? data.recurringFrequency : null,
+        recurring_ends_at: data.isRecurring ? data.recurringEndsAt?.toISOString() : null,
+        recurring_days: data.isRecurring ? data.recurringDays : null,
       }));
 
       const { error: assignmentError } = await supabase
@@ -240,33 +246,40 @@ export default function AssignSurveyPage() {
                     </Button>
                   </div>
 
-                  <FormItem>
-                    <FormLabel>Select Users ({selectedUsers.size} selected)</FormLabel>
-                    <FormControl>
-                      <ScrollArea className="h-[300px] border rounded-md p-2">
-                        <div className="space-y-1">
-                          {filteredUsers?.map((user) => {
-                            const isSelected = selectedUsers.has(user.id);
-                            const displayName = `${user.first_name || ''} ${user.last_name || ''} ${!user.first_name && !user.last_name ? user.email : ''}`.trim();
-                            
-                            return (
-                              <button
-                                key={user.id}
-                                type="button"
-                                onClick={() => toggleUserSelection(user.id)}
-                                className={`w-full flex items-center justify-between px-2 py-1.5 rounded-sm text-sm hover:bg-accent hover:text-accent-foreground ${
-                                  isSelected ? 'bg-accent' : ''
-                                }`}
-                              >
-                                <span>{displayName}</span>
-                                {isSelected && <Check className="h-4 w-4" />}
-                              </button>
-                            );
-                          })}
-                        </div>
-                      </ScrollArea>
-                    </FormControl>
-                  </FormItem>
+                  <FormField
+                    control={form.control}
+                    name="selectedUsers"
+                    render={() => (
+                      <FormItem>
+                        <FormLabel>Select Users ({selectedUsers.size} selected)</FormLabel>
+                        <FormControl>
+                          <ScrollArea className="h-[300px] border rounded-md p-2">
+                            <div className="space-y-1">
+                              {filteredUsers?.map((user) => {
+                                const isSelected = selectedUsers.has(user.id);
+                                const displayName = `${user.first_name || ''} ${user.last_name || ''} ${!user.first_name && !user.last_name ? user.email : ''}`.trim();
+                                
+                                return (
+                                  <button
+                                    key={user.id}
+                                    type="button"
+                                    onClick={() => toggleUserSelection(user.id)}
+                                    className={`w-full flex items-center justify-between px-2 py-1.5 rounded-sm text-sm hover:bg-accent hover:text-accent-foreground ${
+                                      isSelected ? 'bg-accent' : ''
+                                    }`}
+                                  >
+                                    <span>{displayName}</span>
+                                    {isSelected && <Check className="h-4 w-4" />}
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          </ScrollArea>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
                 </div>
 
                 <div className="space-y-6">
