@@ -16,7 +16,7 @@ interface SBUAssignmentTabProps {
   selectedSBUs: Set<string>;
   handleSBUChange: (sbuId: string, checked: boolean) => void;
   primarySBU: string;
-  setPrimarySBU: (value: string) => void;
+  handlePrimarySBUChange: (sbuId: string) => void;
 }
 
 export function SBUAssignmentTab({
@@ -26,7 +26,7 @@ export function SBUAssignmentTab({
   selectedSBUs,
   handleSBUChange,
   primarySBU,
-  setPrimarySBU,
+  handlePrimarySBUChange,
 }: SBUAssignmentTabProps) {
   return (
     <div className="space-y-4">
@@ -55,7 +55,7 @@ export function SBUAssignmentTab({
               <div className="flex items-center space-x-2">
                 <RadioGroup
                   value={primarySBU}
-                  onValueChange={setPrimarySBU}
+                  onValueChange={handlePrimarySBUChange}
                   className="flex"
                 >
                   <div className="flex items-center space-x-2">

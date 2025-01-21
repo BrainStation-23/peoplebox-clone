@@ -9,8 +9,6 @@ export function useProfileManagement(user: User | null) {
   const [lastName, setLastName] = useState("");
   const [profileImageUrl, setProfileImageUrl] = useState("");
   const [selectedLevel, setSelectedLevel] = useState<string>("");
-  const [selectedSBUs, setSelectedSBUs] = useState<Set<string>>(new Set());
-  const [primarySBU, setPrimarySBU] = useState<string>("");
   const queryClient = useQueryClient();
 
   // Fetch complete profile data
@@ -40,6 +38,7 @@ export function useProfileManagement(user: User | null) {
     if (profileData) {
       setFirstName(profileData.first_name || '');
       setLastName(profileData.last_name || '');
+      setProfileImageUrl(profileData.profile_image_url || '');
       setSelectedLevel(profileData.level_id || '');
     }
   }, [profileData]);
@@ -51,15 +50,16 @@ export function useProfileManagement(user: User | null) {
       console.log("Updating profile with data:", {
         first_name: firstName,
         last_name: lastName,
+        profile_image_url: profileImageUrl,
         level_id: selectedLevel,
       });
 
-      // Update profile
       const { error: profileError } = await supabase
         .from("profiles")
         .update({
           first_name: firstName,
           last_name: lastName,
+          profile_image_url: profileImageUrl,
           level_id: selectedLevel || null,
         })
         .eq("id", user.id);
@@ -68,41 +68,10 @@ export function useProfileManagement(user: User | null) {
         console.error("Error updating profile:", profileError);
         throw profileError;
       }
-
-      // Update SBU assignments
-      console.log("Deleting existing SBU assignments for user:", user.id);
-      const { error: sbuDeleteError } = await supabase
-        .from("user_sbus")
-        .delete()
-        .eq("user_id", user.id);
-
-      if (sbuDeleteError) {
-        console.error("Error deleting SBUs:", sbuDeleteError);
-        throw sbuDeleteError;
-      }
-
-      if (selectedSBUs.size > 0) {
-        const sbuInserts = Array.from(selectedSBUs).map(sbuId => ({
-          user_id: user.id,
-          sbu_id: sbuId,
-          is_primary: sbuId === primarySBU
-        }));
-        console.log("Inserting new SBU assignments:", sbuInserts);
-
-        const { error: sbuInsertError } = await supabase
-          .from("user_sbus")
-          .insert(sbuInserts);
-
-        if (sbuInsertError) {
-          console.error("Error inserting SBUs:", sbuInsertError);
-          throw sbuInsertError;
-        }
-      }
     },
     onSuccess: () => {
       console.log("Profile update successful");
       queryClient.invalidateQueries({ queryKey: ["users"] });
-      queryClient.invalidateQueries({ queryKey: ["user_sbus"] });
       toast.success("Profile updated successfully");
     },
     onError: (error) => {
@@ -110,20 +79,6 @@ export function useProfileManagement(user: User | null) {
       toast.error("Failed to update profile");
     }
   });
-
-  const handleSBUChange = (sbuId: string, checked: boolean) => {
-    console.log("SBU selection changed:", { sbuId, checked });
-    const newSelectedSBUs = new Set(selectedSBUs);
-    if (checked) {
-      newSelectedSBUs.add(sbuId);
-    } else {
-      newSelectedSBUs.delete(sbuId);
-      if (primarySBU === sbuId) {
-        setPrimarySBU("");
-      }
-    }
-    setSelectedSBUs(newSelectedSBUs);
-  };
 
   return {
     firstName,
@@ -134,12 +89,8 @@ export function useProfileManagement(user: User | null) {
     setProfileImageUrl,
     selectedLevel,
     setSelectedLevel,
-    selectedSBUs,
-    primarySBU,
-    setPrimarySBU,
     profileData,
     profileError,
     updateProfileMutation,
-    handleSBUChange
   };
 }

@@ -2,6 +2,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Level } from "../../types";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
 interface BasicInfoTabProps {
   firstName: string;
@@ -12,7 +14,6 @@ interface BasicInfoTabProps {
   setProfileImageUrl: (value: string) => void;
   selectedLevel: string;
   setSelectedLevel: (value: string) => void;
-  levels?: Level[];
 }
 
 export function BasicInfoTab({
@@ -24,8 +25,21 @@ export function BasicInfoTab({
   setProfileImageUrl,
   selectedLevel,
   setSelectedLevel,
-  levels,
 }: BasicInfoTabProps) {
+  // Fetch levels
+  const { data: levels } = useQuery({
+    queryKey: ["levels"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("levels")
+        .select("*")
+        .eq("status", "active");
+      
+      if (error) throw error;
+      return data as Level[];
+    },
+  });
+
   return (
     <div className="grid gap-4">
       <div className="grid gap-2">
