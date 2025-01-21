@@ -11,6 +11,7 @@ import Dashboard from "./pages/Dashboard";
 import AdminDashboard from "./pages/admin/Dashboard";
 import AdminConfig from "./pages/admin/Config";
 import AdminProfile from "./pages/admin/Profile";
+import Users from "./pages/admin/users";
 import PlatformConfigLayout from "./components/layouts/PlatformConfigLayout";
 import SBUsConfig from "./pages/admin/config/sbus";
 import SMTPConfig from "./pages/admin/config/smtp";
@@ -32,6 +33,7 @@ const App = () => (
           <Route path="/admin" element={<AdminLayout />}>
             <Route index element={<Navigate to="/admin/dashboard" replace />} />
             <Route path="dashboard" element={<AdminDashboard />} />
+            <Route path="users" element={<Users />} />
             <Route path="config" element={<PlatformConfigLayout />}>
               <Route index element={<AdminConfig />} />
               <Route path="sbus" element={<SBUsConfig />} />
