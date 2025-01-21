@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { Eye, MoreVertical, Pencil, Trash } from "lucide-react";
+import { Eye, MoreVertical, Pencil, Trash, Send } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -17,7 +17,6 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Survey } from "../types";
-import { AssignSurveyDialog } from "./AssignSurvey";
 
 interface SurveyTableProps {
   surveys: Survey[];
@@ -68,12 +67,11 @@ export function SurveyTable({ surveys, onDelete, onStatusChange }: SurveyTablePr
             <TableCell>
               <div className="flex items-center gap-2">
                 {survey.status === 'published' && (
-                  <AssignSurveyDialog 
-                    surveyId={survey.id} 
-                    onAssigned={() => {
-                      // Optionally refresh data
-                    }} 
-                  />
+                  <Button variant="ghost" size="icon" asChild>
+                    <Link to={`/admin/surveys/assign?surveyId=${survey.id}`}>
+                      <Send className="h-4 w-4" />
+                    </Link>
+                  </Button>
                 )}
                 <Button variant="ghost" size="icon" asChild>
                   <Link to={`/admin/surveys/${survey.id}/preview`}>
