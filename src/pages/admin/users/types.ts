@@ -11,3 +11,20 @@ export interface User {
     role: UserRole;
   };
 }
+
+export interface UserSBU {
+  id: string;
+  user_id: string;
+  sbu_id: string;
+  is_primary: boolean;
+  sbu: {
+    id: string;
+    name: string;
+  };
+}
+
+export interface Level {
+  id: string;
+  name: string;
+  status: 'active' | 'inactive';
+}
