@@ -5,6 +5,16 @@ import { User } from "../types";
 import { toast } from "sonner";
 import { SupervisorType } from "../components/EditUserDialog";
 
+type SupervisorQueryResult = {
+  supervisor_id: string;
+  is_primary: boolean;
+  supervisor: {
+    id: string;
+    first_name: string | null;
+    last_name: string | null;
+  };
+}
+
 export function useSupervisorManagement(user: User | null) {
   const queryClient = useQueryClient();
   const [primarySupervisor, setPrimarySupervisor] = useState<string | null>(null);
@@ -29,7 +39,7 @@ export function useSupervisorManagement(user: User | null) {
 
       if (error) throw error;
 
-      return data.map((item) => ({
+      return (data as SupervisorQueryResult[]).map((item) => ({
         id: item.supervisor.id,
         first_name: item.supervisor.first_name,
         last_name: item.supervisor.last_name,
