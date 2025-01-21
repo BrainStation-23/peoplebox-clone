@@ -29,11 +29,11 @@ export function useSupervisorManagement(user: User | null) {
 
       if (error) throw error;
 
-      return data.map(({ supervisor, is_primary }) => ({
-        id: supervisor.id,
-        first_name: supervisor.first_name,
-        last_name: supervisor.last_name,
-        is_primary: is_primary,
+      return data.map((item) => ({
+        id: item.supervisor.id,
+        first_name: item.supervisor.first_name,
+        last_name: item.supervisor.last_name,
+        is_primary: item.is_primary,
       })) as SupervisorType[];
     },
     enabled: !!user,
