@@ -34,10 +34,10 @@ import EditUserDialog from "./EditUserDialog";
 
 interface UserTableProps {
   users: User[];
-  total: number;
+  isLoading: boolean;
   page: number;
   pageSize: number;
-  isLoading: boolean;
+  total: number;
   onPageChange: (page: number) => void;
   onDelete: (userId: string) => void;
 }
