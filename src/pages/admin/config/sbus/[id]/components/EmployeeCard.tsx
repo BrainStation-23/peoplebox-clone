@@ -1,6 +1,8 @@
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
+import { Mail } from "lucide-react";
 
 interface EmployeeCardProps {
   employee: {
@@ -22,6 +24,13 @@ interface EmployeeCardProps {
       };
       is_primary: boolean | null;
     }[];
+    user_sbus?: {
+      sbu: {
+        id: string;
+        name: string;
+      };
+      is_primary: boolean | null;
+    }[];
   };
   isPrimarySBU: boolean | null;
 }
@@ -29,12 +38,15 @@ interface EmployeeCardProps {
 export default function EmployeeCard({ employee, isPrimarySBU }: EmployeeCardProps) {
   const fullName = `${employee.first_name || ""} ${employee.last_name || ""}`.trim();
   const role = employee.user_roles[0]?.role;
-  const primarySupervisor = employee.user_supervisors.find(
+  const primarySupervisor = employee.user_supervisors?.find(
     (s) => s.is_primary
   )?.supervisor;
   const otherSupervisors = employee.user_supervisors
-    .filter((s) => !s.is_primary)
-    .map((s) => s.supervisor);
+    ?.filter((s) => !s.is_primary)
+    .map((s) => s.supervisor) || [];
+  const otherSBUs = employee.user_sbus
+    ?.filter((sbu) => !sbu.is_primary)
+    .map((sbu) => sbu.sbu) || [];
 
   return (
     <Card>
@@ -56,37 +68,59 @@ export default function EmployeeCard({ employee, isPrimarySBU }: EmployeeCardPro
               </Badge>
             )}
           </div>
-          <div className="flex gap-2 mt-1">
+          <div className="flex items-center gap-2 mt-1 text-sm text-muted-foreground">
+            <Mail className="h-4 w-4" />
+            <span>{employee.email}</span>
+          </div>
+          <div className="flex gap-2 mt-2">
             {role && (
               <Badge variant={role === "admin" ? "destructive" : "default"}>
                 {role}
               </Badge>
             )}
-            {employee.level && <Badge>{employee.level.name}</Badge>}
+            {employee.level && <Badge variant="outline">{employee.level.name}</Badge>}
           </div>
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
         {primarySupervisor && (
-          <div>
-            <h4 className="text-sm font-semibold mb-1">Primary Supervisor</h4>
-            <p className="text-sm">
-              {`${primarySupervisor.first_name || ""} ${
-                primarySupervisor.last_name || ""
-              }`.trim()}
-            </p>
-          </div>
+          <>
+            <div>
+              <h4 className="text-sm font-semibold mb-1">Primary Supervisor</h4>
+              <p className="text-sm">
+                {`${primarySupervisor.first_name || ""} ${
+                  primarySupervisor.last_name || ""
+                }`.trim()}
+              </p>
+            </div>
+            <Separator />
+          </>
         )}
+        
         {otherSupervisors.length > 0 && (
+          <>
+            <div>
+              <h4 className="text-sm font-semibold mb-1">Other Supervisors</h4>
+              <ul className="text-sm space-y-1">
+                {otherSupervisors.map((supervisor) => (
+                  <li key={supervisor.id}>
+                    {`${supervisor.first_name || ""} ${
+                      supervisor.last_name || ""
+                    }`.trim()}
+                  </li>
+                ))}
+              </ul>
+            </div>
+            <Separator />
+          </>
+        )}
+
+        {otherSBUs.length > 0 && (
           <div>
-            <h4 className="text-sm font-semibold mb-1">Other Supervisors</h4>
+            <h4 className="text-sm font-semibold mb-1">Other SBUs</h4>
             <ul className="text-sm space-y-1">
-              {otherSupervisors.map((supervisor) => (
-                <li key={supervisor.id}>
-                  {`${supervisor.first_name || ""} ${
-                    supervisor.last_name || ""
-                  }`.trim()}
-                </li>
+              {otherSBUs.map((sbu) => (
+                <li key={sbu.id}>{sbu.name}</li>
               ))}
             </ul>
           </div>

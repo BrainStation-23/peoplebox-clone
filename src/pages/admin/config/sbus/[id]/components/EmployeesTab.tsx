@@ -37,6 +37,22 @@ export default function EmployeesTab({ sbuId }: EmployeesTabProps) {
             level:levels(
               id,
               name
+            ),
+            user_roles(role),
+            user_supervisors(
+              is_primary,
+              supervisor:profiles!user_supervisors_supervisor_id_fkey(
+                id,
+                first_name,
+                last_name
+              )
+            ),
+            user_sbus(
+              is_primary,
+              sbu:sbus(
+                id,
+                name
+              )
             )
           )
         `)
@@ -55,20 +71,7 @@ export default function EmployeesTab({ sbuId }: EmployeesTabProps) {
       const { data, error } = await query;
       if (error) throw error;
       
-      return data.map((employee) => ({
-        id: employee.id,
-        is_primary: employee.is_primary,
-        profile: {
-          first_name: employee.profile.first_name,
-          last_name: employee.profile.last_name,
-          email: employee.profile.email,
-          profile_image_url: employee.profile.profile_image_url,
-          level: employee.profile.level?.[0] || null,
-          // Since EmployeeCard expects these properties, we'll provide empty arrays
-          user_roles: [],
-          user_supervisors: []
-        }
-      }));
+      return data;
     },
     enabled: !!sbuId,
   });
