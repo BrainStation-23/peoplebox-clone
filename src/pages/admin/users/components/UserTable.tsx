@@ -1,3 +1,4 @@
+import { useState } from "react";
 import {
   Table,
   TableBody,
@@ -18,26 +19,17 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
-import { Trash2 } from "lucide-react";
 import {
   Pagination,
   PaginationContent,
-  PaginationEllipsis,
   PaginationItem,
-  PaginationLink,
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
-
-interface User {
-  id: string;
-  email: string;
-  first_name: string | null;
-  last_name: string | null;
-  user_roles: {
-    role: 'admin' | 'user';
-  };
-}
+import { Skeleton } from "@/components/ui/skeleton";
+import { Badge } from "@/components/ui/badge";
+import { Trash2 } from "lucide-react";
+import { User } from "../types";
 
 interface UserTableProps {
   users: User[];
@@ -58,43 +50,36 @@ export default function UserTable({
   onPageChange,
   onDelete,
 }: UserTableProps) {
+  const [userToDelete, setUserToDelete] = useState<string | null>(null);
   const totalPages = Math.ceil(total / pageSize);
+
+  const handleDelete = async () => {
+    if (userToDelete) {
+      await onDelete(userToDelete);
+      setUserToDelete(null);
+    }
+  };
 
   const renderPaginationItems = () => {
     const items = [];
-    const maxVisible = 5;
-    let startPage = Math.max(1, page - Math.floor(maxVisible / 2));
-    let endPage = Math.min(totalPages, startPage + maxVisible - 1);
+    const maxVisiblePages = 5;
+    let startPage = Math.max(1, page - Math.floor(maxVisiblePages / 2));
+    let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
 
-    if (endPage - startPage + 1 < maxVisible) {
-      startPage = Math.max(1, endPage - maxVisible + 1);
-    }
-
-    if (startPage > 1) {
-      items.push(
-        <PaginationItem key="ellipsis-start">
-          <PaginationEllipsis />
-        </PaginationItem>
-      );
+    if (endPage - startPage + 1 < maxVisiblePages) {
+      startPage = Math.max(1, endPage - maxVisiblePages + 1);
     }
 
     for (let i = startPage; i <= endPage; i++) {
       items.push(
         <PaginationItem key={i}>
-          <PaginationLink
-            isActive={page === i}
+          <Button
+            variant={page === i ? "default" : "ghost"}
             onClick={() => onPageChange(i)}
+            className="w-10"
           >
             {i}
-          </PaginationLink>
-        </PaginationItem>
-      );
-    }
-
-    if (endPage < totalPages) {
-      items.push(
-        <PaginationItem key="ellipsis-end">
-          <PaginationEllipsis />
+          </Button>
         </PaginationItem>
       );
     }
@@ -103,7 +88,13 @@ export default function UserTable({
   };
 
   if (isLoading) {
-    return <div>Loading...</div>;
+    return (
+      <div className="space-y-4">
+        <Skeleton className="h-8 w-full" />
+        <Skeleton className="h-8 w-full" />
+        <Skeleton className="h-8 w-full" />
+      </div>
+    );
   }
 
   return (
@@ -122,15 +113,23 @@ export default function UserTable({
             <TableRow key={user.id}>
               <TableCell>
                 {user.first_name || user.last_name
-                  ? `${user.first_name || ''} ${user.last_name || ''}`
-                  : 'N/A'}
+                  ? `${user.first_name || ""} ${user.last_name || ""}`
+                  : "N/A"}
               </TableCell>
               <TableCell>{user.email}</TableCell>
-              <TableCell className="capitalize">{user.user_roles.role}</TableCell>
               <TableCell>
-                <AlertDialog>
+                <Badge variant={user.user_roles.role === "admin" ? "default" : "secondary"}>
+                  {user.user_roles.role}
+                </Badge>
+              </TableCell>
+              <TableCell>
+                <AlertDialog open={userToDelete === user.id} onOpenChange={(open) => !open && setUserToDelete(null)}>
                   <AlertDialogTrigger asChild>
-                    <Button variant="ghost" size="icon">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => setUserToDelete(user.id)}
+                    >
                       <Trash2 className="h-4 w-4" />
                     </Button>
                   </AlertDialogTrigger>
@@ -138,14 +137,13 @@ export default function UserTable({
                     <AlertDialogHeader>
                       <AlertDialogTitle>Delete User</AlertDialogTitle>
                       <AlertDialogDescription>
-                        Are you sure you want to delete this user? This action cannot be undone.
+                        Are you sure you want to delete this user? This action
+                        cannot be undone.
                       </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
                       <AlertDialogCancel>Cancel</AlertDialogCancel>
-                      <AlertDialogAction
-                        onClick={() => onDelete(user.id)}
-                      >
+                      <AlertDialogAction onClick={handleDelete}>
                         Delete
                       </AlertDialogAction>
                     </AlertDialogFooter>

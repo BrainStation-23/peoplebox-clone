@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import UserTable from "./components/UserTable";
 import CreateUserDialog from "./components/CreateUserDialog";
+import { User } from "./types";
 
 export default function Users() {
   const [search, setSearch] = useState("");
@@ -25,7 +26,7 @@ export default function Users() {
           email,
           first_name,
           last_name,
-          user_roles (
+          user_roles!inner (
             role
           )
         `, { count: 'exact' })
@@ -40,10 +41,10 @@ export default function Users() {
       if (error) throw error;
 
       return {
-        users: data.map(user => ({
+        users: (data as any[]).map(user => ({
           ...user,
           user_roles: user.user_roles[0]
-        })),
+        })) as User[],
         total: count || 0
       };
     }
@@ -63,7 +64,7 @@ export default function Users() {
       });
 
       refetch();
-    } catch (error) {
+    } catch (error: any) {
       toast({
         variant: "destructive",
         title: "Error",
