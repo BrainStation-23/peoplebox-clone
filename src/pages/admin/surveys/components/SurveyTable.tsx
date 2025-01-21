@@ -1,7 +1,12 @@
-import { Edit, Eye, Trash2 } from "lucide-react";
 import { Link } from "react-router-dom";
+import { Eye, MoreVertical, Pencil, Trash } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import {
   Table,
   TableBody,
@@ -10,23 +15,27 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { MoreHorizontal } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import { Survey } from "../types";
 
 interface SurveyTableProps {
   surveys: Survey[];
-  onPreview: (survey: Survey) => void;
   onDelete: (id: string) => void;
   onStatusChange: (id: string, status: 'draft' | 'published' | 'archived') => void;
 }
 
-export function SurveyTable({ surveys, onPreview, onDelete, onStatusChange }: SurveyTableProps) {
+export function SurveyTable({ surveys, onDelete, onStatusChange }: SurveyTableProps) {
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'published':
+        return 'success';
+      case 'archived':
+        return 'destructive';
+      default:
+        return 'default';
+    }
+  };
+
   return (
     <Table>
       <TableHeader>
@@ -44,7 +53,7 @@ export function SurveyTable({ surveys, onPreview, onDelete, onStatusChange }: Su
             <TableCell className="font-medium">{survey.name}</TableCell>
             <TableCell>{survey.description}</TableCell>
             <TableCell>
-              <div className="flex gap-1">
+              <div className="flex gap-1 flex-wrap">
                 {survey.tags?.map((tag) => (
                   <Badge key={tag} variant="secondary">
                     {tag}
@@ -53,40 +62,24 @@ export function SurveyTable({ surveys, onPreview, onDelete, onStatusChange }: Su
               </div>
             </TableCell>
             <TableCell>
-              <Badge
-                variant={
-                  survey.status === "published"
-                    ? "default"
-                    : survey.status === "archived"
-                    ? "destructive"
-                    : "secondary"
-                }
-              >
-                {survey.status}
-              </Badge>
+              <Badge variant={getStatusColor(survey.status)}>{survey.status}</Badge>
             </TableCell>
             <TableCell>
               <div className="flex items-center gap-2">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => onPreview(survey)}
-                >
-                  <Eye className="h-4 w-4" />
+                <Button variant="ghost" size="icon" asChild>
+                  <Link to={`/admin/surveys/${survey.id}/preview`}>
+                    <Eye className="h-4 w-4" />
+                  </Link>
                 </Button>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  asChild
-                >
+                <Button variant="ghost" size="icon" asChild>
                   <Link to={`/admin/surveys/${survey.id}/edit`}>
-                    <Edit className="h-4 w-4" />
+                    <Pencil className="h-4 w-4" />
                   </Link>
                 </Button>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button variant="ghost" size="icon">
-                      <MoreHorizontal className="h-4 w-4" />
+                      <MoreVertical className="h-4 w-4" />
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
@@ -100,21 +93,21 @@ export function SurveyTable({ surveys, onPreview, onDelete, onStatusChange }: Su
                         Unpublish
                       </DropdownMenuItem>
                     )}
-                    {survey.status === 'archived' && (
-                      <DropdownMenuItem onClick={() => onStatusChange(survey.id, 'draft')}>
-                        Unarchive
-                      </DropdownMenuItem>
-                    )}
                     {survey.status !== 'archived' && (
                       <DropdownMenuItem onClick={() => onStatusChange(survey.id, 'archived')}>
                         Archive
+                      </DropdownMenuItem>
+                    )}
+                    {survey.status === 'archived' && (
+                      <DropdownMenuItem onClick={() => onStatusChange(survey.id, 'draft')}>
+                        Unarchive
                       </DropdownMenuItem>
                     )}
                     <DropdownMenuItem
                       className="text-destructive"
                       onClick={() => onDelete(survey.id)}
                     >
-                      Delete Permanently
+                      Delete
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>

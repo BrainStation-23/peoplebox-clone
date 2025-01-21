@@ -9,12 +9,10 @@ import { Survey } from "./types";
 import { SearchBar } from "./components/SearchBar";
 import { TagFilter } from "./components/TagFilter";
 import { SurveyTable } from "./components/SurveyTable";
-import { PreviewDialog } from "./components/PreviewDialog";
 
 export default function SurveysPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
-  const [previewSurvey, setPreviewSurvey] = useState<Survey | null>(null);
   const { toast } = useToast();
 
   const { data: surveys, isLoading, refetch } = useQuery({
@@ -124,17 +122,11 @@ export default function SurveysPage() {
         ) : (
           <SurveyTable
             surveys={filteredSurveys || []}
-            onPreview={setPreviewSurvey}
             onDelete={handleDelete}
             onStatusChange={handleStatusChange}
           />
         )}
       </div>
-
-      <PreviewDialog
-        survey={previewSurvey}
-        onOpenChange={() => setPreviewSurvey(null)}
-      />
     </div>
   );
 }
