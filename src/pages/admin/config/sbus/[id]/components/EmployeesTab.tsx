@@ -29,7 +29,7 @@ export default function EmployeesTab({ sbuId }: EmployeesTabProps) {
         .select(`
           id,
           is_primary,
-          profile:profiles!inner(
+          profile:profiles!user_sbus_user_id_fkey(
             id,
             first_name,
             last_name,
@@ -38,17 +38,6 @@ export default function EmployeesTab({ sbuId }: EmployeesTabProps) {
             level:levels(
               id,
               name
-            ),
-            user_roles(
-              role
-            ),
-            user_supervisors(
-              is_primary,
-              supervisor:profiles!user_supervisors_supervisor_id_fkey(
-                id,
-                first_name,
-                last_name
-              )
             )
           )
         `)
@@ -60,35 +49,71 @@ export default function EmployeesTab({ sbuId }: EmployeesTabProps) {
         );
       }
 
-      if (roleFilter) {
-        query = query.eq("profile.user_roles.role", roleFilter);
-      }
-
       if (levelFilter) {
-        query = query.eq("profile.level.id", levelFilter);
+        query = query.eq("profile.level_id", levelFilter);
       }
 
-      const { data, error } = await query;
-      if (error) throw error;
-      
-      // Transform the data to match the expected type
-      return data.map((employee) => ({
-        ...employee,
-        profile: {
-          first_name: employee.profile.first_name,
-          last_name: employee.profile.last_name,
-          email: employee.profile.email,
-          profile_image_url: employee.profile.profile_image_url,
-          level: employee.profile.level?.[0] || null,
-          user_roles: Array.isArray(employee.profile.user_roles) 
-            ? employee.profile.user_roles 
-            : [],
-          user_supervisors: employee.profile.user_supervisors.map((sup) => ({
-            supervisor: sup.supervisor,
-            is_primary: sup.is_primary || false,
-          })),
-        },
-      }));
+      const { data: userSBUs, error: userSBUsError } = await query;
+      if (userSBUsError) throw userSBUsError;
+
+      // Fetch user roles separately for each user
+      const employeesWithRoles = await Promise.all(
+        userSBUs.map(async (userSBU) => {
+          const { data: userRoles, error: rolesError } = await supabase
+            .from("user_roles")
+            .select("role")
+            .eq("user_id", userSBU.profile.id);
+          
+          if (rolesError) throw rolesError;
+
+          // Fetch user supervisors
+          const { data: supervisors, error: supervisorsError } = await supabase
+            .from("user_supervisors")
+            .select(`
+              is_primary,
+              supervisor:profiles!user_supervisors_supervisor_id_fkey(
+                id,
+                first_name,
+                last_name
+              )
+            `)
+            .eq("user_id", userSBU.profile.id);
+
+          if (supervisorsError) throw supervisorsError;
+
+          // Apply role filter if specified
+          if (roleFilter && !userRoles?.some(ur => ur.role === roleFilter)) {
+            return null;
+          }
+
+          return {
+            ...userSBU,
+            profile: {
+              ...userSBU.profile,
+              level: userSBU.profile.level?.[0] || null,
+              user_roles: userRoles || [],
+              user_supervisors: supervisors || []
+            }
+          };
+        })
+      );
+
+      // Filter out null values (from role filter) and transform data
+      return employeesWithRoles
+        .filter((employee): employee is NonNullable<typeof employee> => employee !== null)
+        .map(employee => ({
+          id: employee.id,
+          is_primary: employee.is_primary,
+          profile: {
+            first_name: employee.profile.first_name,
+            last_name: employee.profile.last_name,
+            email: employee.profile.email,
+            profile_image_url: employee.profile.profile_image_url,
+            level: employee.profile.level,
+            user_roles: employee.profile.user_roles,
+            user_supervisors: employee.profile.user_supervisors
+          }
+        }));
     },
     enabled: !!sbuId,
   });
