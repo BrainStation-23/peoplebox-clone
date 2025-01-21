@@ -43,7 +43,7 @@ const App = () => (
             <Route path="surveys/create" element={<SurveyFormPage />} />
             <Route path="surveys/:id/edit" element={<SurveyFormPage />} />
             <Route path="surveys/:id/preview" element={<PreviewSurveyPage />} />
-            <Route path="surveys/assign" element={<AssignSurveyPage />} />
+            <Route path="surveys/assign/:id" element={<AssignSurveyPage />} />
             <Route path="config" element={<PlatformConfigLayout />}>
               <Route index element={<AdminConfig />} />
               <Route path="sbus" element={<SBUsConfig />} />

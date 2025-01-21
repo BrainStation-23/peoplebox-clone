@@ -68,7 +68,7 @@ export function SurveyTable({ surveys, onDelete, onStatusChange }: SurveyTablePr
               <div className="flex items-center gap-2">
                 {survey.status === 'published' && (
                   <Button variant="ghost" size="icon" asChild>
-                    <Link to={`/admin/surveys/assign?surveyId=${survey.id}`}>
+                    <Link to={`/admin/surveys/assign/${survey.id}`}>
                       <Send className="h-4 w-4" />
                     </Link>
                   </Button>
