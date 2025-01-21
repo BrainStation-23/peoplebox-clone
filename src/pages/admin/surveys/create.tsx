@@ -50,12 +50,27 @@ export default function CreateSurveyPage() {
 
   const onSubmit = async (data: FormData) => {
     try {
+      // First, get the current user's session
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      
+      if (sessionError) throw sessionError;
+      if (!session) {
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "You must be logged in to create a survey",
+        });
+        navigate('/login');
+        return;
+      }
+
       const { error } = await supabase.from("surveys").insert({
         name: data.name,
         description: data.description,
         tags: data.tags,
         json_data: {}, // Empty initial structure
         status: "draft",
+        created_by: session.user.id, // Add the user ID here
       });
 
       if (error) throw error;
