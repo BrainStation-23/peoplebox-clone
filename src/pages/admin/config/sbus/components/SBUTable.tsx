@@ -1,4 +1,5 @@
-import { ExternalLink, Pencil, Trash2, User } from "lucide-react";
+import { ExternalLink, Eye, Pencil, Trash2, User } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import {
   Table,
   TableBody,
@@ -27,6 +28,8 @@ interface SBUTableProps {
 }
 
 export function SBUTable({ sbus, onEdit, onDelete, isLoading }: SBUTableProps) {
+  const navigate = useNavigate();
+  
   return (
     <div className="rounded-md border">
       <Table>
@@ -69,6 +72,13 @@ export function SBUTable({ sbus, onEdit, onDelete, isLoading }: SBUTableProps) {
               </TableCell>
               <TableCell>
                 <div className="flex items-center gap-2">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => navigate(`/admin/config/sbus/${sbu.id}`)}
+                  >
+                    <Eye className="h-4 w-4" />
+                  </Button>
                   <Button
                     variant="ghost"
                     size="icon"
