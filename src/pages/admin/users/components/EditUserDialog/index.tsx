@@ -23,7 +23,7 @@ interface EditUserDialogProps {
   onOpenChange: (open: boolean) => void;
 }
 
-type SupervisorType = {
+export type SupervisorType = {
   id: string;
   first_name: string | null;
   last_name: string | null;
@@ -58,16 +58,11 @@ export default function EditUserDialog({
     handlePrimarySBUChange,
   } = useSBUManagement(user);
 
-  const supervisorManagement = useSupervisorManagement(user);
   const {
     supervisors,
     handleSupervisorChange,
     handlePrimarySupervisorChange,
-  } = supervisorManagement as {
-    supervisors: SupervisorType[];
-    handleSupervisorChange: (supervisorId: string, action: 'add' | 'remove') => void;
-    handlePrimarySupervisorChange: (supervisorId: string) => void;
-  };
+  } = useSupervisorManagement(user);
 
   useEffect(() => {
     if (profileError) {
