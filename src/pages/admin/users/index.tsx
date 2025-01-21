@@ -4,7 +4,7 @@ import { Plus } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import UserTable from "./components/UserTable";
 import CreateUserDialog from "./components/CreateUserDialog";
 
@@ -25,7 +25,7 @@ export default function Users() {
           email,
           first_name,
           last_name,
-          user_roles!inner (
+          user_roles (
             role
           )
         `, { count: 'exact' })
@@ -40,7 +40,10 @@ export default function Users() {
       if (error) throw error;
 
       return {
-        users: data,
+        users: data.map(user => ({
+          ...user,
+          user_roles: user.user_roles[0]
+        })),
         total: count || 0
       };
     }

@@ -160,17 +160,25 @@ export default function UserTable({
       <Pagination>
         <PaginationContent>
           <PaginationItem>
-            <PaginationPrevious
+            <Button
+              variant="ghost"
               onClick={() => onPageChange(page - 1)}
               disabled={page === 1}
-            />
+              className="cursor-pointer"
+            >
+              <PaginationPrevious />
+            </Button>
           </PaginationItem>
           {renderPaginationItems()}
           <PaginationItem>
-            <PaginationNext
+            <Button
+              variant="ghost"
               onClick={() => onPageChange(page + 1)}
               disabled={page === totalPages}
-            />
+              className="cursor-pointer"
+            >
+              <PaginationNext />
+            </Button>
           </PaginationItem>
         </PaginationContent>
       </Pagination>
