@@ -4,6 +4,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft, Plus, Pencil, Trash2, ExternalLink, User } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -91,15 +92,37 @@ export default function SBUsConfig() {
     },
   });
 
+  const form = useForm<SBUFormValues>({
+    resolver: zodResolver(sbuFormSchema),
+    defaultValues: {
+      name: "",
+      profile_image_url: "",
+      website: "",
+      head_id: undefined,
+    },
+  });
+
   // Create SBU mutation
   const createSBU = useMutation({
     mutationFn: async (values: SBUFormValues) => {
-      const { error } = await supabase.from("sbus").insert(values);
+      // Ensure name is provided as it's required by the schema
+      if (!values.name) {
+        throw new Error("Name is required");
+      }
+      
+      const { error } = await supabase.from("sbus").insert({
+        name: values.name,
+        profile_image_url: values.profile_image_url || null,
+        website: values.website || null,
+        head_id: values.head_id || null,
+      });
+      
       if (error) throw error;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["sbus"] });
       setIsCreateOpen(false);
+      form.reset();
       toast({
         title: "SBU created successfully",
       });
@@ -116,15 +139,27 @@ export default function SBUsConfig() {
   // Update SBU mutation
   const updateSBU = useMutation({
     mutationFn: async ({ id, ...values }: SBUFormValues & { id: string }) => {
+      // Ensure name is provided as it's required by the schema
+      if (!values.name) {
+        throw new Error("Name is required");
+      }
+      
       const { error } = await supabase
         .from("sbus")
-        .update(values)
+        .update({
+          name: values.name,
+          profile_image_url: values.profile_image_url || null,
+          website: values.website || null,
+          head_id: values.head_id || null,
+        })
         .eq("id", id);
+      
       if (error) throw error;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["sbus"] });
       setEditingSBU(null);
+      form.reset();
       toast({
         title: "SBU updated successfully",
       });
@@ -156,15 +191,6 @@ export default function SBUsConfig() {
         description: error.message,
         variant: "destructive",
       });
-    },
-  });
-
-  const form = useForm<SBUFormValues>({
-    defaultValues: {
-      name: "",
-      profile_image_url: "",
-      website: "",
-      head_id: undefined,
     },
   });
 
