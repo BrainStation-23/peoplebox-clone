@@ -3,7 +3,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowLeft } from "lucide-react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -21,6 +21,7 @@ import { assignSurveySchema, type AssignSurveyFormData } from "../components/Ass
 
 export default function AssignSurveyPage() {
   const navigate = useNavigate();
+  const { surveyId } = useParams();
   
   const form = useForm<AssignSurveyFormData>({
     resolver: zodResolver(assignSurveySchema),
@@ -57,10 +58,14 @@ export default function AssignSurveyPage() {
         throw new Error("No authenticated user found");
       }
 
+      if (!surveyId) {
+        throw new Error("No survey ID provided");
+      }
+
       const { error: assignmentError } = await supabase
         .from("survey_assignments")
         .insert({
-          survey_id: "your-survey-id", // TODO: Get this from URL params
+          survey_id: surveyId,
           user_id: data.targetId,
           due_date: data.dueDate?.toISOString(),
           created_by: session.user.id,
@@ -79,6 +84,17 @@ export default function AssignSurveyPage() {
       toast.error("Failed to assign survey");
     }
   };
+
+  if (!surveyId) {
+    return (
+      <div className="p-4">
+        <p className="text-red-500">No survey ID provided</p>
+        <Button variant="ghost" size="sm" asChild className="mt-4">
+          <Link to="/admin/surveys">Back to Surveys</Link>
+        </Button>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
