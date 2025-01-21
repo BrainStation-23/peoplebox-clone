@@ -1,11 +1,7 @@
 import { z } from "zod";
 
-export type AssignmentType = "individual" | "sbu" | "organization";
-
 export const assignSurveySchema = z.object({
-  assignmentType: z.enum(["individual", "sbu", "organization"]),
-  targetId: z.string().uuid().optional(),
-  targetIds: z.array(z.string().uuid()).optional(),
+  targetId: z.string().uuid(),
   dueDate: z.date().optional(),
   isRecurring: z.boolean().default(false),
   recurringFrequency: z.enum(["one_time", "daily", "weekly", "monthly"]).optional(),
