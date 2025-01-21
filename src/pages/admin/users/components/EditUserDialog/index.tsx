@@ -48,7 +48,7 @@ export default function EditUserDialog({
         .from('profiles')
         .select('*, levels(*)')
         .eq('id', user?.id)
-        .single();
+        .maybeSingle();
       
       if (error) {
         console.error("Error fetching profile:", error);
@@ -212,31 +212,6 @@ export default function EditUserDialog({
       toast.error("Failed to update profile");
     }
   });
-
-  const handleSave = () => {
-    console.log("Save button clicked with state:", {
-      firstName,
-      lastName,
-      selectedLevel,
-      selectedSBUs,
-      primarySBU
-    });
-    updateProfileMutation.mutate();
-  };
-
-  const handleSBUChange = (sbuId: string, checked: boolean) => {
-    console.log("SBU selection changed:", { sbuId, checked });
-    const newSelectedSBUs = new Set(selectedSBUs);
-    if (checked) {
-      newSelectedSBUs.add(sbuId);
-    } else {
-      newSelectedSBUs.delete(sbuId);
-      if (primarySBU === sbuId) {
-        setPrimarySBU("");
-      }
-    }
-    setSelectedSBUs(newSelectedSBUs);
-  };
 
   if (profileError) {
     console.error("Profile fetch error:", profileError);
