@@ -20,8 +20,6 @@ interface UserSelectorProps {
 
 export function UserSelector({ users, selectedUserId, onChange }: UserSelectorProps) {
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedLevel, setSelectedLevel] = useState<string | null>(null);
-  const [selectedSBU, setSelectedSBU] = useState<string | null>(null);
 
   const filteredUsers = users.filter((user) => {
     const matchesSearch =
@@ -29,7 +27,6 @@ export function UserSelector({ users, selectedUserId, onChange }: UserSelectorPr
       (user.first_name?.toLowerCase() || "").includes(searchQuery.toLowerCase()) ||
       (user.last_name?.toLowerCase() || "").includes(searchQuery.toLowerCase());
 
-    // Add additional filtering based on level and SBU if needed
     return matchesSearch;
   });
 
@@ -60,17 +57,9 @@ export function UserSelector({ users, selectedUserId, onChange }: UserSelectorPr
         </Button>
       </div>
       
-      <Input
-        placeholder="Search users..."
-        value={searchQuery}
-        onChange={(e) => setSearchQuery(e.target.value)}
-      />
-      
       <UserFilters
-        selectedLevel={selectedLevel}
-        onLevelChange={setSelectedLevel}
-        selectedSBU={selectedSBU}
-        onSBUChange={setSelectedSBU}
+        searchQuery={searchQuery}
+        onSearchChange={setSearchQuery}
       />
       
       <UserList
