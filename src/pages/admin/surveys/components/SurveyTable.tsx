@@ -17,7 +17,7 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Survey } from "../types";
-import { AssignSurveyDialog } from "./AssignSurveyDialog";
+import { AssignSurveyDialog } from "./AssignSurvey";
 
 interface SurveyTableProps {
   surveys: Survey[];
