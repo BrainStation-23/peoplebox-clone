@@ -18,8 +18,7 @@ import SBUDetails from "./pages/admin/config/sbus/[id]";
 import SMTPConfig from "./pages/admin/config/smtp";
 import LevelConfig from "./pages/admin/config/level";
 import SurveysPage from "./pages/admin/surveys";
-import CreateSurveyPage from "./pages/admin/surveys/create";
-import EditSurveyPage from "./pages/admin/surveys/[id]/edit";
+import SurveyFormPage from "./pages/admin/surveys/SurveyFormPage";
 import PreviewSurveyPage from "./pages/admin/surveys/[id]/preview";
 
 const queryClient = new QueryClient();
@@ -40,8 +39,8 @@ const App = () => (
             <Route path="dashboard" element={<AdminDashboard />} />
             <Route path="users" element={<Users />} />
             <Route path="surveys" element={<SurveysPage />} />
-            <Route path="surveys/create" element={<CreateSurveyPage />} />
-            <Route path="surveys/:id/edit" element={<EditSurveyPage />} />
+            <Route path="surveys/create" element={<SurveyFormPage />} />
+            <Route path="surveys/:id/edit" element={<SurveyFormPage />} />
             <Route path="surveys/:id/preview" element={<PreviewSurveyPage />} />
             <Route path="config" element={<PlatformConfigLayout />}>
               <Route index element={<AdminConfig />} />
