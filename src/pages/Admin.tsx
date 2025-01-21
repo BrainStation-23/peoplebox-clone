@@ -2,6 +2,9 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
+import { Database } from "@/types/database.types";
+
+type UserRole = Database['public']['Tables']['user_roles']['Row'];
 
 export default function Admin() {
   const navigate = useNavigate();
@@ -18,7 +21,7 @@ export default function Admin() {
 
       const { data: roleData } = await supabase
         .from('user_roles')
-        .select('role')
+        .select('*')
         .eq('user_id', session.user.id)
         .single();
 
@@ -64,7 +67,6 @@ export default function Admin() {
       <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
         <div className="px-4 py-6 sm:px-0">
           <h2 className="text-2xl font-bold mb-4">Welcome to Admin Portal</h2>
-          {/* Admin content will be added here */}
         </div>
       </main>
     </div>

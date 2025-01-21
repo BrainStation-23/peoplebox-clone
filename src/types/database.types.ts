@@ -1,3 +1,8 @@
+import { ProfilesTable } from "./profiles.types";
+import { SBUsTable } from "./sbus.types";
+import { SurveysTable, SurveyAssignmentsTable, SurveyResponsesTable } from "./surveys.types";
+import { UserRolesTable, UserSBUsTable, UserSupervisorsTable } from "./users.types";
+
 export type Json =
   | string
   | number
@@ -5,6 +10,23 @@ export type Json =
   | null
   | { [key: string]: Json | undefined }
   | Json[]
+
+export interface DatabaseFunctions {
+  is_admin: {
+    Args: {
+      user_uid: string
+    }
+    Returns: boolean
+  }
+}
+
+export interface DatabaseEnums {
+  level_status: "active" | "inactive"
+  survey_status: "draft" | "published" | "archived"
+  user_role: "admin" | "user"
+  assignment_type: "individual" | "sbu" | "organization"
+  assignment_status: "pending" | "completed" | "expired"
+}
 
 export type Database = {
   public: {
