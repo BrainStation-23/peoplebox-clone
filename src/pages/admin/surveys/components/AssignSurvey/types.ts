@@ -4,6 +4,7 @@ export type AssignmentType = "individual" | "sbu" | "organization";
 
 export const assignSurveySchema = z.object({
   assignmentType: z.enum(["individual", "sbu", "organization"]),
+  targetId: z.string().uuid().optional(),
   targetIds: z.array(z.string().uuid()).optional(),
   dueDate: z.date().optional(),
   isRecurring: z.boolean().default(false),

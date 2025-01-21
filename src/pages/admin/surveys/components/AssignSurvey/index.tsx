@@ -26,9 +26,20 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+} from "@/components/ui/command";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { CalendarIcon } from "lucide-react";
+import { CalendarIcon, Check } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
@@ -44,6 +55,8 @@ interface AssignSurveyDialogProps {
 
 export function AssignSurveyDialog({ surveyId, onAssigned }: AssignSurveyDialogProps) {
   const [open, setOpen] = useState(false);
+  const [commandOpen, setCommandOpen] = useState(false);
+  
   const form = useForm<AssignSurveyFormData>({
     resolver: zodResolver(assignSurveySchema),
     defaultValues: {
@@ -60,6 +73,18 @@ export function AssignSurveyDialog({ surveyId, onAssigned }: AssignSurveyDialogP
         .from("sbus")
         .select("*")
         .order("name");
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  const { data: users } = useQuery({
+    queryKey: ["users"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("id, email, first_name, last_name")
+        .order("first_name");
       if (error) throw error;
       return data;
     },
@@ -82,7 +107,7 @@ export function AssignSurveyDialog({ surveyId, onAssigned }: AssignSurveyDialogP
 
       // Set target_id based on assignment type according to the constraint
       const targetId = data.assignmentType === "individual" 
-        ? session.user.id  // Must have target_id for individual
+        ? data.targetId  // Use selected individual's ID
         : null;  // Must be null for organization and sbu
 
       // Create the main assignment
@@ -169,6 +194,67 @@ export function AssignSurveyDialog({ surveyId, onAssigned }: AssignSurveyDialogP
                 </FormItem>
               )}
             />
+
+            {assignmentType === "individual" && (
+              <FormField
+                control={form.control}
+                name="targetId"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Select Individual</FormLabel>
+                    <Popover open={commandOpen} onOpenChange={setCommandOpen}>
+                      <PopoverTrigger asChild>
+                        <FormControl>
+                          <Button
+                            variant="outline"
+                            role="combobox"
+                            className={cn(
+                              "w-full justify-between",
+                              !field.value && "text-muted-foreground"
+                            )}
+                          >
+                            {field.value
+                              ? users?.find((user) => user.id === field.value)
+                                ? `${users.find((user) => user.id === field.value)?.first_name} ${users.find((user) => user.id === field.value)?.last_name}`
+                                : "Select user"
+                              : "Select user"}
+                          </Button>
+                        </FormControl>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-[400px] p-0">
+                        <Command>
+                          <CommandInput placeholder="Search users..." />
+                          <CommandEmpty>No user found.</CommandEmpty>
+                          <CommandGroup>
+                            {users?.map((user) => (
+                              <CommandItem
+                                value={user.id}
+                                key={user.id}
+                                onSelect={() => {
+                                  form.setValue("targetId", user.id);
+                                  setCommandOpen(false);
+                                }}
+                              >
+                                <Check
+                                  className={cn(
+                                    "mr-2 h-4 w-4",
+                                    user.id === field.value
+                                      ? "opacity-100"
+                                      : "opacity-0"
+                                  )}
+                                />
+                                {user.first_name} {user.last_name}
+                              </CommandItem>
+                            ))}
+                          </CommandGroup>
+                        </Command>
+                      </PopoverContent>
+                    </Popover>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
 
             {assignmentType === "sbu" && (
               <FormField
