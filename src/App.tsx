@@ -17,6 +17,7 @@ import SBUsConfig from "./pages/admin/config/sbus";
 import SBUDetails from "./pages/admin/config/sbus/[id]";
 import SMTPConfig from "./pages/admin/config/smtp";
 import LevelConfig from "./pages/admin/config/level";
+import SurveysPage from "./pages/admin/surveys";
 
 const queryClient = new QueryClient();
 
@@ -35,6 +36,7 @@ const App = () => (
             <Route index element={<Navigate to="/admin/dashboard" replace />} />
             <Route path="dashboard" element={<AdminDashboard />} />
             <Route path="users" element={<Users />} />
+            <Route path="surveys" element={<SurveysPage />} />
             <Route path="config" element={<PlatformConfigLayout />}>
               <Route index element={<AdminConfig />} />
               <Route path="sbus" element={<SBUsConfig />} />

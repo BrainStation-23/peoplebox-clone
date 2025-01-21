@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { useNavigate, Outlet, Link, useLocation } from "react-router-dom";
-import { LayoutDashboard, Settings2, UserRound, LogOut, Users } from "lucide-react";
+import { LayoutDashboard, Settings2, UserRound, LogOut, Users, FileText } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import {
   Sidebar,
@@ -34,6 +34,11 @@ const navigationItems = [
     title: "Users",
     icon: Users,
     path: "/admin/users",
+  },
+  {
+    title: "Surveys",
+    icon: FileText,
+    path: "/admin/surveys",
   },
   {
     title: "Platform Config",

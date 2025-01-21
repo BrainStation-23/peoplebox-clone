@@ -112,6 +112,50 @@ export type Database = {
           },
         ]
       }
+      surveys: {
+        Row: {
+          created_at: string
+          created_by: string
+          description: string | null
+          id: string
+          json_data: Json
+          name: string
+          status: Database["public"]["Enums"]["survey_status"] | null
+          tags: string[] | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          description?: string | null
+          id?: string
+          json_data: Json
+          name: string
+          status?: Database["public"]["Enums"]["survey_status"] | null
+          tags?: string[] | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          id?: string
+          json_data?: Json
+          name?: string
+          status?: Database["public"]["Enums"]["survey_status"] | null
+          tags?: string[] | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "surveys_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -231,6 +275,7 @@ export type Database = {
     }
     Enums: {
       level_status: "active" | "inactive"
+      survey_status: "draft" | "published" | "archived"
       user_role: "admin" | "user"
     }
     CompositeTypes: {
