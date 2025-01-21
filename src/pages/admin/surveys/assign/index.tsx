@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useQuery } from "@tanstack/react-query";
+import { useParams, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
@@ -20,10 +21,26 @@ import { RecurringSchedule } from "../components/AssignSurvey/RecurringSchedule"
 import { DateRangePicker } from "../components/AssignSurvey/RecurringSchedule/DateRangePicker";
 import { SBUSelector } from "../components/AssignSurvey/SBUSelector";
 import { assignSurveySchema, type AssignSurveyFormData } from "../components/AssignSurvey/types";
-import { useNavigate } from "react-router-dom";
 
 export default function AssignSurveyPage() {
   const navigate = useNavigate();
+  const { surveyId } = useParams();
+  
+  // Fetch survey details to show in the header
+  const { data: survey } = useQuery({
+    queryKey: ["survey", surveyId],
+    queryFn: async () => {
+      if (!surveyId) throw new Error("No survey ID provided");
+      const { data, error } = await supabase
+        .from("surveys")
+        .select("name")
+        .eq("id", surveyId)
+        .single();
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!surveyId,
+  });
   
   const form = useForm<AssignSurveyFormData>({
     resolver: zodResolver(assignSurveySchema),
@@ -70,6 +87,10 @@ export default function AssignSurveyPage() {
 
   const onSubmit = async (data: AssignSurveyFormData) => {
     try {
+      if (!surveyId) {
+        throw new Error("No survey ID provided");
+      }
+
       if (!session?.user?.id) {
         throw new Error("No authenticated user found");
       }
@@ -78,7 +99,7 @@ export default function AssignSurveyPage() {
       const { data: assignment, error: assignmentError } = await supabase
         .from("survey_assignments")
         .insert({
-          survey_id: "", // TODO: Get survey ID from URL params
+          survey_id: surveyId,
           user_id: data.targetId,
           due_date: data.dueDate?.toISOString(),
           created_by: session.user.id,
@@ -117,9 +138,28 @@ export default function AssignSurveyPage() {
 
   const isOrganizationWide = form.watch("isOrganizationWide");
 
+  if (!surveyId) {
+    return (
+      <div className="container mx-auto py-6">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold mb-4">Error</h1>
+          <p>No survey ID provided. Please select a survey to assign.</p>
+          <Button 
+            onClick={() => navigate("/admin/surveys")}
+            className="mt-4"
+          >
+            Back to Surveys
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="container mx-auto py-6 max-w-2xl">
-      <h1 className="text-2xl font-bold mb-6">Assign Survey</h1>
+      <h1 className="text-2xl font-bold mb-6">
+        Assign Survey: {survey?.name || 'Loading...'}
+      </h1>
       <Card>
         <CardHeader>
           <CardTitle>Assignment Details</CardTitle>
