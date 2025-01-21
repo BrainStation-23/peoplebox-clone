@@ -4,7 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useQuery } from "@tanstack/react-query";
 import { useParams, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
+import { Check, Filter } from "lucide-react";
 import {
   Form,
   FormControl,
@@ -15,17 +15,26 @@ import {
 } from "@/components/ui/form";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { UserSelector } from "../components/AssignSurvey/UserSelector";
-import { RecurringSchedule } from "../components/AssignSurvey/RecurringSchedule";
 import { DateRangePicker } from "../components/AssignSurvey/RecurringSchedule/DateRangePicker";
-import { SBUSelector } from "../components/AssignSurvey/SBUSelector";
+import { RecurringSchedule } from "../components/AssignSurvey/RecurringSchedule";
 import { assignSurveySchema, type AssignSurveyFormData } from "../components/AssignSurvey/types";
 
 export default function AssignSurveyPage() {
   const navigate = useNavigate();
   const { id: surveyId } = useParams();
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedSBUFilter, setSelectedSBUFilter] = useState("all");
   
   const { data: survey, isLoading: surveyLoading } = useQuery({
     queryKey: ["survey", surveyId],
@@ -41,13 +50,12 @@ export default function AssignSurveyPage() {
     },
     enabled: !!surveyId,
   });
-  
+
   const form = useForm<AssignSurveyFormData>({
     resolver: zodResolver(assignSurveySchema),
     defaultValues: {
       isRecurring: false,
       recurringFrequency: "one_time",
-      isOrganizationWide: false,
       selectedSBUs: [],
     },
   });
@@ -57,7 +65,7 @@ export default function AssignSurveyPage() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("profiles")
-        .select("id, email, first_name, last_name")
+        .select("id, email, first_name, last_name, user_sbus!inner(sbu:sbus(id, name), is_primary)")
         .order("first_name");
       if (error) throw error;
       return data;
@@ -85,18 +93,22 @@ export default function AssignSurveyPage() {
     },
   });
 
+  const filteredUsers = users?.filter(user => {
+    const matchesSearch = searchTerm === "" || 
+      `${user.first_name || ''} ${user.last_name || ''} ${user.email}`.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    const matchesSBU = selectedSBUFilter === "all" || 
+      user.user_sbus?.some(sbu => sbu.sbu.id === selectedSBUFilter);
+
+    return matchesSearch && matchesSBU;
+  });
+
   const onSubmit = async (data: AssignSurveyFormData) => {
     try {
-      if (!surveyId) {
-        throw new Error("No survey ID provided");
-      }
+      if (!surveyId) throw new Error("No survey ID provided");
+      if (!session?.user?.id) throw new Error("No authenticated user found");
 
-      if (!session?.user?.id) {
-        throw new Error("No authenticated user found");
-      }
-
-      // Create the survey assignment
-      const { data: assignment, error: assignmentError } = await supabase
+      const { error: assignmentError } = await supabase
         .from("survey_assignments")
         .insert({
           survey_id: surveyId,
@@ -107,26 +119,9 @@ export default function AssignSurveyPage() {
           recurring_frequency: data.isRecurring ? data.recurringFrequency : null,
           recurring_ends_at: data.isRecurring ? data.recurringEndsAt?.toISOString() : null,
           recurring_days: data.isRecurring ? data.recurringDays : null,
-          is_organization_wide: data.isOrganizationWide,
-        })
-        .select()
-        .single();
+        });
 
       if (assignmentError) throw assignmentError;
-
-      // If SBUs are selected, create SBU assignments
-      if (data.selectedSBUs.length > 0) {
-        const sbuAssignments = data.selectedSBUs.map(sbuId => ({
-          assignment_id: assignment.id,
-          sbu_id: sbuId,
-        }));
-
-        const { error: sbuError } = await supabase
-          .from("survey_sbu_assignments")
-          .insert(sbuAssignments);
-
-        if (sbuError) throw sbuError;
-      }
 
       toast.success("Survey assigned successfully");
       navigate("/admin/surveys");
@@ -145,17 +140,12 @@ export default function AssignSurveyPage() {
             No survey ID provided. Please select a survey to assign.
           </AlertDescription>
         </Alert>
-        <Button 
-          onClick={() => navigate("/admin/surveys")}
-          className="mt-4"
-        >
+        <Button onClick={() => navigate("/admin/surveys")} className="mt-4">
           Back to Surveys
         </Button>
       </div>
     );
   }
-
-  const isOrganizationWide = form.watch("isOrganizationWide");
 
   return (
     <div className="container mx-auto py-6">
@@ -170,58 +160,66 @@ export default function AssignSurveyPage() {
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-6">
+                <div className="space-y-4">
+                  <div className="flex gap-4 items-center">
+                    <div className="flex-1">
+                      <Input
+                        placeholder="Search users..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        className="w-full"
+                      />
+                    </div>
+                    <Select value={selectedSBUFilter} onValueChange={setSelectedSBUFilter}>
+                      <SelectTrigger className="w-[200px]">
+                        <Filter className="w-4 h-4 mr-2" />
+                        <SelectValue placeholder="Filter by SBU" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All SBUs</SelectItem>
+                        {sbus?.map((sbu) => (
+                          <SelectItem key={sbu.id} value={sbu.id}>
+                            {sbu.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
                   <FormField
                     control={form.control}
-                    name="isOrganizationWide"
+                    name="targetId"
                     render={({ field }) => (
-                      <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                      <FormItem>
+                        <FormLabel>Select User</FormLabel>
                         <FormControl>
-                          <Checkbox
-                            checked={field.value}
-                            onCheckedChange={field.onChange}
-                          />
+                          <ScrollArea className="h-[300px] border rounded-md p-2">
+                            <div className="space-y-1">
+                              {filteredUsers?.map((user) => {
+                                const isSelected = field.value === user.id;
+                                const displayName = `${user.first_name || ''} ${user.last_name || ''} ${!user.first_name && !user.last_name ? user.email : ''}`.trim();
+                                
+                                return (
+                                  <button
+                                    key={user.id}
+                                    type="button"
+                                    onClick={() => field.onChange(user.id)}
+                                    className={`w-full flex items-center justify-between px-2 py-1.5 rounded-sm text-sm hover:bg-accent hover:text-accent-foreground ${
+                                      isSelected ? 'bg-accent' : ''
+                                    }`}
+                                  >
+                                    <span>{displayName}</span>
+                                    {isSelected && <Check className="h-4 w-4" />}
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          </ScrollArea>
                         </FormControl>
-                        <div className="space-y-1 leading-none">
-                          <FormLabel>Organization-wide</FormLabel>
-                        </div>
+                        <FormMessage />
                       </FormItem>
                     )}
                   />
-
-                  {!isOrganizationWide && (
-                    <>
-                      <FormField
-                        control={form.control}
-                        name="targetId"
-                        render={({ field }) => (
-                          <FormItem>
-                            <UserSelector
-                              users={users || []}
-                              selectedUserId={field.value}
-                              onChange={field.onChange}
-                            />
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      <FormField
-                        control={form.control}
-                        name="selectedSBUs"
-                        render={({ field }) => (
-                          <FormItem>
-                            <SBUSelector
-                              sbus={sbus || []}
-                              selectedSBUs={field.value}
-                              onChange={field.onChange}
-                            />
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </>
-                  )}
                 </div>
 
                 <div className="space-y-6">
