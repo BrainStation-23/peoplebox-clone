@@ -1,129 +1,66 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Plus } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { useToast } from "@/hooks/use-toast";
 import UserTable from "./components/UserTable";
 import CreateUserDialog from "./components/CreateUserDialog";
+import EditUserDialog from "./components/EditUserDialog"; // This should now point to the index.tsx
 import { User } from "./types";
 
-export default function Users() {
-  const [search, setSearch] = useState("");
-  const [page, setPage] = useState(1);
+export default function UsersPage() {
+  const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
-  const { toast } = useToast();
-  const pageSize = 10;
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
 
-  const { data, isLoading, refetch } = useQuery({
-    queryKey: ["users", search, page],
+  const { data: users, isLoading } = useQuery({
+    queryKey: ["users"],
     queryFn: async () => {
-      // First, get profiles with pagination
-      let profilesQuery = supabase
+      const { data, error } = await supabase
         .from("profiles")
         .select(`
           id,
           email,
           first_name,
-          last_name
-        `, { count: 'exact' })
-        .range((page - 1) * pageSize, page * pageSize - 1);
-
-      if (search) {
-        profilesQuery = profilesQuery.or(`email.ilike.%${search}%,first_name.ilike.%${search}%,last_name.ilike.%${search}%`);
-      }
-
-      const { data: profiles, count, error: profilesError } = await profilesQuery;
-      
-      if (profilesError) throw profilesError;
-
-      // Then, get user roles for these profiles using their IDs
-      // Note: profile.id is the same as user_id in user_roles because profiles.id references auth.users.id
-      const { data: userRoles, error: rolesError } = await supabase
-        .from("user_roles")
-        .select("user_id, role")
-        .in("user_id", profiles?.map(profile => profile.id) || []);
-
-      if (rolesError) throw rolesError;
-
-      // Combine the data
-      const users = profiles?.map(profile => {
-        const userRole = userRoles?.find(role => role.user_id === profile.id);
-        return {
-          ...profile,
-          user_roles: {
-            role: userRole?.role || "user"
-          }
-        };
-      }) as User[];
-
-      return {
-        users,
-        total: count || 0
-      };
-    }
-  });
-
-  const handleDelete = async (userId: string) => {
-    try {
-      const { error } = await supabase.functions.invoke('manage-users', {
-        body: { method: 'DELETE', action: { user_id: userId } }
-      });
+          last_name,
+          user_roles (
+            role
+          )
+        `);
 
       if (error) throw error;
-
-      toast({
-        title: "Success",
-        description: "User deleted successfully",
-      });
-
-      refetch();
-    } catch (error: any) {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: error.message,
-      });
-    }
-  };
+      return data as User[];
+    },
+  });
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="container mx-auto py-6 space-y-4">
+      <div className="flex justify-between items-center">
         <h1 className="text-2xl font-bold">Users</h1>
-        <Button onClick={() => setIsCreateDialogOpen(true)}>
-          <Plus className="h-4 w-4 mr-2" />
+        <button
+          onClick={() => setIsCreateDialogOpen(true)}
+          className="bg-primary text-primary-foreground hover:bg-primary/90 px-4 py-2 rounded-md"
+        >
           Add User
-        </Button>
-      </div>
-
-      <div className="flex items-center space-x-2">
-        <Input
-          placeholder="Search users..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="max-w-sm"
-        />
+        </button>
       </div>
 
       <UserTable
-        users={data?.users || []}
-        total={data?.total || 0}
-        page={page}
-        pageSize={pageSize}
+        users={users || []}
         isLoading={isLoading}
-        onPageChange={setPage}
-        onDelete={handleDelete}
+        onEdit={(user) => {
+          setSelectedUser(user);
+          setIsEditDialogOpen(true);
+        }}
       />
 
       <CreateUserDialog
         open={isCreateDialogOpen}
         onOpenChange={setIsCreateDialogOpen}
-        onSuccess={() => {
-          refetch();
-          setIsCreateDialogOpen(false);
-        }}
+      />
+
+      <EditUserDialog
+        user={selectedUser}
+        open={isEditDialogOpen}
+        onOpenChange={setIsEditDialogOpen}
       />
     </div>
   );
