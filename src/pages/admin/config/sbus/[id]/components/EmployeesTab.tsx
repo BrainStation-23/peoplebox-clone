@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import EmployeeCard from "./EmployeeCard";
-import { Database } from "@/types/database.types";
+import { Database } from "@/integrations/supabase/types";
 
 interface EmployeesTabProps {
   sbuId: string | undefined;
@@ -26,7 +26,7 @@ type Employee = {
     name: string;
   } | null;
   user_roles: {
-    role: "admin" | "user";
+    role: Database["public"]["Enums"]["user_role"];
   }[];
   user_supervisors: {
     supervisor: {
@@ -107,7 +107,7 @@ export default function EmployeesTab({ sbuId }: EmployeesTabProps) {
 
       // Fetch user roles separately for each employee
       const employeesWithRoles = await Promise.all(
-        employeesData?.map(async (employee: EmployeeResponse) => {
+        (employeesData as any[])?.map(async (employee) => {
           const { data: roles } = await supabase
             .from("user_roles")
             .select("role")

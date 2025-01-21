@@ -58,11 +58,12 @@ export default function EditUserDialog({
     handlePrimarySBUChange,
   } = useSBUManagement(user);
 
+  const supervisorManagement = useSupervisorManagement(user);
   const {
     supervisors,
     handleSupervisorChange,
     handlePrimarySupervisorChange,
-  } = useSupervisorManagement(user) as {
+  } = supervisorManagement as {
     supervisors: SupervisorType[];
     handleSupervisorChange: (supervisorId: string, action: 'add' | 'remove') => void;
     handlePrimarySupervisorChange: (supervisorId: string) => void;
