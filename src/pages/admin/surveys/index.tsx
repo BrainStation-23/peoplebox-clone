@@ -93,13 +93,13 @@ export default function SurveysPage() {
 
       <div className="flex flex-col gap-4">
         <div className="flex gap-4">
-          <div className="flex-1">
+          <div className="flex-1 relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
               placeholder="Search surveys..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full"
-              leftIcon={<Search className="h-4 w-4" />}
+              className="w-full pl-9"
             />
           </div>
           <div className="flex gap-2">
