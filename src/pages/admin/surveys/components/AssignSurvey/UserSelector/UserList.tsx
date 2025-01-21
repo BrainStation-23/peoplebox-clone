@@ -11,28 +11,35 @@ interface User {
 
 interface UserListProps {
   users: User[];
-  selectedUserId?: string;
-  onSelect: (userId: string) => void;
+  selectedUsers: string[];
+  onSelect: (selectedUsers: string[]) => void;
   searchQuery?: string;
 }
 
-export function UserList({ users, selectedUserId, onSelect, searchQuery = "" }: UserListProps) {
+export function UserList({ users, selectedUsers, onSelect, searchQuery = "" }: UserListProps) {
   const filteredUsers = users.filter((user) => {
     const searchStr = `${user.first_name || ''} ${user.last_name || ''} ${user.email}`.toLowerCase();
     return searchStr.includes(searchQuery.toLowerCase());
   });
 
+  const toggleUser = (userId: string) => {
+    const newSelectedUsers = selectedUsers.includes(userId)
+      ? selectedUsers.filter(id => id !== userId)
+      : [...selectedUsers, userId];
+    onSelect(newSelectedUsers);
+  };
+
   return (
     <ScrollArea className="h-[200px] rounded-md border p-2">
       <div className="space-y-1">
         {filteredUsers.map((user) => {
-          const isSelected = selectedUserId === user.id;
+          const isSelected = selectedUsers.includes(user.id);
           const displayName = `${user.first_name || ''} ${user.last_name || ''} ${!user.first_name && !user.last_name ? user.email : ''}`.trim();
           
           return (
             <button
               key={user.id}
-              onClick={() => onSelect(user.id)}
+              onClick={() => toggleUser(user.id)}
               className={cn(
                 "w-full flex items-center space-x-2 px-2 py-1.5 rounded-sm text-sm",
                 "hover:bg-accent hover:text-accent-foreground",

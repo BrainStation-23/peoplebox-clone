@@ -3,35 +3,37 @@ import { Label } from "@/components/ui/label";
 import { UserList } from "./UserList";
 import { UserFilters } from "./UserFilters";
 
-interface UserSelectorProps {
-  users: Array<{
-    id: string;
-    email: string;
-    first_name: string | null;
-    last_name: string | null;
-  }>;
-  selectedUserId?: string;
-  onChange: (userId: string) => void;
+interface User {
+  id: string;
+  email: string;
+  first_name: string | null;
+  last_name: string | null;
 }
 
-export function UserSelector({ users, selectedUserId, onChange }: UserSelectorProps) {
+export interface UserSelectorProps {
+  users: User[];
+  selectedUsers: string[];
+  onChange: (selectedUsers: string[]) => void;
+}
+
+export function UserSelector({ users, selectedUsers, onChange }: UserSelectorProps) {
   const [searchQuery, setSearchQuery] = useState("");
 
   return (
     <div className="space-y-4">
-      <Label>Select Individual</Label>
+      <Label>Select Users</Label>
       <UserFilters
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
       />
       <UserList
         users={users}
-        selectedUserId={selectedUserId}
+        selectedUsers={selectedUsers}
         onSelect={onChange}
         searchQuery={searchQuery}
       />
       <div className="text-sm text-muted-foreground">
-        {selectedUserId ? "1 user selected" : "No user selected"}
+        {selectedUsers.length} users selected
       </div>
     </div>
   );
