@@ -19,32 +19,46 @@ export default function Users() {
   const { data, isLoading, refetch } = useQuery({
     queryKey: ["users", search, page],
     queryFn: async () => {
-      let query = supabase
+      // First, get profiles with pagination
+      let profilesQuery = supabase
         .from("profiles")
         .select(`
           id,
           email,
           first_name,
-          last_name,
-          user_roles!inner (
-            role
-          )
+          last_name
         `, { count: 'exact' })
         .range((page - 1) * pageSize, page * pageSize - 1);
 
       if (search) {
-        query = query.or(`email.ilike.%${search}%,first_name.ilike.%${search}%,last_name.ilike.%${search}%`);
+        profilesQuery = profilesQuery.or(`email.ilike.%${search}%,first_name.ilike.%${search}%,last_name.ilike.%${search}%`);
       }
 
-      const { data, count, error } = await query;
+      const { data: profiles, count, error: profilesError } = await profilesQuery;
+      
+      if (profilesError) throw profilesError;
 
-      if (error) throw error;
+      // Then, get user roles for these profiles
+      const { data: userRoles, error: rolesError } = await supabase
+        .from("user_roles")
+        .select("user_id, role")
+        .in("user_id", profiles?.map(profile => profile.id) || []);
+
+      if (rolesError) throw rolesError;
+
+      // Combine the data
+      const users = profiles?.map(profile => {
+        const userRole = userRoles?.find(role => role.user_id === profile.id);
+        return {
+          ...profile,
+          user_roles: {
+            role: userRole?.role || "user"
+          }
+        };
+      }) as User[];
 
       return {
-        users: (data as any[]).map(user => ({
-          ...user,
-          user_roles: user.user_roles[0]
-        })) as User[],
+        users,
         total: count || 0
       };
     }
