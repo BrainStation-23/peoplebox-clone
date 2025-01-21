@@ -9,6 +9,30 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      levels: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          status: Database["public"]["Enums"]["level_status"] | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          status?: Database["public"]["Enums"]["level_status"] | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          status?: Database["public"]["Enums"]["level_status"] | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string
@@ -16,6 +40,7 @@ export type Database = {
           first_name: string | null
           id: string
           last_name: string | null
+          level_id: string | null
           updated_at: string
         }
         Insert: {
@@ -24,6 +49,7 @@ export type Database = {
           first_name?: string | null
           id: string
           last_name?: string | null
+          level_id?: string | null
           updated_at?: string
         }
         Update: {
@@ -32,9 +58,18 @@ export type Database = {
           first_name?: string | null
           id?: string
           last_name?: string | null
+          level_id?: string | null
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "profiles_level_id_fkey"
+            columns: ["level_id"]
+            isOneToOne: false
+            referencedRelation: "levels"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_roles: {
         Row: {
@@ -70,6 +105,7 @@ export type Database = {
       }
     }
     Enums: {
+      level_status: "active" | "inactive"
       user_role: "admin" | "user"
     }
     CompositeTypes: {
