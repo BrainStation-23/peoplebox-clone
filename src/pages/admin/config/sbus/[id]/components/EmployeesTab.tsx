@@ -37,9 +37,6 @@ export default function EmployeesTab({ sbuId }: EmployeesTabProps) {
             level:levels(
               name
             ),
-            user_roles(
-              role
-            ),
             user_supervisors(
               is_primary,
               supervisor:profiles!user_supervisors_supervisor_id_fkey(
@@ -69,10 +66,28 @@ export default function EmployeesTab({ sbuId }: EmployeesTabProps) {
         query = query.eq("profile.level_id", levelFilter);
       }
 
-      const { data, error } = await query;
+      const { data: employeesData, error } = await query;
       if (error) throw error;
-      
-      return data;
+
+      // Fetch user roles separately for each employee
+      const employeesWithRoles = await Promise.all(
+        employeesData?.map(async (employee) => {
+          const { data: roles } = await supabase
+            .from("user_roles")
+            .select("role")
+            .eq("user_id", employee.profile.id);
+
+          return {
+            ...employee,
+            profile: {
+              ...employee.profile,
+              user_roles: roles || [],
+            },
+          };
+        }) || []
+      );
+
+      return employeesWithRoles;
     },
     enabled: !!sbuId,
   });
