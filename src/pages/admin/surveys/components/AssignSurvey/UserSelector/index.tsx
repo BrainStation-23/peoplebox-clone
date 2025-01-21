@@ -1,37 +1,86 @@
 import { useState } from "react";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
 import { UserList } from "./UserList";
 import { UserFilters } from "./UserFilters";
 
+interface User {
+  id: string;
+  email: string;
+  first_name: string | null;
+  last_name: string | null;
+}
+
 interface UserSelectorProps {
-  users: Array<{
-    id: string;
-    email: string;
-    first_name: string | null;
-    last_name: string | null;
-  }>;
+  users: User[];
   selectedUserId?: string;
   onChange: (userId: string) => void;
 }
 
 export function UserSelector({ users, selectedUserId, onChange }: UserSelectorProps) {
   const [searchQuery, setSearchQuery] = useState("");
+  const [selectedLevel, setSelectedLevel] = useState<string | null>(null);
+  const [selectedSBU, setSelectedSBU] = useState<string | null>(null);
+
+  const filteredUsers = users.filter((user) => {
+    const matchesSearch =
+      user.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (user.first_name?.toLowerCase() || "").includes(searchQuery.toLowerCase()) ||
+      (user.last_name?.toLowerCase() || "").includes(searchQuery.toLowerCase());
+
+    // Add additional filtering based on level and SBU if needed
+    return matchesSearch;
+  });
+
+  const handleSelectAll = () => {
+    // If there's already a selection, clear it
+    if (selectedUserId) {
+      onChange("");
+    } else {
+      // Select the first user from the filtered list
+      const firstUser = filteredUsers[0];
+      if (firstUser) {
+        onChange(firstUser.id);
+      }
+    }
+  };
 
   return (
     <div className="space-y-4">
-      <Label>Select Individual</Label>
-      <UserFilters
-        searchQuery={searchQuery}
-        onSearchChange={setSearchQuery}
+      <div className="flex items-center justify-between">
+        <Label>Select User</Label>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={handleSelectAll}
+        >
+          {selectedUserId ? "Clear Selection" : "Select First"}
+        </Button>
+      </div>
+      
+      <Input
+        placeholder="Search users..."
+        value={searchQuery}
+        onChange={(e) => setSearchQuery(e.target.value)}
       />
+      
+      <UserFilters
+        selectedLevel={selectedLevel}
+        onLevelChange={setSelectedLevel}
+        selectedSBU={selectedSBU}
+        onSBUChange={setSelectedSBU}
+      />
+      
       <UserList
-        users={users}
+        users={filteredUsers}
         selectedUserId={selectedUserId}
         onSelect={onChange}
-        searchQuery={searchQuery}
       />
+      
       <div className="text-sm text-muted-foreground">
-        {selectedUserId ? "1 user selected" : "No user selected"}
+        {filteredUsers.length} users found
       </div>
     </div>
   );
