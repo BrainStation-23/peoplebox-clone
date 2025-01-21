@@ -28,7 +28,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { DateRangePicker } from "../components/AssignSurvey/RecurringSchedule/DateRangePicker";
 import { RecurringSchedule } from "../components/AssignSurvey/RecurringSchedule";
-import { assignSurveySchema } from "../components/AssignSurvey/types";
+import { assignSurveySchema, type AssignSurveyFormData } from "../components/AssignSurvey/types";
 
 export default function AssignSurveyPage() {
   const navigate = useNavigate();
@@ -37,7 +37,7 @@ export default function AssignSurveyPage() {
   const [selectedSBUFilter, setSelectedSBUFilter] = useState("all");
   const [selectedUsers, setSelectedUsers] = useState<Set<string>>(new Set());
   
-  const form = useForm({
+  const form = useForm<AssignSurveyFormData>({
     resolver: zodResolver(assignSurveySchema),
     defaultValues: {
       selectedUsers: [],
