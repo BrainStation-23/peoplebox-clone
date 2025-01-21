@@ -26,25 +26,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-} from "@/components/ui/command";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import { Calendar } from "@/components/ui/calendar";
-import { CalendarIcon, Check } from "lucide-react";
-import { format } from "date-fns";
-import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { SBUSelector } from "./SBUSelector";
+import { UserSelector } from "./UserSelector";
 import { RecurringSchedule } from "./RecurringSchedule";
 import { assignSurveySchema, type AssignSurveyFormData } from "./types";
 
@@ -55,7 +40,6 @@ interface AssignSurveyDialogProps {
 
 export function AssignSurveyDialog({ surveyId, onAssigned }: AssignSurveyDialogProps) {
   const [open, setOpen] = useState(false);
-  const [commandOpen, setCommandOpen] = useState(false);
   
   const form = useForm<AssignSurveyFormData>({
     resolver: zodResolver(assignSurveySchema),
@@ -153,7 +137,6 @@ export function AssignSurveyDialog({ surveyId, onAssigned }: AssignSurveyDialogP
   };
 
   const assignmentType = form.watch("assignmentType");
-  const isRecurring = form.watch("isRecurring");
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -201,55 +184,11 @@ export function AssignSurveyDialog({ surveyId, onAssigned }: AssignSurveyDialogP
                 name="targetId"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Select Individual</FormLabel>
-                    <Popover open={commandOpen} onOpenChange={setCommandOpen}>
-                      <PopoverTrigger asChild>
-                        <FormControl>
-                          <Button
-                            variant="outline"
-                            role="combobox"
-                            className={cn(
-                              "w-full justify-between",
-                              !field.value && "text-muted-foreground"
-                            )}
-                          >
-                            {field.value
-                              ? users?.find((user) => user.id === field.value)
-                                ? `${users.find((user) => user.id === field.value)?.first_name} ${users.find((user) => user.id === field.value)?.last_name}`
-                                : "Select user"
-                              : "Select user"}
-                          </Button>
-                        </FormControl>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-[400px] p-0">
-                        <Command>
-                          <CommandInput placeholder="Search users..." />
-                          <CommandEmpty>No user found.</CommandEmpty>
-                          <CommandGroup>
-                            {users?.map((user) => (
-                              <CommandItem
-                                value={user.id}
-                                key={user.id}
-                                onSelect={() => {
-                                  form.setValue("targetId", user.id);
-                                  setCommandOpen(false);
-                                }}
-                              >
-                                <Check
-                                  className={cn(
-                                    "mr-2 h-4 w-4",
-                                    user.id === field.value
-                                      ? "opacity-100"
-                                      : "opacity-0"
-                                  )}
-                                />
-                                {user.first_name} {user.last_name}
-                              </CommandItem>
-                            ))}
-                          </CommandGroup>
-                        </Command>
-                      </PopoverContent>
-                    </Popover>
+                    <UserSelector
+                      users={users || []}
+                      selectedUserId={field.value}
+                      onChange={field.onChange}
+                    />
                     <FormMessage />
                   </FormItem>
                 )}
@@ -277,37 +216,12 @@ export function AssignSurveyDialog({ surveyId, onAssigned }: AssignSurveyDialogP
               control={form.control}
               name="dueDate"
               render={({ field }) => (
-                <FormItem className="flex flex-col">
-                  <FormLabel>Due Date</FormLabel>
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <FormControl>
-                        <Button
-                          variant="outline"
-                          className={cn(
-                            "w-full pl-3 text-left font-normal",
-                            !field.value && "text-muted-foreground"
-                          )}
-                        >
-                          {field.value ? (
-                            format(field.value, "PPP")
-                          ) : (
-                            <span>Pick a date</span>
-                          )}
-                          <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                        </Button>
-                      </FormControl>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="start">
-                      <Calendar
-                        mode="single"
-                        selected={field.value}
-                        onSelect={field.onChange}
-                        disabled={(date) => date < new Date()}
-                        initialFocus
-                      />
-                    </PopoverContent>
-                  </Popover>
+                <FormItem>
+                  <DateRangePicker
+                    date={field.value}
+                    onDateChange={field.onChange}
+                    label="Due Date"
+                  />
                   <FormMessage />
                 </FormItem>
               )}
