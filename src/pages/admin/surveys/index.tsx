@@ -33,19 +33,40 @@ export default function SurveysPage() {
   const handleDelete = async (surveyId: string) => {
     const { error } = await supabase
       .from('surveys')
-      .update({ status: 'archived' })
+      .delete()
       .eq('id', surveyId);
 
     if (error) {
       toast({
         title: "Error",
-        description: "Failed to archive survey",
+        description: "Failed to delete survey",
         variant: "destructive",
       });
     } else {
       toast({
         title: "Success",
-        description: "Survey archived successfully",
+        description: "Survey deleted successfully",
+      });
+      refetch();
+    }
+  };
+
+  const handleStatusChange = async (surveyId: string, status: 'draft' | 'published' | 'archived') => {
+    const { error } = await supabase
+      .from('surveys')
+      .update({ status })
+      .eq('id', surveyId);
+
+    if (error) {
+      toast({
+        title: "Error",
+        description: `Failed to ${status === 'published' ? 'publish' : status} survey`,
+        variant: "destructive",
+      });
+    } else {
+      toast({
+        title: "Success",
+        description: `Survey ${status === 'published' ? 'published' : status} successfully`,
       });
       refetch();
     }
@@ -105,6 +126,7 @@ export default function SurveysPage() {
             surveys={filteredSurveys || []}
             onPreview={setPreviewSurvey}
             onDelete={handleDelete}
+            onStatusChange={handleStatusChange}
           />
         )}
       </div>

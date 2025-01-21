@@ -10,15 +10,23 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { MoreHorizontal } from "lucide-react";
 import { Survey } from "../types";
 
 interface SurveyTableProps {
   surveys: Survey[];
   onPreview: (survey: Survey) => void;
   onDelete: (id: string) => void;
+  onStatusChange: (id: string, status: 'draft' | 'published' | 'archived') => void;
 }
 
-export function SurveyTable({ surveys, onPreview, onDelete }: SurveyTableProps) {
+export function SurveyTable({ surveys, onPreview, onDelete, onStatusChange }: SurveyTableProps) {
   return (
     <Table>
       <TableHeader>
@@ -75,13 +83,41 @@ export function SurveyTable({ surveys, onPreview, onDelete }: SurveyTableProps) 
                     <Edit className="h-4 w-4" />
                   </Link>
                 </Button>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => onDelete(survey.id)}
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="icon">
+                      <MoreHorizontal className="h-4 w-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    {survey.status === 'draft' && (
+                      <DropdownMenuItem onClick={() => onStatusChange(survey.id, 'published')}>
+                        Publish
+                      </DropdownMenuItem>
+                    )}
+                    {survey.status === 'published' && (
+                      <DropdownMenuItem onClick={() => onStatusChange(survey.id, 'draft')}>
+                        Unpublish
+                      </DropdownMenuItem>
+                    )}
+                    {survey.status === 'archived' && (
+                      <DropdownMenuItem onClick={() => onStatusChange(survey.id, 'draft')}>
+                        Unarchive
+                      </DropdownMenuItem>
+                    )}
+                    {survey.status !== 'archived' && (
+                      <DropdownMenuItem onClick={() => onStatusChange(survey.id, 'archived')}>
+                        Archive
+                      </DropdownMenuItem>
+                    )}
+                    <DropdownMenuItem
+                      className="text-destructive"
+                      onClick={() => onDelete(survey.id)}
+                    >
+                      Delete Permanently
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </div>
             </TableCell>
           </TableRow>
