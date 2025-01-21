@@ -38,7 +38,7 @@ export default function EmployeesTab({ sbuId }: EmployeesTabProps) {
             level:levels(
               name
             ),
-            user_roles(
+            user_roles!profiles_id_fkey(
               role
             ),
             user_supervisors(
@@ -74,8 +74,14 @@ export default function EmployeesTab({ sbuId }: EmployeesTabProps) {
       return data.map((employee) => ({
         ...employee,
         profile: {
-          ...employee.profile,
-          user_roles: employee.profile.user_roles || [],
+          first_name: employee.profile.first_name,
+          last_name: employee.profile.last_name,
+          email: employee.profile.email,
+          profile_image_url: employee.profile.profile_image_url,
+          level: employee.profile.level,
+          user_roles: Array.isArray(employee.profile.user_roles) 
+            ? employee.profile.user_roles 
+            : [],
           user_supervisors: employee.profile.user_supervisors.map((sup) => ({
             supervisor: sup.supervisor,
             is_primary: sup.is_primary || false,
