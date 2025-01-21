@@ -35,10 +35,11 @@ export default function EmployeesTab({ sbuId }: EmployeesTabProps) {
             email,
             profile_image_url,
             level:levels(
-              id,
               name
             ),
-            user_roles(role),
+            user_roles(
+              role
+            ),
             user_supervisors(
               is_primary,
               supervisor:profiles!user_supervisors_supervisor_id_fkey(
