@@ -80,18 +80,28 @@ export function AssignSurveyDialog({ surveyId, onAssigned }: AssignSurveyDialogP
         throw new Error("No authenticated user found");
       }
 
+      // For organization type, we don't need a target_id
+      // For individual type, we use the current user's id
+      // For SBU type, we'll handle targets separately
+      const targetId = data.assignmentType === "individual" 
+        ? session.user.id 
+        : data.assignmentType === "organization"
+          ? null
+          : null; // For SBU type, we'll handle targets separately
+
       // Create the main assignment
       const { data: assignment, error: assignmentError } = await supabase
         .from("survey_assignments")
         .insert({
           survey_id: surveyId,
           assignment_type: data.assignmentType,
+          target_id: targetId,
           due_date: data.dueDate?.toISOString(),
           created_by: session.user.id,
           is_recurring: data.isRecurring,
-          recurring_frequency: data.recurringFrequency,
-          recurring_ends_at: data.recurringEndsAt?.toISOString(),
-          recurring_days: data.recurringDays,
+          recurring_frequency: data.isRecurring ? data.recurringFrequency : null,
+          recurring_ends_at: data.isRecurring ? data.recurringEndsAt?.toISOString() : null,
+          recurring_days: data.isRecurring ? data.recurringDays : null,
         })
         .select()
         .single();
