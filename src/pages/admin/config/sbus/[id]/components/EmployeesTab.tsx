@@ -17,7 +17,7 @@ interface EmployeesTabProps {
 
 export default function EmployeesTab({ sbuId }: EmployeesTabProps) {
   const [search, setSearch] = useState("");
-  const [levelFilter, setLevelFilter] = useState<string>("");
+  const [levelFilter, setLevelFilter] = useState<string>("all");
 
   const { data: employees, isLoading } = useQuery({
     queryKey: ["sbu-employees", sbuId, search, levelFilter],
@@ -48,7 +48,7 @@ export default function EmployeesTab({ sbuId }: EmployeesTabProps) {
         );
       }
 
-      if (levelFilter) {
+      if (levelFilter && levelFilter !== "all") {
         query = query.eq("profile.level_id", levelFilter);
       }
 
@@ -104,7 +104,7 @@ export default function EmployeesTab({ sbuId }: EmployeesTabProps) {
             <SelectValue placeholder="Filter by level" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">All levels</SelectItem>
+            <SelectItem value="all">All levels</SelectItem>
             {levels?.map((level) => (
               <SelectItem key={level.id} value={level.id}>
                 {level.name}
