@@ -10,7 +10,6 @@ import {
 } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import EmployeeCard from "./EmployeeCard";
-import { UserRole } from "@/pages/admin/users/types";
 
 interface EmployeesTabProps {
   sbuId: string | undefined;
@@ -18,12 +17,12 @@ interface EmployeesTabProps {
 
 export default function EmployeesTab({ sbuId }: EmployeesTabProps) {
   const [search, setSearch] = useState("");
-  const [roleFilter, setRoleFilter] = useState<UserRole | "">("");
   const [levelFilter, setLevelFilter] = useState<string>("");
 
   const { data: employees, isLoading } = useQuery({
-    queryKey: ["sbu-employees", sbuId, search, roleFilter, levelFilter],
+    queryKey: ["sbu-employees", sbuId, search, levelFilter],
     queryFn: async () => {
+      console.log("Fetching employees for SBU:", sbuId);
       let query = supabase
         .from("user_sbus")
         .select(`
@@ -53,67 +52,23 @@ export default function EmployeesTab({ sbuId }: EmployeesTabProps) {
         query = query.eq("profile.level_id", levelFilter);
       }
 
-      const { data: userSBUs, error: userSBUsError } = await query;
-      if (userSBUsError) throw userSBUsError;
-
-      // Fetch user roles separately for each user
-      const employeesWithRoles = await Promise.all(
-        userSBUs.map(async (userSBU) => {
-          const { data: userRoles, error: rolesError } = await supabase
-            .from("user_roles")
-            .select("role")
-            .eq("user_id", userSBU.profile.id);
-          
-          if (rolesError) throw rolesError;
-
-          // Fetch user supervisors
-          const { data: supervisors, error: supervisorsError } = await supabase
-            .from("user_supervisors")
-            .select(`
-              is_primary,
-              supervisor:profiles!user_supervisors_supervisor_id_fkey(
-                id,
-                first_name,
-                last_name
-              )
-            `)
-            .eq("user_id", userSBU.profile.id);
-
-          if (supervisorsError) throw supervisorsError;
-
-          // Apply role filter if specified
-          if (roleFilter && !userRoles?.some(ur => ur.role === roleFilter)) {
-            return null;
-          }
-
-          return {
-            ...userSBU,
-            profile: {
-              ...userSBU.profile,
-              level: userSBU.profile.level?.[0] || null,
-              user_roles: userRoles || [],
-              user_supervisors: supervisors || []
-            }
-          };
-        })
-      );
-
-      // Filter out null values (from role filter) and transform data
-      return employeesWithRoles
-        .filter((employee): employee is NonNullable<typeof employee> => employee !== null)
-        .map(employee => ({
-          id: employee.id,
-          is_primary: employee.is_primary,
-          profile: {
-            first_name: employee.profile.first_name,
-            last_name: employee.profile.last_name,
-            email: employee.profile.email,
-            profile_image_url: employee.profile.profile_image_url,
-            level: employee.profile.level,
-            user_roles: employee.profile.user_roles,
-            user_supervisors: employee.profile.user_supervisors
-          }
-        }));
+      const { data, error } = await query;
+      if (error) throw error;
+      
+      return data.map((employee) => ({
+        id: employee.id,
+        is_primary: employee.is_primary,
+        profile: {
+          first_name: employee.profile.first_name,
+          last_name: employee.profile.last_name,
+          email: employee.profile.email,
+          profile_image_url: employee.profile.profile_image_url,
+          level: employee.profile.level?.[0] || null,
+          // Since EmployeeCard expects these properties, we'll provide empty arrays
+          user_roles: [],
+          user_supervisors: []
+        }
+      }));
     },
     enabled: !!sbuId,
   });
@@ -144,16 +99,6 @@ export default function EmployeesTab({ sbuId }: EmployeesTabProps) {
           onChange={(e) => setSearch(e.target.value)}
           className="flex-1"
         />
-        <Select value={roleFilter} onValueChange={(value: UserRole | "") => setRoleFilter(value)}>
-          <SelectTrigger className="w-[180px]">
-            <SelectValue placeholder="Filter by role" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="">All roles</SelectItem>
-            <SelectItem value="admin">Admin</SelectItem>
-            <SelectItem value="user">User</SelectItem>
-          </SelectContent>
-        </Select>
         <Select value={levelFilter} onValueChange={setLevelFilter}>
           <SelectTrigger className="w-[180px]">
             <SelectValue placeholder="Filter by level" />
