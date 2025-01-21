@@ -27,7 +27,7 @@ import { assignSurveySchema, type AssignSurveyFormData } from "./types";
 
 interface AssignSurveyDialogProps {
   surveyId: string;
-  onAssigned: () => void;
+  onAssigned?: () => void;
 }
 
 export function AssignSurveyDialog({ surveyId, onAssigned }: AssignSurveyDialogProps) {
@@ -68,6 +68,10 @@ export function AssignSurveyDialog({ surveyId, onAssigned }: AssignSurveyDialogP
         throw new Error("No authenticated user found");
       }
 
+      if (!surveyId) {
+        throw new Error("No survey ID provided");
+      }
+
       const { error: assignmentError } = await supabase
         .from("survey_assignments")
         .insert({
@@ -85,7 +89,7 @@ export function AssignSurveyDialog({ surveyId, onAssigned }: AssignSurveyDialogP
 
       toast.success("Survey assigned successfully");
       setOpen(false);
-      onAssigned();
+      onAssigned?.();
     } catch (error: any) {
       console.error("Error assigning survey:", error);
       toast.error("Failed to assign survey");
