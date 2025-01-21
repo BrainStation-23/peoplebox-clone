@@ -7,6 +7,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -29,12 +30,33 @@ export default function EditUserDialog({
   const queryClient = useQueryClient();
 
   // Form state
-  const [firstName, setFirstName] = useState(user?.first_name || "");
-  const [lastName, setLastName] = useState(user?.last_name || "");
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
   const [profileImageUrl, setProfileImageUrl] = useState("");
   const [selectedLevel, setSelectedLevel] = useState<string>("");
   const [selectedSBUs, setSelectedSBUs] = useState<Set<string>>(new Set());
   const [primarySBU, setPrimarySBU] = useState<string>("");
+
+  // Update form state when user changes
+  useEffect(() => {
+    if (user) {
+      setFirstName(user.first_name || "");
+      setLastName(user.last_name || "");
+      // Fetch additional user profile data
+      const fetchUserProfile = async () => {
+        const { data: profileData } = await supabase
+          .from("profiles")
+          .select("level_id")
+          .eq("id", user.id)
+          .single();
+        
+        if (profileData?.level_id) {
+          setSelectedLevel(profileData.level_id);
+        }
+      };
+      fetchUserProfile();
+    }
+  }, [user]);
 
   // Fetch levels
   const { data: levels } = useQuery({
@@ -168,6 +190,9 @@ export default function EditUserDialog({
       <DialogContent className="max-w-2xl">
         <DialogHeader>
           <DialogTitle>Edit Profile</DialogTitle>
+          <DialogDescription>
+            Make changes to the user profile here. Click save when you're done.
+          </DialogDescription>
         </DialogHeader>
 
         <Tabs defaultValue="basic" className="w-full">
