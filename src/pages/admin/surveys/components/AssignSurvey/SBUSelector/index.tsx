@@ -21,24 +21,7 @@ export function SBUSelector({ sbus, selectedSBUs, onChange }: SBUSelectorProps) 
   };
 
   const handleSelectAll = () => {
-    const filteredSBUs = sbus.filter((sbu) =>
-      sbu.name.toLowerCase().includes(searchQuery.toLowerCase())
-    );
-    const allSelected = filteredSBUs.every((sbu) => selectedSBUs.includes(sbu.id));
-    
-    if (allSelected) {
-      // If all are selected, deselect all filtered SBUs
-      const newSelection = selectedSBUs.filter(
-        (id) => !filteredSBUs.some((sbu) => sbu.id === id)
-      );
-      onChange(newSelection);
-    } else {
-      // Select all filtered SBUs
-      const newSelection = Array.from(
-        new Set([...selectedSBUs, ...filteredSBUs.map((sbu) => sbu.id)])
-      );
-      onChange(newSelection);
-    }
+    onChange(sbus.map((sbu) => sbu.id));
   };
 
   const handleClearAll = () => {
@@ -56,9 +39,7 @@ export function SBUSelector({ sbus, selectedSBUs, onChange }: SBUSelectorProps) 
             size="sm"
             onClick={handleSelectAll}
           >
-            {sbus.every((sbu) => selectedSBUs.includes(sbu.id))
-              ? "Deselect All"
-              : "Select All"}
+            Select All
           </Button>
           <Button
             type="button"
