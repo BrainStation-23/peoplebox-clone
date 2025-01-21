@@ -86,7 +86,7 @@ export default function EditUserDialog({
             <BasicInfoTab
               firstName={firstName}
               setFirstName={setFirstName}
-              lastName={setLastName}
+              lastName={lastName}
               setLastName={setLastName}
               profileImageUrl={profileImageUrl}
               setProfileImageUrl={setProfileImageUrl}
