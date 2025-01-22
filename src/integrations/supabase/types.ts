@@ -50,7 +50,7 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "survey_campaigns"
             referencedColumns: ["id"]
-          }
+          },
         ]
       }
       levels: {
@@ -115,7 +115,7 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "levels"
             referencedColumns: ["id"]
-          }
+          },
         ]
       }
       sbus: {
@@ -153,7 +153,7 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
-          }
+          },
         ]
       }
       survey_assignments: {
@@ -221,69 +221,69 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
-          }
+          },
         ]
       }
       survey_campaigns: {
         Row: {
-          id: string;
-          name: string;
-          description: string | null;
-          survey_id: string;
-          created_by: string;
-          status: string;
-          campaign_type: string;
-          is_recurring: boolean | null;
-          recurring_frequency: string | null;
-          recurring_days: number[] | null;
-          recurring_ends_at: string | null;
-          created_at: string;
-          updated_at: string;
-          completion_rate: number | null;
-          starts_at: string;
-          ends_at: string | null;
-          instance_duration_days: number | null;
-          instance_end_time: string | null;
+          campaign_type: string
+          completion_rate: number | null
+          created_at: string
+          created_by: string
+          description: string | null
+          ends_at: string | null
+          id: string
+          instance_duration_days: number | null
+          instance_end_time: string | null
+          is_recurring: boolean | null
+          name: string
+          recurring_days: number[] | null
+          recurring_ends_at: string | null
+          recurring_frequency: string | null
+          starts_at: string
+          status: string
+          survey_id: string
+          updated_at: string
         }
         Insert: {
-          id?: string;
-          name: string;
-          description?: string | null;
-          survey_id: string;
-          created_by: string;
-          status?: string;
-          campaign_type?: string;
-          is_recurring?: boolean | null;
-          recurring_frequency?: string | null;
-          recurring_days?: number[] | null;
-          recurring_ends_at?: string | null;
-          created_at?: string;
-          updated_at?: string;
-          completion_rate?: number | null;
-          starts_at: string;
-          ends_at?: string | null;
-          instance_duration_days?: number | null;
-          instance_end_time?: string | null;
+          campaign_type?: string
+          completion_rate?: number | null
+          created_at?: string
+          created_by: string
+          description?: string | null
+          ends_at?: string | null
+          id?: string
+          instance_duration_days?: number | null
+          instance_end_time?: string | null
+          is_recurring?: boolean | null
+          name: string
+          recurring_days?: number[] | null
+          recurring_ends_at?: string | null
+          recurring_frequency?: string | null
+          starts_at: string
+          status?: string
+          survey_id: string
+          updated_at?: string
         }
         Update: {
-          id?: string;
-          name?: string;
-          description?: string | null;
-          survey_id?: string;
-          created_by?: string;
-          status?: string;
-          campaign_type?: string;
-          is_recurring?: boolean | null;
-          recurring_frequency?: string | null;
-          recurring_days?: number[] | null;
-          recurring_ends_at?: string | null;
-          created_at?: string;
-          updated_at?: string;
-          completion_rate?: number | null;
-          starts_at?: string;
-          ends_at?: string | null;
-          instance_duration_days?: number | null;
-          instance_end_time?: string | null;
+          campaign_type?: string
+          completion_rate?: number | null
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          ends_at?: string | null
+          id?: string
+          instance_duration_days?: number | null
+          instance_end_time?: string | null
+          is_recurring?: boolean | null
+          name?: string
+          recurring_days?: number[] | null
+          recurring_ends_at?: string | null
+          recurring_frequency?: string | null
+          starts_at?: string
+          status?: string
+          survey_id?: string
+          updated_at?: string
         }
         Relationships: [
           {
@@ -299,7 +299,7 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "surveys"
             referencedColumns: ["id"]
-          }
+          },
         ]
       }
       survey_responses: {
@@ -354,7 +354,7 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
-          }
+          },
         ]
       }
       survey_sbu_assignments: {
@@ -390,7 +390,7 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "sbus"
             referencedColumns: ["id"]
-          }
+          },
         ]
       }
       surveys: {
@@ -434,7 +434,7 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
-          }
+          },
         ]
       }
       user_roles: {
@@ -497,7 +497,7 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
-          }
+          },
         ]
       }
       user_supervisors: {
@@ -539,7 +539,7 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
-          }
+          },
         ]
       }
     }
