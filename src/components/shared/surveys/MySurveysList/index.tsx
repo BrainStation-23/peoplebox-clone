@@ -64,8 +64,10 @@ export default function MySurveysList() {
     if (assignments) {
       const now = new Date();
       assignments.forEach(assignment => {
-        if (assignment.due_date && assignment.status !== 'completed') {
-          const dueDate = new Date(assignment.due_date);
+        const effectiveDueDate = assignment.due_date || assignment.campaign?.ends_at;
+        
+        if (effectiveDueDate && assignment.status !== 'completed') {
+          const dueDate = new Date(effectiveDueDate);
           const daysUntilDue = Math.ceil((dueDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
           
           if (daysUntilDue <= 3 && daysUntilDue > 0) {
@@ -87,37 +89,16 @@ export default function MySurveysList() {
     }
   }, [assignments, toast]);
 
-  // Subscribe to real-time updates for new assignments
-  useEffect(() => {
-    const channel = supabase
-      .channel('survey_assignments')
-      .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'survey_assignments',
-          filter: `user_id=eq.${supabase.auth.getUser().then(({ data }) => data.user?.id)}`
-        },
-        (payload) => {
-          toast({
-            title: "New Survey Assignment",
-            description: "You have been assigned a new survey",
-          });
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [toast]);
-
   const handleSelectSurvey = async (id: string) => {
     navigate(`/admin/my-surveys/${id}`);
   };
 
   const filteredAssignments = assignments?.filter((assignment) => {
+    // Filter out assignments with draft campaigns
+    if (assignment.campaign?.status === 'draft') {
+      return false;
+    }
+
     const matchesSearch = 
       assignment.campaign?.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       assignment.survey.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -149,7 +130,10 @@ export default function MySurveysList() {
           {filteredAssignments?.map((assignment) => (
             <SurveyCard
               key={assignment.id}
-              assignment={assignment}
+              assignment={{
+                ...assignment,
+                due_date: assignment.due_date || assignment.campaign?.ends_at || null
+              }}
               onSelect={handleSelectSurvey}
             />
           ))}
