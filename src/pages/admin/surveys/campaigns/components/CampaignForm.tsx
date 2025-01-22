@@ -70,6 +70,14 @@ export function CampaignForm({
     }
   };
 
+  const handleSubmit = async (data: CampaignFormData) => {
+    if (currentStep !== 3) {
+      handleNext();
+      return;
+    }
+    onSubmit(data);
+  };
+
   const renderStepContent = () => {
     switch (currentStep) {
       case 1:
@@ -85,7 +93,7 @@ export function CampaignForm({
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
         {renderStepContent()}
         
         <div className="flex justify-between pt-6 border-t">
