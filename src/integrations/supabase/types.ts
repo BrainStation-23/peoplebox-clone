@@ -9,6 +9,50 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      campaign_instances: {
+        Row: {
+          id: string
+          campaign_id: string
+          period_number: number
+          starts_at: string
+          ends_at: string
+          status: Database["public"]["Enums"]["instance_status"]
+          completion_rate: number | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          campaign_id: string
+          period_number: number
+          starts_at: string
+          ends_at: string
+          status?: Database["public"]["Enums"]["instance_status"]
+          completion_rate?: number | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          campaign_id?: string
+          period_number?: number
+          starts_at?: string
+          ends_at?: string
+          status?: Database["public"]["Enums"]["instance_status"]
+          completion_rate?: number | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "campaign_instances_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "survey_campaigns"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
       levels: {
         Row: {
           created_at: string
@@ -114,43 +158,40 @@ export type Database = {
       }
       survey_assignments: {
         Row: {
-          campaign_id: string | null
           created_at: string | null
           created_by: string
           due_date: string | null
           id: string
-          instance_number: number | null
           is_organization_wide: boolean | null
           status: Database["public"]["Enums"]["assignment_status"] | null
           survey_id: string
           updated_at: string | null
           user_id: string
+          campaign_id: string | null
         }
         Insert: {
-          campaign_id?: string | null
           created_at?: string | null
           created_by: string
           due_date?: string | null
           id?: string
-          instance_number?: number | null
           is_organization_wide?: boolean | null
           status?: Database["public"]["Enums"]["assignment_status"] | null
           survey_id: string
           updated_at?: string | null
           user_id: string
+          campaign_id?: string | null
         }
         Update: {
-          campaign_id?: string | null
           created_at?: string | null
           created_by?: string
           due_date?: string | null
           id?: string
-          instance_number?: number | null
           is_organization_wide?: boolean | null
           status?: Database["public"]["Enums"]["assignment_status"] | null
           survey_id?: string
           updated_at?: string | null
           user_id?: string
+          campaign_id?: string | null
         }
         Relationships: [
           {
@@ -180,7 +221,7 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
-          },
+          }
         ]
       }
       survey_campaigns: {
@@ -260,31 +301,31 @@ export type Database = {
           assignment_id: string
           created_at: string | null
           id: string
-          instance_number: number | null
           response_data: Json
           submitted_at: string | null
           updated_at: string | null
           user_id: string
+          campaign_instance_id: string | null
         }
         Insert: {
           assignment_id: string
           created_at?: string | null
           id?: string
-          instance_number?: number | null
           response_data: Json
           submitted_at?: string | null
           updated_at?: string | null
           user_id: string
+          campaign_instance_id?: string | null
         }
         Update: {
           assignment_id?: string
           created_at?: string | null
           id?: string
-          instance_number?: number | null
           response_data?: Json
           submitted_at?: string | null
           updated_at?: string | null
           user_id?: string
+          campaign_instance_id?: string | null
         }
         Relationships: [
           {
@@ -295,12 +336,19 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "survey_responses_campaign_instance_id_fkey"
+            columns: ["campaign_instance_id"]
+            isOneToOne: false
+            referencedRelation: "campaign_instances"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "survey_responses_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
-          },
+          }
         ]
       }
       survey_sbu_assignments: {
@@ -503,14 +551,9 @@ export type Database = {
     Enums: {
       assignment_status: "pending" | "completed" | "expired"
       campaign_status: "draft" | "active" | "completed" | "archived"
+      instance_status: "upcoming" | "active" | "completed"
       level_status: "active" | "inactive"
-      recurring_frequency:
-        | "one_time"
-        | "daily"
-        | "weekly"
-        | "monthly"
-        | "quarterly"
-        | "yearly"
+      recurring_frequency: "one_time" | "daily" | "weekly" | "monthly" | "quarterly" | "yearly"
       survey_status: "draft" | "published" | "archived"
       user_role: "admin" | "user"
     }
