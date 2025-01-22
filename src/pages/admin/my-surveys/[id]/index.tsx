@@ -68,77 +68,82 @@ export default function SurveyResponsePage() {
         surveyModel.data = existingResponse.response_data;
       }
       
-      // Handle auto-save
-      surveyModel.onValueChanged.add(async (sender, options) => {
-        try {
-          const userId = (await supabase.auth.getUser()).data.user?.id;
-          if (!userId) throw new Error("User not authenticated");
+      // Make survey read-only if completed
+      if (assignment.status === 'completed') {
+        surveyModel.mode = 'display';
+      } else {
+        // Handle auto-save
+        surveyModel.onValueChanged.add(async (sender, options) => {
+          try {
+            const userId = (await supabase.auth.getUser()).data.user?.id;
+            if (!userId) throw new Error("User not authenticated");
 
-          const { error } = await supabase
-            .from("survey_responses")
-            .upsert({
-              assignment_id: id,
-              user_id: userId,
-              response_data: sender.data,
-              updated_at: new Date().toISOString(),
-            }, {
-              onConflict: 'assignment_id,user_id'
+            const { error } = await supabase
+              .from("survey_responses")
+              .upsert({
+                assignment_id: id,
+                user_id: userId,
+                response_data: sender.data,
+                updated_at: new Date().toISOString(),
+              }, {
+                onConflict: 'assignment_id,user_id'
+              });
+
+            if (error) throw error;
+            setLastSaved(new Date());
+          } catch (error) {
+            console.error("Error saving response:", error);
+            toast({
+              title: "Error saving response",
+              description: "Your progress could not be saved. Please try again.",
+              variant: "destructive",
+            });
+          }
+        });
+
+        // Handle survey completion
+        surveyModel.onComplete.add(async (sender) => {
+          try {
+            const userId = (await supabase.auth.getUser()).data.user?.id;
+            if (!userId) throw new Error("User not authenticated");
+
+            const { error: responseError } = await supabase
+              .from("survey_responses")
+              .upsert({
+                assignment_id: id,
+                user_id: userId,
+                response_data: sender.data,
+                submitted_at: new Date().toISOString(),
+              }, {
+                onConflict: 'assignment_id,user_id'
+              });
+
+            if (responseError) throw responseError;
+
+            // Update assignment status
+            const { error: assignmentError } = await supabase
+              .from("survey_assignments")
+              .update({ status: "completed" })
+              .eq("id", id);
+
+            if (assignmentError) throw assignmentError;
+
+            toast({
+              title: "Survey completed",
+              description: "Your response has been submitted successfully.",
             });
 
-          if (error) throw error;
-          setLastSaved(new Date());
-        } catch (error) {
-          console.error("Error saving response:", error);
-          toast({
-            title: "Error saving response",
-            description: "Your progress could not be saved. Please try again.",
-            variant: "destructive",
-          });
-        }
-      });
-
-      // Handle survey completion
-      surveyModel.onComplete.add(async (sender) => {
-        try {
-          const userId = (await supabase.auth.getUser()).data.user?.id;
-          if (!userId) throw new Error("User not authenticated");
-
-          const { error: responseError } = await supabase
-            .from("survey_responses")
-            .upsert({
-              assignment_id: id,
-              user_id: userId,
-              response_data: sender.data,
-              submitted_at: new Date().toISOString(),
-            }, {
-              onConflict: 'assignment_id,user_id'
+            navigate("/admin/my-surveys");
+          } catch (error) {
+            console.error("Error submitting response:", error);
+            toast({
+              title: "Error submitting response",
+              description: "Your response could not be submitted. Please try again.",
+              variant: "destructive",
             });
-
-          if (responseError) throw responseError;
-
-          // Update assignment status
-          const { error: assignmentError } = await supabase
-            .from("survey_assignments")
-            .update({ status: "completed" })
-            .eq("id", id);
-
-          if (assignmentError) throw assignmentError;
-
-          toast({
-            title: "Survey completed",
-            description: "Your response has been submitted successfully.",
-          });
-
-          navigate("/admin/my-surveys");
-        } catch (error) {
-          console.error("Error submitting response:", error);
-          toast({
-            title: "Error submitting response",
-            description: "Your response could not be submitted. Please try again.",
-            variant: "destructive",
-          });
-        }
-      });
+          }
+        });
+      }
 
       setSurvey(surveyModel);
     }
