@@ -22,6 +22,7 @@ function Calendar({
         month: "space-y-4",
         caption: "flex justify-center pt-1 relative items-center",
         caption_label: "text-sm font-medium",
+        caption_dropdowns: "flex gap-1",
         nav: "space-x-1 flex items-center",
         nav_button: cn(
           buttonVariants({ variant: "outline" }),
@@ -49,12 +50,19 @@ function Calendar({
         day_range_middle:
           "aria-selected:bg-accent aria-selected:text-accent-foreground",
         day_hidden: "invisible",
+        vhidden: "hidden",
+        dropdown: "p-1 bg-popover border rounded-md shadow-md focus-within:outline-none",
+        dropdown_month: "text-sm rounded-md p-1 hover:bg-accent",
+        dropdown_year: "text-sm rounded-md p-1 hover:bg-accent",
         ...classNames,
       }}
       components={{
         IconLeft: ({ ..._props }) => <ChevronLeft className="h-4 w-4" />,
         IconRight: ({ ..._props }) => <ChevronRight className="h-4 w-4" />,
       }}
+      captionLayout="dropdown"
+      fromYear={2020}
+      toYear={2030}
       {...props}
     />
   );

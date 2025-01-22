@@ -67,7 +67,6 @@ export function CalendarDateTime({
             selected={value}
             onSelect={handleDateSelect}
             initialFocus
-            captionLayout="buttons"
           />
         </PopoverContent>
       </Popover>
