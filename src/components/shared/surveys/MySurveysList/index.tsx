@@ -2,13 +2,11 @@ import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Input } from "@/components/ui/input";
-import { Search } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import SurveyCard from "./SurveyCard";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useState } from "react";
+import SurveyCard from "./SurveyCard";
+import SurveyFilters from "./components/SurveyFilters";
 
 export default function MySurveysList() {
   const navigate = useNavigate();
@@ -70,7 +68,6 @@ export default function MySurveysList() {
           const dueDate = new Date(assignment.due_date);
           const daysUntilDue = Math.ceil((dueDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
           
-          // Notify about assignments due soon
           if (daysUntilDue <= 3 && daysUntilDue > 0) {
             toast({
               title: "Survey Due Soon",
@@ -78,7 +75,6 @@ export default function MySurveysList() {
               variant: "default",
             });
           }
-          // Notify about overdue assignments
           else if (daysUntilDue < 0 && assignment.status !== 'expired') {
             toast({
               title: "Survey Overdue",
@@ -141,31 +137,12 @@ export default function MySurveysList() {
 
   return (
     <div className="space-y-4">
-      <div className="flex gap-4">
-        <div className="relative flex-1">
-          <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Search surveys..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-8"
-          />
-        </div>
-        <Select
-          value={statusFilter}
-          onValueChange={setStatusFilter}
-        >
-          <SelectTrigger className="w-[180px]">
-            <SelectValue placeholder="Filter by status" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Status</SelectItem>
-            <SelectItem value="pending">Pending</SelectItem>
-            <SelectItem value="completed">Completed</SelectItem>
-            <SelectItem value="expired">Expired</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
+      <SurveyFilters
+        searchQuery={searchQuery}
+        statusFilter={statusFilter}
+        onSearchChange={setSearchQuery}
+        onStatusChange={setStatusFilter}
+      />
 
       <ScrollArea className="h-[calc(100vh-14rem)]">
         <div className="space-y-4 p-4">

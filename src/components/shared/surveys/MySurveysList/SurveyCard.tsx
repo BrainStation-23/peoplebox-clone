@@ -1,10 +1,10 @@
-import { format } from "date-fns";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Progress } from "@/components/ui/progress";
-import { Calendar, Clock, AlertCircle } from "lucide-react";
+import { AlertCircle } from "lucide-react";
 import { Database } from "@/integrations/supabase/types";
 import { cn } from "@/lib/utils";
+import CampaignProgress from "./components/CampaignProgress";
+import DueDateInfo from "./components/DueDateInfo";
 
 type Survey = Database["public"]["Tables"]["surveys"]["Row"];
 type SurveyAssignment = Database["public"]["Tables"]["survey_assignments"]["Row"];
@@ -79,38 +79,15 @@ export default function SurveyCard({ assignment, onSelect }: SurveyCardProps) {
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div className="flex items-center justify-between text-sm text-muted-foreground">
-          <div className="flex items-center gap-2">
-            <Calendar className="h-4 w-4" />
-            {assignment.due_date ? (
-              <span className={cn(
-                isOverdue && "text-destructive",
-                isDueSoon && "text-yellow-500"
-              )}>
-                Due: {format(new Date(assignment.due_date), "PPP")}
-              </span>
-            ) : (
-              <span>No due date</span>
-            )}
-          </div>
-          {daysRemaining !== null && !isOverdue && (
-            <div className="flex items-center gap-2">
-              <Clock className="h-4 w-4" />
-              <span className={isDueSoon ? "text-yellow-500" : ""}>
-                {daysRemaining} days remaining
-              </span>
-            </div>
-          )}
-        </div>
+        <DueDateInfo
+          dueDate={assignment.due_date}
+          daysRemaining={daysRemaining}
+          isOverdue={isOverdue}
+          isDueSoon={isDueSoon}
+        />
 
         {assignment.campaign && (
-          <div className="space-y-2">
-            <div className="flex justify-between text-sm">
-              <span>Campaign Progress</span>
-              <span>{Math.round(assignment.campaign.completion_rate)}%</span>
-            </div>
-            <Progress value={assignment.campaign.completion_rate} />
-          </div>
+          <CampaignProgress campaign={assignment.campaign} />
         )}
       </CardContent>
     </Card>
