@@ -75,7 +75,6 @@ export function ScheduleConfig({ form }: ScheduleConfigProps) {
                     <CalendarDateTime 
                       value={field.value} 
                       onChange={field.onChange}
-                      showMonthYearPicker
                     />
                   </FormControl>
                   <FormMessage />
@@ -93,7 +92,6 @@ export function ScheduleConfig({ form }: ScheduleConfigProps) {
                     <CalendarDateTime 
                       value={field.value} 
                       onChange={field.onChange}
-                      showMonthYearPicker
                     />
                   </FormControl>
                   <FormMessage />
@@ -114,7 +112,6 @@ export function ScheduleConfig({ form }: ScheduleConfigProps) {
                       <CalendarDateTime 
                         value={field.value} 
                         onChange={field.onChange}
-                        showMonthYearPicker
                       />
                     </FormControl>
                     <FormMessage />
@@ -199,7 +196,6 @@ export function ScheduleConfig({ form }: ScheduleConfigProps) {
                     <CalendarDateTime 
                       value={field.value} 
                       onChange={field.onChange}
-                      showMonthYearPicker
                     />
                   </FormControl>
                   <FormMessage />
