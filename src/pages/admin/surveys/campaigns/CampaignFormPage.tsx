@@ -80,7 +80,7 @@ export default function CampaignFormPage() {
         instance_duration_days: formData.instance_duration_days,
         instance_end_time: formData.instance_end_time || '23:59:59',
         ends_at: formData.ends_at?.toISOString(),
-        status: formData.status,
+        status: formData.status as Database['public']['Enums']['instance_status'],
         created_by: session.user.id,
       };
 
