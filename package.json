@@ -61,6 +61,7 @@
     "react-router-dom": "^6.26.2",
     "recharts": "^2.12.7",
     "sonner": "^1.5.0",
+    "survey-analytics": "^1.9.132",
     "survey-core": "^1.12.19",
     "survey-react-ui": "^1.12.19",
     "tailwind-merge": "^2.5.2",

@@ -12,17 +12,3 @@ export type Response = Database["public"]["Tables"]["survey_responses"]["Row"] &
     campaign_id: string;
   };
 };
-
-export type ResponseGroup = {
-  instanceNumber: number;
-  responses: Response[];
-};
-
-export type SortOption = "date" | "name";
-export type SortDirection = "asc" | "desc";
-
-export type FilterOptions = {
-  search: string;
-  sortBy: SortOption;
-  sortDirection: SortDirection;
-};
