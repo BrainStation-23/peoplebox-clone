@@ -22,6 +22,16 @@ export default function CampaignFormPage() {
         .single();
 
       if (error) throw error;
+
+      // Convert string dates to Date objects
+      if (data) {
+        return {
+          ...data,
+          starts_at: data.starts_at ? new Date(data.starts_at) : undefined,
+          ends_at: data.ends_at ? new Date(data.ends_at) : undefined,
+          recurring_ends_at: data.recurring_ends_at ? new Date(data.recurring_ends_at) : undefined,
+        };
+      }
       return data;
     },
     enabled: isEditMode,
@@ -56,10 +66,18 @@ export default function CampaignFormPage() {
         return;
       }
 
+      // Convert Date objects to ISO strings for Supabase
+      const dataToSubmit = {
+        ...formData,
+        starts_at: formData.starts_at?.toISOString(),
+        ends_at: formData.ends_at?.toISOString(),
+        recurring_ends_at: formData.recurring_ends_at?.toISOString(),
+      };
+
       if (isEditMode) {
         const { error } = await supabase
           .from('survey_campaigns')
-          .update(formData)
+          .update(dataToSubmit)
           .eq('id', id);
 
         if (error) throw error;
@@ -72,7 +90,7 @@ export default function CampaignFormPage() {
         const { error } = await supabase
           .from('survey_campaigns')
           .insert({
-            ...formData,
+            ...dataToSubmit,
             created_by: session.user.id,
           });
 
