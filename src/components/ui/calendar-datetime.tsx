@@ -14,13 +14,11 @@ import {
 interface CalendarDateTimeProps {
   value?: Date;
   onChange?: (date: Date) => void;
-  showMonthYearPicker?: boolean;
 }
 
 export function CalendarDateTime({
   value,
   onChange,
-  showMonthYearPicker = false,
 }: CalendarDateTimeProps) {
   const [time, setTime] = React.useState(
     value ? format(value, "HH:mm") : "00:00"
@@ -69,7 +67,7 @@ export function CalendarDateTime({
             selected={value}
             onSelect={handleDateSelect}
             initialFocus
-            captionLayout={showMonthYearPicker ? "dropdown" : "buttons"}
+            captionLayout="buttons-2"
           />
         </PopoverContent>
       </Popover>
