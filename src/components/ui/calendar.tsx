@@ -1,6 +1,6 @@
 import * as React from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { DayPicker } from "react-day-picker";
+import { DayPicker, CaptionProps } from "react-day-picker";
 
 import { cn } from "@/lib/utils";
 import { buttonVariants } from "@/components/ui/button";
@@ -50,15 +50,14 @@ function Calendar({
           "aria-selected:bg-accent aria-selected:text-accent-foreground",
         day_hidden: "invisible",
         vhidden: "hidden",
-        months_grid: "grid grid-cols-4 gap-2 p-2",
-        months_grid_item: cn(
+        caption_dropdowns: "flex gap-1 justify-center items-center",
+        dropdown: "p-2 bg-popover border rounded-md shadow-md focus-within:outline-none grid",
+        dropdown_month: "grid grid-cols-4 gap-2",
+        dropdown_year: "grid grid-cols-4 gap-2",
+        dropdown_icon: "h-4 w-4 opacity-50",
+        dropdown_item: cn(
           buttonVariants({ variant: "ghost" }),
-          "h-9 w-full p-0 font-normal aria-selected:opacity-100 hover:bg-accent hover:text-accent-foreground"
-        ),
-        years_grid: "grid grid-cols-4 gap-2 p-2",
-        years_grid_item: cn(
-          buttonVariants({ variant: "ghost" }),
-          "h-9 w-full p-0 font-normal aria-selected:opacity-100 hover:bg-accent hover:text-accent-foreground"
+          "h-8 w-full p-0 font-normal hover:bg-accent hover:text-accent-foreground grid place-content-center"
         ),
         ...classNames,
       }}
@@ -66,7 +65,7 @@ function Calendar({
         IconLeft: ({ ..._props }) => <ChevronLeft className="h-4 w-4" />,
         IconRight: ({ ..._props }) => <ChevronRight className="h-4 w-4" />,
       }}
-      captionLayout="buttons-2"
+      captionLayout="buttons"
       fromYear={2020}
       toYear={2030}
       {...props}
