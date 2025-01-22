@@ -5,6 +5,7 @@ import { CampaignHeader } from "./components/CampaignHeader";
 import { CampaignTabs, TabPanel } from "./components/CampaignTabs";
 import { AssignmentInstanceList } from "./components/AssignmentInstanceList";
 import { OverviewTab } from "./components/OverviewTab";
+import { ResponsesTab } from "./components/ResponsesTab";
 
 export default function CampaignDetailsPage() {
   const { id } = useParams();
@@ -97,7 +98,7 @@ export default function CampaignDetailsPage() {
           />
         </TabPanel>
         <TabPanel value="responses">
-          <h2>Responses Content</h2>
+          <ResponsesTab />
         </TabPanel>
         <TabPanel value="reports">
           <h2>Reports Content</h2>
