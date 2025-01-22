@@ -50,7 +50,7 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "survey_campaigns"
             referencedColumns: ["id"]
-          },
+          }
         ]
       }
       levels: {
@@ -115,7 +115,7 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "levels"
             referencedColumns: ["id"]
-          },
+          }
         ]
       }
       sbus: {
@@ -153,7 +153,7 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
-          },
+          }
         ]
       }
       survey_assignments: {
@@ -221,7 +221,7 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
-          },
+          }
         ]
       }
       survey_campaigns: {
@@ -299,7 +299,7 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "surveys"
             referencedColumns: ["id"]
-          },
+          }
         ]
       }
       survey_responses: {
@@ -354,7 +354,7 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
-          },
+          }
         ]
       }
       survey_sbu_assignments: {
@@ -390,7 +390,7 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "sbus"
             referencedColumns: ["id"]
-          },
+          }
         ]
       }
       surveys: {
@@ -434,7 +434,7 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
-          },
+          }
         ]
       }
       user_roles: {
@@ -497,7 +497,7 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
-          },
+          }
         ]
       }
       user_supervisors: {
@@ -539,7 +539,7 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
-          },
+          }
         ]
       }
     }
