@@ -48,6 +48,7 @@ const App = () => (
             <Route path="surveys/campaigns" element={<CampaignsPage />} />
             <Route path="surveys/campaigns/create" element={<CampaignFormPage />} />
             <Route path="surveys/campaigns/:id" element={<CampaignDetailsPage />} />
+            <Route path="surveys/campaigns/:id/edit" element={<CampaignFormPage />} />
             <Route path="config" element={<PlatformConfigLayout />}>
               <Route index element={<AdminConfig />} />
               <Route path="sbus" element={<SBUsConfig />} />
