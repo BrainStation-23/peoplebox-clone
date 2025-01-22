@@ -4,12 +4,9 @@ import { Button } from "@/components/ui/button";
 import { usePendingSurveysCount } from "@/hooks/use-pending-surveys-count";
 import {
   Sidebar,
-  SidebarContent,
-  SidebarFooter,
-  SidebarHeader,
   SidebarMenu,
-  SidebarMenuButton,
   SidebarMenuItem,
+  SidebarMenuButton,
 } from "@/components/ui/sidebar";
 import { navigationItems } from "@/config/navigation";
 
@@ -22,10 +19,10 @@ export default function AdminSidebar({ onSignOut }: AdminSidebarProps) {
 
   return (
     <Sidebar>
-      <SidebarHeader className="border-b px-6 py-3">
+      <div className="border-b px-6 py-3">
         <h2 className="font-semibold">Admin Portal</h2>
-      </SidebarHeader>
-      <SidebarContent>
+      </div>
+      <div className="flex min-h-0 flex-1 flex-col gap-2 overflow-auto">
         <SidebarMenu>
           {navigationItems.map((item) => (
             <SidebarMenuItem key={item.title}>
@@ -51,8 +48,8 @@ export default function AdminSidebar({ onSignOut }: AdminSidebarProps) {
             </SidebarMenuItem>
           ))}
         </SidebarMenu>
-      </SidebarContent>
-      <SidebarFooter>
+      </div>
+      <div className="p-2">
         <Button
           variant="ghost"
           className="w-full justify-start"
@@ -61,7 +58,7 @@ export default function AdminSidebar({ onSignOut }: AdminSidebarProps) {
           <LogOut className="mr-2 h-4 w-4" />
           Logout
         </Button>
-      </SidebarFooter>
+      </div>
     </Sidebar>
   );
 }
