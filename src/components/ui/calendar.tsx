@@ -51,11 +51,15 @@ function Calendar({
         day_hidden: "invisible",
         vhidden: "hidden",
         caption_dropdowns: "flex gap-1 justify-center items-center",
-        dropdown: "p-2 bg-popover border rounded-md shadow-md focus-within:outline-none grid",
+        dropdown: "p-2 bg-popover border rounded-md shadow-md focus:outline-none",
         dropdown_month: "grid grid-cols-4 gap-2",
         dropdown_year: "grid grid-cols-4 gap-2",
         dropdown_icon: "h-4 w-4 opacity-50",
-        dropdown_item: cn(
+        button_month: cn(
+          buttonVariants({ variant: "ghost" }),
+          "h-8 w-full p-0 font-normal hover:bg-accent hover:text-accent-foreground grid place-content-center"
+        ),
+        button_year: cn(
           buttonVariants({ variant: "ghost" }),
           "h-8 w-full p-0 font-normal hover:bg-accent hover:text-accent-foreground grid place-content-center"
         ),
@@ -65,7 +69,7 @@ function Calendar({
         IconLeft: ({ ..._props }) => <ChevronLeft className="h-4 w-4" />,
         IconRight: ({ ..._props }) => <ChevronRight className="h-4 w-4" />,
       }}
-      captionLayout="buttons"
+      captionLayout="dropdown"
       fromYear={2020}
       toYear={2030}
       {...props}
