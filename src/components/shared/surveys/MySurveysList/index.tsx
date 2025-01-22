@@ -36,7 +36,18 @@ export default function MySurveysList() {
             name,
             description,
             completion_rate,
-            status
+            status,
+            campaign_type,
+            created_at,
+            created_by,
+            ends_at,
+            is_recurring,
+            recurring_days,
+            recurring_ends_at,
+            recurring_frequency,
+            starts_at,
+            survey_id,
+            updated_at
           )
         `)
         .eq("user_id", (await supabase.auth.getUser()).data.user?.id)
