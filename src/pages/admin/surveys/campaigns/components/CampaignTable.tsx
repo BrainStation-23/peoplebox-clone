@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { Eye, MoreVertical, Pencil } from "lucide-react";
+import { Eye, MoreVertical, Pencil, Trash2 } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -17,6 +17,20 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 interface Campaign {
   id: string;
@@ -37,6 +51,35 @@ interface CampaignTableProps {
 }
 
 export function CampaignTable({ campaigns }: CampaignTableProps) {
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  const deleteMutation = useMutation({
+    mutationFn: async (campaignId: string) => {
+      const { error } = await supabase
+        .from('survey_campaigns')
+        .delete()
+        .eq('id', campaignId);
+      
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['campaigns'] });
+      toast({
+        title: "Success",
+        description: "Campaign deleted successfully",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: "Failed to delete campaign",
+        variant: "destructive",
+      });
+      console.error("Error deleting campaign:", error);
+    },
+  });
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'active':
@@ -94,21 +137,34 @@ export function CampaignTable({ campaigns }: CampaignTableProps) {
                   </Link>
                 </Button>
                 <Button variant="ghost" size="icon" asChild>
-                  <Link to={`/admin/surveys/campaigns/${campaign.id}`}>
+                  <Link to={`/admin/surveys/campaigns/${campaign.id}/edit`}>
                     <Pencil className="h-4 w-4" />
                   </Link>
                 </Button>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
                     <Button variant="ghost" size="icon">
-                      <MoreVertical className="h-4 w-4" />
+                      <Trash2 className="h-4 w-4 text-destructive" />
                     </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuItem>View Details</DropdownMenuItem>
-                    <DropdownMenuItem>View Responses</DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Delete Campaign</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        Are you sure you want to delete this campaign? This action will also delete all assignments, responses, and related data. This action cannot be undone.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogAction
+                        onClick={() => deleteMutation.mutate(campaign.id)}
+                        className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                      >
+                        Delete
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
               </div>
             </TableCell>
           </TableRow>
