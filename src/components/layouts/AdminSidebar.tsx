@@ -1,7 +1,6 @@
 import { Link } from "react-router-dom";
 import { LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { usePendingSurveysCount } from "@/hooks/use-pending-surveys-count";
 import {
   Sidebar,
@@ -31,18 +30,11 @@ export default function AdminSidebar({ onSignOut }: AdminSidebarProps) {
           {navigationItems.map((item) => (
             <SidebarMenuItem key={item.title}>
               <SidebarMenuButton asChild>
-                <Link to={item.path} className="relative flex items-center">
+                <Link to={item.path} className="flex items-center">
                   <item.icon className="h-4 w-4" />
-                  <span className="relative">
+                  <span>
                     {item.title}
-                    {item.path === "/admin/my-surveys" && pendingSurveysCount > 0 && (
-                      <Badge 
-                        variant="destructive" 
-                        className="absolute -top-3 -right-6 h-5 min-w-5 flex items-center justify-center p-0.5 text-xs"
-                      >
-                        {pendingSurveysCount}
-                      </Badge>
-                    )}
+                    {item.path === "/admin/my-surveys" && pendingSurveysCount > 0 && ` (${pendingSurveysCount})`}
                   </span>
                 </Link>
               </SidebarMenuButton>
