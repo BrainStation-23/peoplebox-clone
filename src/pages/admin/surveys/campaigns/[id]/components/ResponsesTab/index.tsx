@@ -1,7 +1,5 @@
 import { useState } from "react";
-import { useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -10,6 +8,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { supabase } from "@/integrations/supabase/client";
 import { ResponsesList } from "./ResponsesList";
 import type { FilterOptions, Response } from "./types";
 
@@ -18,7 +17,6 @@ interface ResponsesTabProps {
 }
 
 export function ResponsesTab({ instanceId }: ResponsesTabProps) {
-  const { id: campaignId } = useParams();
   const [filters, setFilters] = useState<FilterOptions>({
     search: "",
     sortBy: "date",
@@ -26,8 +24,9 @@ export function ResponsesTab({ instanceId }: ResponsesTabProps) {
   });
 
   const { data: responses, isLoading } = useQuery({
-    queryKey: ["campaign-responses", campaignId, instanceId],
+    queryKey: ["campaign-responses", instanceId],
     queryFn: async () => {
+      console.log("Fetching responses for instance:", instanceId);
       const query = supabase
         .from("survey_responses")
         .select(`
@@ -49,8 +48,7 @@ export function ResponsesTab({ instanceId }: ResponsesTabProps) {
             id,
             campaign_id
           )
-        `)
-        .eq("assignment.campaign_id", campaignId);
+        `);
 
       if (instanceId) {
         query.eq("campaign_instance_id", instanceId);
@@ -81,19 +79,18 @@ export function ResponsesTab({ instanceId }: ResponsesTabProps) {
     return userName.includes(searchTerm);
   });
 
-  const sortedResponses = [...(filteredResponses || [])].sort((a, b) => {
-    if (filters.sortBy === "date") {
-      const dateA = new Date(a.submitted_at || a.created_at).getTime();
-      const dateB = new Date(b.submitted_at || b.created_at).getTime();
-      return filters.sortDirection === "desc" ? dateB - dateA : dateA - dateB;
-    } else {
-      const nameA = `${a.user.first_name || ''} ${a.user.last_name || ''}`.toLowerCase();
-      const nameB = `${b.user.first_name || ''} ${b.user.last_name || ''}`.toLowerCase();
-      return filters.sortDirection === "desc" 
-        ? nameB.localeCompare(nameA)
-        : nameA.localeCompare(nameB);
+  // Group responses by instance
+  const groupedResponses = filteredResponses?.reduce((acc, response) => {
+    const instanceNumber = response.campaign_instance_id 
+      ? parseInt(response.campaign_instance_id.split('-')[0], 10) 
+      : 1;
+    
+    if (!acc[instanceNumber]) {
+      acc[instanceNumber] = [];
     }
-  });
+    acc[instanceNumber].push(response);
+    return acc;
+  }, {} as Record<number, Response[]>) || {};
 
   return (
     <div className="space-y-6">
@@ -136,7 +133,7 @@ export function ResponsesTab({ instanceId }: ResponsesTabProps) {
         </Select>
       </div>
 
-      <ResponsesList responses={sortedResponses} />
+      <ResponsesList groupedResponses={groupedResponses} />
     </div>
   );
 }

@@ -12,17 +12,17 @@ interface ResponsesListProps {
 }
 
 export function ResponsesList({ groupedResponses }: ResponsesListProps) {
-  const instances = Object.keys(groupedResponses)
-    .map(Number)
-    .sort((a, b) => a - b);
-
-  if (instances.length === 0) {
+  if (!groupedResponses || Object.keys(groupedResponses).length === 0) {
     return (
       <div className="text-center py-8 text-muted-foreground">
         No responses found for this campaign.
       </div>
     );
   }
+
+  const instances = Object.keys(groupedResponses)
+    .map(Number)
+    .sort((a, b) => a - b);
 
   return (
     <Accordion type="single" collapsible className="w-full">
