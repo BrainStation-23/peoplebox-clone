@@ -3,7 +3,7 @@ import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from "recharts";
 
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28'];
 
-type StatusData = {
+export type StatusData = {
   name: string;
   value: number;
 };

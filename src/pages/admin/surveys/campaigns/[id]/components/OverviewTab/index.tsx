@@ -3,7 +3,7 @@ import { format } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
 import { CompletionRateCard } from "./CompletionRateCard";
 import { ResponseRateChart } from "./ResponseRateChart";
-import { StatusDistributionChart } from "./StatusDistributionChart";
+import { StatusDistributionChart, type StatusData } from "./StatusDistributionChart";
 import { RecentActivityList } from "./RecentActivityList";
 
 export function OverviewTab({ campaignId }: { campaignId: string }) {
@@ -68,13 +68,13 @@ export function OverviewTab({ campaignId }: { campaignId: string }) {
       
       if (error) throw error;
 
-      const distribution = data.reduce((acc: any, assignment) => {
+      const distribution = data.reduce((acc: Record<string, number>, assignment) => {
         const status = assignment.status || "pending";
         acc[status] = (acc[status] || 0) + 1;
         return acc;
       }, {});
 
-      return Object.entries(distribution).map(([name, value]) => ({
+      return Object.entries(distribution).map(([name, value]): StatusData => ({
         name,
         value,
       }));
