@@ -56,9 +56,14 @@ export function ResponsesTab({ instanceId }: ResponsesTabProps) {
 
       const { data, error } = await query;
 
-      if (error) throw error;
+      if (error) {
+        console.error("Error fetching responses:", error);
+        throw error;
+      }
+      console.log("Fetched responses:", data);
       return data as Response[];
     },
+    enabled: !!instanceId,
   });
 
   if (isLoading) {

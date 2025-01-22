@@ -15,14 +15,14 @@ export function ResponsesList({ groupedResponses }: ResponsesListProps) {
   if (!groupedResponses || Object.keys(groupedResponses).length === 0) {
     return (
       <div className="text-center py-8 text-muted-foreground">
-        No responses found for this campaign.
+        No responses found for this campaign instance.
       </div>
     );
   }
 
   const instances = Object.keys(groupedResponses)
     .map(Number)
-    .sort((a, b) => a - b);
+    .sort((a, b) => b - a); // Sort in descending order
 
   return (
     <Accordion type="single" collapsible className="w-full">
@@ -31,7 +31,7 @@ export function ResponsesList({ groupedResponses }: ResponsesListProps) {
           <AccordionTrigger className="hover:no-underline">
             <div className="flex items-center gap-4">
               <span className="font-semibold">
-                Instance {instanceNumber}
+                Period {instanceNumber}
               </span>
               <span className="text-sm text-muted-foreground">
                 ({groupedResponses[instanceNumber].length} responses)
