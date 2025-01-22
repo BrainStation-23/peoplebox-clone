@@ -6,6 +6,7 @@ import { Form } from "@/components/ui/form";
 import { BasicInfoForm } from "./BasicInfoForm";
 import { ScheduleConfig } from "./ScheduleConfig";
 import { ReviewStep } from "./ReviewStep";
+import { ArrowLeft, ArrowRight, Send } from "lucide-react";
 
 const campaignSchema = z.object({
   name: z.string().min(1, "Name is required"),
@@ -70,14 +71,6 @@ export function CampaignForm({
     }
   };
 
-  const handleSubmit = async (data: CampaignFormData) => {
-    if (currentStep !== 3) {
-      handleNext();
-      return;
-    }
-    onSubmit(data);
-  };
-
   const renderStepContent = () => {
     switch (currentStep) {
       case 1:
@@ -93,7 +86,7 @@ export function CampaignForm({
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
         {renderStepContent()}
         
         <div className="flex justify-between pt-6 border-t">
@@ -103,16 +96,19 @@ export function CampaignForm({
             onClick={() => onStepBack(currentStep)}
             disabled={currentStep === 1}
           >
+            <ArrowLeft className="mr-2 h-4 w-4" />
             Back
           </Button>
           
           {currentStep === 3 ? (
             <Button type="submit">
+              <Send className="mr-2 h-4 w-4" />
               Create Campaign
             </Button>
           ) : (
             <Button type="button" onClick={handleNext}>
               Continue
+              <ArrowRight className="ml-2 h-4 w-4" />
             </Button>
           )}
         </div>
