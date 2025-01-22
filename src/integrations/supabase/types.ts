@@ -114,57 +114,52 @@ export type Database = {
       }
       survey_assignments: {
         Row: {
+          campaign_id: string | null
           created_at: string | null
           created_by: string
           due_date: string | null
           id: string
+          instance_number: number | null
           is_organization_wide: boolean | null
-          is_recurring: boolean | null
-          recurring_days: number[] | null
-          recurring_ends_at: string | null
-          recurring_frequency:
-            | Database["public"]["Enums"]["recurring_frequency"]
-            | null
           status: Database["public"]["Enums"]["assignment_status"] | null
           survey_id: string
           updated_at: string | null
           user_id: string
         }
         Insert: {
+          campaign_id?: string | null
           created_at?: string | null
           created_by: string
           due_date?: string | null
           id?: string
+          instance_number?: number | null
           is_organization_wide?: boolean | null
-          is_recurring?: boolean | null
-          recurring_days?: number[] | null
-          recurring_ends_at?: string | null
-          recurring_frequency?:
-            | Database["public"]["Enums"]["recurring_frequency"]
-            | null
           status?: Database["public"]["Enums"]["assignment_status"] | null
           survey_id: string
           updated_at?: string | null
           user_id: string
         }
         Update: {
+          campaign_id?: string | null
           created_at?: string | null
           created_by?: string
           due_date?: string | null
           id?: string
+          instance_number?: number | null
           is_organization_wide?: boolean | null
-          is_recurring?: boolean | null
-          recurring_days?: number[] | null
-          recurring_ends_at?: string | null
-          recurring_frequency?:
-            | Database["public"]["Enums"]["recurring_frequency"]
-            | null
           status?: Database["public"]["Enums"]["assignment_status"] | null
           survey_id?: string
           updated_at?: string | null
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "survey_assignments_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "survey_campaigns"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "survey_assignments_created_by_fkey"
             columns: ["created_by"]
@@ -184,6 +179,69 @@ export type Database = {
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      survey_campaigns: {
+        Row: {
+          campaign_type: string
+          created_at: string
+          created_by: string
+          description: string | null
+          id: string
+          is_recurring: boolean | null
+          name: string
+          recurring_days: number[] | null
+          recurring_ends_at: string | null
+          recurring_frequency: string | null
+          status: string
+          survey_id: string
+          updated_at: string
+        }
+        Insert: {
+          campaign_type?: string
+          created_at?: string
+          created_by: string
+          description?: string | null
+          id?: string
+          is_recurring?: boolean | null
+          name: string
+          recurring_days?: number[] | null
+          recurring_ends_at?: string | null
+          recurring_frequency?: string | null
+          status?: string
+          survey_id: string
+          updated_at?: string
+        }
+        Update: {
+          campaign_type?: string
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          id?: string
+          is_recurring?: boolean | null
+          name?: string
+          recurring_days?: number[] | null
+          recurring_ends_at?: string | null
+          recurring_frequency?: string | null
+          status?: string
+          survey_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "survey_campaigns_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "survey_campaigns_survey_id_fkey"
+            columns: ["survey_id"]
+            isOneToOne: false
+            referencedRelation: "surveys"
             referencedColumns: ["id"]
           },
         ]
@@ -432,6 +490,7 @@ export type Database = {
     }
     Enums: {
       assignment_status: "pending" | "completed" | "expired"
+      campaign_status: "draft" | "active" | "completed" | "archived"
       level_status: "active" | "inactive"
       recurring_frequency: "one_time" | "daily" | "weekly" | "monthly"
       survey_status: "draft" | "published" | "archived"
