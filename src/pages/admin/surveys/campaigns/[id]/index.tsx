@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { AssignSurvey } from "../../components/AssignSurvey";
+import { AssignSurveyDialog } from "../../components/AssignSurvey";
 import { AssignmentInstanceList } from "./components/AssignmentInstanceList";
 
 export default function CampaignDetailsPage() {
@@ -115,7 +115,7 @@ export default function CampaignDetailsPage() {
         </TabsContent>
         
         <TabsContent value="new-assignment">
-          <AssignSurvey 
+          <AssignSurveyDialog 
             surveyId={campaign.survey_id}
             campaignId={campaign.id}
             isRecurring={campaign.is_recurring}

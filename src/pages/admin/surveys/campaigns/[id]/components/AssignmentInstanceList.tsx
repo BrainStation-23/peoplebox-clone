@@ -8,10 +8,13 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
+import { Database } from "@/integrations/supabase/types";
+
+type AssignmentStatus = Database["public"]["Enums"]["assignment_status"];
 
 interface Assignment {
   id: string;
-  status: string;
+  status: AssignmentStatus;
   due_date: string | null;
   instance_number: number | null;
   user: {
