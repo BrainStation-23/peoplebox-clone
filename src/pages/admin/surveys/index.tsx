@@ -9,7 +9,6 @@ import { Survey } from "./types";
 import { SearchBar } from "./components/SearchBar";
 import { TagFilter } from "./components/TagFilter";
 import { SurveyTable } from "./components/SurveyTable";
-import { CampaignOverview } from "./components/CampaignOverview";
 
 export default function SurveysPage() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -109,10 +108,6 @@ export default function SurveysPage() {
             </Link>
           </Button>
         </div>
-      </div>
-
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        <CampaignOverview />
       </div>
 
       <div className="flex flex-col gap-4">
