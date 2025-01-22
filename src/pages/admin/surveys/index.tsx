@@ -9,6 +9,7 @@ import { Survey } from "./types";
 import { SearchBar } from "./components/SearchBar";
 import { TagFilter } from "./components/TagFilter";
 import { SurveyTable } from "./components/SurveyTable";
+import { CampaignOverview } from "./components/CampaignOverview";
 
 export default function SurveysPage() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -94,12 +95,24 @@ export default function SurveysPage() {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-bold">Surveys</h1>
-        <Button asChild>
-          <Link to="/admin/surveys/create">
-            <Plus className="mr-2 h-4 w-4" />
-            Create Survey
-          </Link>
-        </Button>
+        <div className="flex gap-2">
+          <Button asChild variant="outline">
+            <Link to="/admin/surveys/campaigns/create">
+              <Plus className="mr-2 h-4 w-4" />
+              Create Campaign
+            </Link>
+          </Button>
+          <Button asChild>
+            <Link to="/admin/surveys/create">
+              <Plus className="mr-2 h-4 w-4" />
+              Create Survey
+            </Link>
+          </Button>
+        </div>
+      </div>
+
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        <CampaignOverview />
       </div>
 
       <div className="flex flex-col gap-4">

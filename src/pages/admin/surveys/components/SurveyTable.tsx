@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { Eye, MoreVertical, Pencil, Play, Archive, Trash } from "lucide-react";
+import { Eye, MoreVertical, Pencil, Play, Archive, Trash, Grid } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -28,9 +28,9 @@ export function SurveyTable({ surveys, onDelete, onStatusChange }: SurveyTablePr
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'published':
-        return 'success';
-      case 'draft':
         return 'secondary';
+      case 'draft':
+        return 'default';
       case 'archived':
         return 'destructive';
       default:
@@ -46,7 +46,7 @@ export function SurveyTable({ surveys, onDelete, onStatusChange }: SurveyTablePr
           <TableHead>Description</TableHead>
           <TableHead>Tags</TableHead>
           <TableHead>Status</TableHead>
-          <TableHead className="w-[100px]">Actions</TableHead>
+          <TableHead className="w-[180px]">Actions</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
@@ -78,6 +78,13 @@ export function SurveyTable({ surveys, onDelete, onStatusChange }: SurveyTablePr
                     <Pencil className="h-4 w-4" />
                   </Link>
                 </Button>
+                {survey.status === 'published' && (
+                  <Button variant="ghost" size="icon" asChild>
+                    <Link to={`/admin/surveys/campaigns/create?surveyId=${survey.id}`}>
+                      <Grid className="h-4 w-4" />
+                    </Link>
+                  </Button>
+                )}
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button variant="ghost" size="icon">
@@ -92,17 +99,10 @@ export function SurveyTable({ surveys, onDelete, onStatusChange }: SurveyTablePr
                       </DropdownMenuItem>
                     )}
                     {survey.status === 'published' && (
-                      <>
-                        <DropdownMenuItem asChild>
-                          <Link to={`/admin/surveys/campaigns/create?surveyId=${survey.id}`}>
-                            Create Campaign
-                          </Link>
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => onStatusChange(survey.id, 'archived')}>
-                          <Archive className="mr-2 h-4 w-4" />
-                          Archive
-                        </DropdownMenuItem>
-                      </>
+                      <DropdownMenuItem onClick={() => onStatusChange(survey.id, 'archived')}>
+                        <Archive className="mr-2 h-4 w-4" />
+                        Archive
+                      </DropdownMenuItem>
                     )}
                     <DropdownMenuItem
                       onClick={() => onDelete(survey.id)}
