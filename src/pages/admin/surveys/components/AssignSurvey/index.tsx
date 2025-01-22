@@ -24,15 +24,10 @@ import { toast } from "sonner";
 import { UserSelector } from "./UserSelector";
 import { RecurringSchedule } from "./RecurringSchedule";
 import { DateRangePicker } from "./RecurringSchedule/DateRangePicker";
-import { assignSurveySchema, type AssignSurveyFormData } from "./types";
+import { assignSurveySchema, type AssignSurveyFormData, type AssignSurveyProps } from "./types";
+import { Database } from "@/integrations/supabase/types";
 
-interface AssignSurveyProps {
-  surveyId: string;
-  campaignId?: string;
-  isRecurring?: boolean;
-  recurringFrequency?: string;
-  onAssigned?: () => void;
-}
+type RecurringFrequency = Database["public"]["Enums"]["recurring_frequency"];
 
 export function AssignSurveyDialog({ 
   surveyId, 
@@ -47,8 +42,8 @@ export function AssignSurveyDialog({
     resolver: zodResolver(assignSurveySchema),
     defaultValues: {
       selectedUsers: [],
-      isRecurring: false,
-      recurringFrequency: "one_time",
+      isRecurring: isRecurring || false,
+      recurringFrequency: (recurringFrequency as RecurringFrequency) || "one_time",
     },
   });
 
@@ -93,8 +88,9 @@ export function AssignSurveyDialog({
         user_id: userId,
         due_date: data.dueDate?.toISOString(),
         created_by: session.user.id,
+        campaign_id: campaignId,
         is_recurring: data.isRecurring,
-        recurring_frequency: data.isRecurring ? data.recurringFrequency : null,
+        recurring_frequency: data.isRecurring ? data.recurringFrequency as RecurringFrequency : null,
         recurring_ends_at: data.isRecurring ? data.recurringEndsAt?.toISOString() : null,
         recurring_days: data.isRecurring ? data.recurringDays : null,
       }));
@@ -199,7 +195,7 @@ export function AssignSurvey({
     defaultValues: {
       selectedUsers: [],
       isRecurring: isRecurring || false,
-      recurringFrequency: recurringFrequency || "one_time",
+      recurringFrequency: (recurringFrequency as RecurringFrequency) || "one_time",
     },
   });
 
@@ -309,7 +305,9 @@ export function AssignSurvey({
                 frequency={form.watch("recurringFrequency") || "one_time"}
                 endsAt={form.watch("recurringEndsAt")}
                 onIsRecurringChange={field.onChange}
-                onFrequencyChange={(value) => form.setValue("recurringFrequency", value)}
+                onFrequencyChange={(value) => 
+                  form.setValue("recurringFrequency", value as RecurringFrequency)
+                }
                 onEndsAtChange={(date) => form.setValue("recurringEndsAt", date)}
               />
               <FormMessage />

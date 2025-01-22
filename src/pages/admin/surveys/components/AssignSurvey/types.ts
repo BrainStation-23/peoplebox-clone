@@ -13,3 +13,11 @@ export const assignSurveySchema = z.object({
 });
 
 export type AssignSurveyFormData = z.infer<typeof assignSurveySchema>;
+
+export type AssignSurveyProps = {
+  surveyId: string;
+  campaignId?: string;
+  isRecurring?: boolean;
+  recurringFrequency?: RecurringFrequency;
+  onAssigned?: () => void;
+};
