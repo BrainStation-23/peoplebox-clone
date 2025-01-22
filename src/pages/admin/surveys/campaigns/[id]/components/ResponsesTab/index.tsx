@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { Model } from "survey-core";
@@ -10,7 +10,6 @@ import type { Response } from "./types";
 
 export function ResponsesTab() {
   const { id: campaignId } = useParams();
-  const [visualizationPanel, setVisualizationPanel] = useState<any>(null);
 
   const { data: surveyData } = useQuery({
     queryKey: ["campaign-survey", campaignId],
@@ -67,14 +66,13 @@ export function ResponsesTab() {
   });
 
   // Initialize visualization panel when data is available
-  useState(() => {
+  useEffect(() => {
     if (surveyData?.json_data && responses) {
       const survey = new Model(surveyData.json_data);
       const visPanel = new VisualizationPanel(
-        survey,
+        survey.getAllQuestions(),
         responses.map(r => r.response_data)
       );
-      setVisualizationPanel(visPanel);
       
       // Render the panel
       const container = document.getElementById("visualizationContainer");
