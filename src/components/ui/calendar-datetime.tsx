@@ -69,7 +69,7 @@ export function CalendarDateTime({
             selected={value}
             onSelect={handleDateSelect}
             initialFocus
-            showMonthYearPicker={showMonthYearPicker}
+            captionLayout={showMonthYearPicker ? "dropdown" : "buttons"}
           />
         </PopoverContent>
       </Popover>
