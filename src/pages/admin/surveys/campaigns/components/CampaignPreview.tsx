@@ -1,117 +1,114 @@
-import { format, addDays, isAfter, isBefore } from "date-fns";
-import { CalendarDays, Clock } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { UseFormReturn, useWatch } from "react-hook-form";
 import { CampaignFormData } from "./CampaignForm";
+import { format, addDays, addWeeks, addMonths, addYears } from "date-fns";
 
 interface CampaignPreviewProps {
   form: UseFormReturn<CampaignFormData>;
 }
 
 export function CampaignPreview({ form }: CampaignPreviewProps) {
-  const values = useWatch({ control: form.control });
-  
-  const getInstancePeriods = () => {
-    if (!values.starts_at) return [];
-    
-    const periods = [];
-    let currentStart = values.starts_at;
-    
-    if (!values.is_recurring) {
-      if (values.ends_at) {
-        periods.push({
-          start: currentStart,
-          end: values.ends_at,
-          dueTime: format(values.ends_at, 'HH:mm'),
-        });
-      }
-      return periods;
+  const isRecurring = useWatch({
+    control: form.control,
+    name: "is_recurring",
+  });
+
+  const frequency = useWatch({
+    control: form.control,
+    name: "recurring_frequency",
+  });
+
+  const startsAt = useWatch({
+    control: form.control,
+    name: "starts_at",
+  });
+
+  const instanceDurationDays = useWatch({
+    control: form.control,
+    name: "instance_duration_days",
+  });
+
+  const recurringEndsAt = useWatch({
+    control: form.control,
+    name: "recurring_ends_at",
+  });
+
+  if (!isRecurring) {
+    return null;
+  }
+
+  const getNextDate = (date: Date) => {
+    switch (frequency) {
+      case "daily":
+        return addDays(date, 1);
+      case "weekly":
+        return addWeeks(date, 1);
+      case "monthly":
+        return addMonths(date, 1);
+      case "quarterly":
+        return addMonths(date, 3);
+      case "yearly":
+        return addYears(date, 1);
+      default:
+        return date;
     }
-
-    while (values.recurring_ends_at && isBefore(currentStart, values.recurring_ends_at)) {
-      const endDate = addDays(currentStart, values.instance_duration_days || 0);
-      
-      if (isAfter(endDate, values.recurring_ends_at)) break;
-      
-      periods.push({
-        start: currentStart,
-        end: endDate,
-        dueTime: values.instance_end_time,
-      });
-
-      // Calculate next period start based on frequency
-      switch (values.recurring_frequency) {
-        case 'weekly':
-          currentStart = addDays(currentStart, 7);
-          break;
-        case 'monthly':
-          currentStart = new Date(currentStart.setMonth(currentStart.getMonth() + 1));
-          break;
-        case 'quarterly':
-          currentStart = new Date(currentStart.setMonth(currentStart.getMonth() + 3));
-          break;
-        case 'yearly':
-          currentStart = new Date(currentStart.setFullYear(currentStart.getFullYear() + 1));
-          break;
-        default:
-          currentStart = addDays(currentStart, 1); // daily
-      }
-    }
-
-    return periods;
   };
 
-  const periods = getInstancePeriods();
+  const generateTimelineEvents = () => {
+    if (!startsAt || !frequency) return [];
+
+    const events = [];
+    let currentDate = new Date(startsAt);
+    let count = 0;
+    const maxEvents = 5;
+
+    while (count < maxEvents) {
+      if (recurringEndsAt && currentDate > recurringEndsAt) break;
+
+      events.push({
+        startDate: currentDate,
+        endDate: addDays(currentDate, instanceDurationDays || 7),
+      });
+
+      currentDate = getNextDate(currentDate);
+      count++;
+    }
+
+    return events;
+  };
+
+  const events = generateTimelineEvents();
 
   return (
-    <div className="space-y-6">
-      <h3 className="text-lg font-semibold">Campaign Timeline</h3>
-      
-      <div className="space-y-4">
-        {periods.map((period, index) => (
-          <div
-            key={index}
-            className="p-4 border rounded-lg hover:bg-accent transition-colors"
-          >
-            <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
-              <CalendarDays className="h-4 w-4" />
-              <span>Period {index + 1}</span>
-            </div>
-            <div className="space-y-1">
-              <p className="text-sm">
-                {format(period.start, 'MMM d')} - {format(period.end, 'MMM d, yyyy')}
-              </p>
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <Clock className="h-4 w-4" />
-                <span>Due by {period.dueTime}</span>
+    <Card>
+      <CardHeader>
+        <CardTitle>Campaign Timeline</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="space-y-4">
+          {events.map((event, index) => (
+            <div
+              key={index}
+              className="border rounded-lg p-4 space-y-2"
+            >
+              <div className="text-sm font-medium">
+                Instance {index + 1}
+              </div>
+              <div className="text-sm text-muted-foreground">
+                Starts: {format(event.startDate, "PPP")}
+              </div>
+              <div className="text-sm text-muted-foreground">
+                Ends: {format(event.endDate, "PPP")}
               </div>
             </div>
-          </div>
-        ))}
-      </div>
-
-      {periods.length > 0 && (
-        <div className="border-t pt-4">
-          <h4 className="font-medium mb-2">Summary</h4>
-          <dl className="space-y-1 text-sm">
-            <div className="flex justify-between">
-              <dt className="text-muted-foreground">Total Periods:</dt>
-              <dd className="font-medium">{periods.length}</dd>
+          ))}
+          {recurringEndsAt && (
+            <div className="text-sm text-muted-foreground mt-4">
+              Campaign ends on {format(recurringEndsAt, "PPP")}
             </div>
-            <div className="flex justify-between">
-              <dt className="text-muted-foreground">First Response Due:</dt>
-              <dd className="font-medium">
-                {format(periods[0].end, 'MMM d, yyyy')} at {periods[0].dueTime}
-              </dd>
-            </div>
-            <div className="flex justify-between">
-              <dt className="text-muted-foreground">Last Response Due:</dt>
-              <dd className="font-medium">
-                {format(periods[periods.length - 1].end, 'MMM d, yyyy')} at {periods[periods.length - 1].dueTime}
-              </dd>
-            </div>
-          </dl>
+          )}
         </div>
-      )}
-    </div>
+      </CardContent>
+    </Card>
   );
 }

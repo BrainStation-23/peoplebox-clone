@@ -19,6 +19,7 @@ import { Switch } from "@/components/ui/switch";
 import { UseFormReturn, useWatch } from "react-hook-form";
 import { CalendarDateTime } from "@/components/ui/calendar-datetime";
 import { CampaignFormData } from "./CampaignForm";
+import { cn } from "@/lib/utils";
 
 interface ScheduleConfigProps {
   form: UseFormReturn<CampaignFormData>;
@@ -36,11 +37,6 @@ export function ScheduleConfig({ form }: ScheduleConfigProps) {
   const isRecurring = useWatch({
     control: form.control,
     name: "is_recurring",
-  });
-
-  const frequency = useWatch({
-    control: form.control,
-    name: "recurring_frequency",
   });
 
   return (
@@ -67,25 +63,26 @@ export function ScheduleConfig({ form }: ScheduleConfigProps) {
           )}
         />
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <FormField
-            control={form.control}
-            name="starts_at"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Start Date & Time</FormLabel>
-                <FormControl>
-                  <CalendarDateTime 
-                    value={field.value} 
-                    onChange={field.onChange}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+        {!isRecurring ? (
+          <div className="space-y-4">
+            <FormField
+              control={form.control}
+              name="starts_at"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Start Date & Time</FormLabel>
+                  <FormControl>
+                    <CalendarDateTime 
+                      value={field.value} 
+                      onChange={field.onChange}
+                      showMonthYearPicker
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-          {!isRecurring && (
             <FormField
               control={form.control}
               name="ends_at"
@@ -96,17 +93,36 @@ export function ScheduleConfig({ form }: ScheduleConfigProps) {
                     <CalendarDateTime 
                       value={field.value} 
                       onChange={field.onChange}
+                      showMonthYearPicker
                     />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
-          )}
-        </div>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <FormField
+                control={form.control}
+                name="starts_at"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Start Date & Time</FormLabel>
+                    <FormControl>
+                      <CalendarDateTime 
+                        value={field.value} 
+                        onChange={field.onChange}
+                        showMonthYearPicker
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
 
-        {isRecurring && (
-          <>
             <FormField
               control={form.control}
               name="recurring_frequency"
@@ -183,13 +199,14 @@ export function ScheduleConfig({ form }: ScheduleConfigProps) {
                     <CalendarDateTime 
                       value={field.value} 
                       onChange={field.onChange}
+                      showMonthYearPicker
                     />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
-          </>
+          </div>
         )}
       </div>
     </Card>
