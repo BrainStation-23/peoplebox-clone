@@ -26,10 +26,15 @@ export default function AdminSidebar({ onSignOut }: AdminSidebarProps) {
     queryFn: async () => {
       const { count, error } = await supabase
         .from("survey_assignments")
-        .select("*", { count: 'exact', head: true })
+        .select(`
+          *,
+          campaign:survey_campaigns!inner (
+            status
+          )
+        `, { count: 'exact', head: true })
         .eq("status", "pending")
         .eq("user_id", (await supabase.auth.getUser()).data.user?.id)
-        .not("campaign.status", "eq", "draft");
+        .neq("campaign.status", "draft");
 
       if (error) throw error;
       return count || 0;
