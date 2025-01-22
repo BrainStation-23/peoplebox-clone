@@ -32,10 +32,21 @@ export default function CampaignDetailsPage() {
       const { data, error } = await supabase
         .from('survey_assignments')
         .select(`
-          *,
-          user:profiles(id, email, first_name, last_name),
+          id,
+          status,
+          due_date,
+          instance_number,
+          user:profiles!survey_assignments_user_id_fkey(
+            id,
+            email,
+            first_name,
+            last_name
+          ),
           sbu_assignments:survey_sbu_assignments(
-            sbu:sbus(id, name)
+            sbu:sbus(
+              id,
+              name
+            )
           )
         `)
         .eq('campaign_id', id)
@@ -119,7 +130,7 @@ export default function CampaignDetailsPage() {
             surveyId={campaign.survey_id}
             campaignId={campaign.id}
             isRecurring={campaign.is_recurring}
-            recurringFrequency={campaign.recurring_frequency}
+            recurringFrequency={campaign.recurring_frequency as "one_time" | "daily" | "weekly" | "monthly"}
           />
         </TabsContent>
       </Tabs>
