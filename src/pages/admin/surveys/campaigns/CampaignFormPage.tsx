@@ -89,18 +89,7 @@ export default function CampaignFormPage() {
       if (isEditMode) {
         const { error } = await supabase
           .from('survey_campaigns')
-          .update({
-            name: dataToSubmit.name,
-            description: dataToSubmit.description,
-            survey_id: dataToSubmit.survey_id,
-            starts_at: dataToSubmit.starts_at,
-            ends_at: dataToSubmit.ends_at,
-            is_recurring: dataToSubmit.is_recurring,
-            recurring_frequency: dataToSubmit.recurring_frequency,
-            recurring_ends_at: dataToSubmit.recurring_ends_at,
-            status: dataToSubmit.status,
-            updated_at: new Date().toISOString(),
-          })
+          .update(dataToSubmit)
           .eq('id', id);
 
         if (error) throw error;
