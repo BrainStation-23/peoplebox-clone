@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { Eye, MoreVertical, Pencil, Trash } from "lucide-react";
+import { Eye, MoreVertical, Pencil, Trash2 } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -16,53 +16,119 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { format } from "date-fns";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 interface Campaign {
   id: string;
   name: string;
   description: string | null;
   status: string;
-  starts_at: string;
-  ends_at: string | null;
-  completion_rate: number;
+  campaign_type: string;
+  is_recurring: boolean;
+  recurring_frequency: string | null;
+  recurring_ends_at: string | null;
+  created_at: string;
+  survey: { name: string };
+  created_by: { email: string };
 }
 
 interface CampaignTableProps {
   campaigns: Campaign[];
-  onDelete: (id: string) => void;
 }
 
-export function CampaignTable({ campaigns, onDelete }: CampaignTableProps) {
+export function CampaignTable({ campaigns }: CampaignTableProps) {
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  const deleteMutation = useMutation({
+    mutationFn: async (campaignId: string) => {
+      const { error } = await supabase
+        .from('survey_campaigns')
+        .delete()
+        .eq('id', campaignId);
+      
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['campaigns'] });
+      toast({
+        title: "Success",
+        description: "Campaign deleted successfully",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: "Failed to delete campaign",
+        variant: "destructive",
+      });
+      console.error("Error deleting campaign:", error);
+    },
+  });
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'active':
+        return 'secondary';
+      case 'completed':
+        return 'default';
+      case 'draft':
+        return 'outline';
+      default:
+        return 'destructive';
+    }
+  };
+
   return (
     <Table>
       <TableHeader>
         <TableRow>
           <TableHead>Name</TableHead>
-          <TableHead>Description</TableHead>
+          <TableHead>Survey</TableHead>
+          <TableHead>Type</TableHead>
           <TableHead>Status</TableHead>
-          <TableHead>Start Date</TableHead>
-          <TableHead>End Date</TableHead>
-          <TableHead>Completion Rate</TableHead>
+          <TableHead>Created</TableHead>
           <TableHead className="w-[100px]">Actions</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
         {campaigns.map((campaign) => (
           <TableRow key={campaign.id}>
-            <TableCell className="font-medium">{campaign.name}</TableCell>
-            <TableCell>{campaign.description}</TableCell>
+            <TableCell className="font-medium">
+              <Link 
+                to={`/admin/surveys/campaigns/${campaign.id}`}
+                className="hover:underline"
+              >
+                {campaign.name}
+              </Link>
+              {campaign.description && (
+                <p className="text-sm text-muted-foreground">{campaign.description}</p>
+              )}
+            </TableCell>
+            <TableCell>{campaign.survey.name}</TableCell>
             <TableCell>
-              <Badge variant={campaign.status === 'active' ? 'default' : 'secondary'}>
-                {campaign.status}
+              <Badge variant="outline">
+                {campaign.is_recurring ? `Recurring (${campaign.recurring_frequency})` : 'One-time'}
               </Badge>
             </TableCell>
-            <TableCell>{format(new Date(campaign.starts_at), 'MMM d, yyyy')}</TableCell>
             <TableCell>
-              {campaign.ends_at ? format(new Date(campaign.ends_at), 'MMM d, yyyy') : '-'}
+              <Badge variant={getStatusColor(campaign.status)}>{campaign.status}</Badge>
             </TableCell>
-            <TableCell>{campaign.completion_rate?.toFixed(1)}%</TableCell>
+            <TableCell>{format(new Date(campaign.created_at), 'MMM d, yyyy')}</TableCell>
             <TableCell>
               <div className="flex items-center gap-2">
                 <Button variant="ghost" size="icon" asChild>
@@ -78,21 +144,20 @@ export function CampaignTable({ campaigns, onDelete }: CampaignTableProps) {
                 <AlertDialog>
                   <AlertDialogTrigger asChild>
                     <Button variant="ghost" size="icon">
-                      <Trash className="h-4 w-4 text-destructive" />
+                      <Trash2 className="h-4 w-4 text-destructive" />
                     </Button>
                   </AlertDialogTrigger>
                   <AlertDialogContent>
                     <AlertDialogHeader>
                       <AlertDialogTitle>Delete Campaign</AlertDialogTitle>
                       <AlertDialogDescription>
-                        This action cannot be undone. This will permanently delete the campaign
-                        and all associated data including assignments and responses.
+                        Are you sure you want to delete this campaign? This action will also delete all assignments, responses, and related data. This action cannot be undone.
                       </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
                       <AlertDialogCancel>Cancel</AlertDialogCancel>
                       <AlertDialogAction
-                        onClick={() => onDelete(campaign.id)}
+                        onClick={() => deleteMutation.mutate(campaign.id)}
                         className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                       >
                         Delete
