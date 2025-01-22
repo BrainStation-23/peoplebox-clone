@@ -1,15 +1,18 @@
 import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
+import { useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Search } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 import SurveyCard from "./SurveyCard";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useState } from "react";
 
 export default function MySurveysList() {
   const navigate = useNavigate();
+  const { toast } = useToast();
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   
@@ -58,7 +61,63 @@ export default function MySurveysList() {
     },
   });
 
-  const handleSelectSurvey = (id: string) => {
+  // Check for due dates and show notifications
+  useEffect(() => {
+    if (assignments) {
+      const now = new Date();
+      assignments.forEach(assignment => {
+        if (assignment.due_date && assignment.status !== 'completed') {
+          const dueDate = new Date(assignment.due_date);
+          const daysUntilDue = Math.ceil((dueDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+          
+          // Notify about assignments due soon
+          if (daysUntilDue <= 3 && daysUntilDue > 0) {
+            toast({
+              title: "Survey Due Soon",
+              description: `"${assignment.campaign?.name || assignment.survey.name}" is due in ${daysUntilDue} day${daysUntilDue === 1 ? '' : 's'}`,
+              variant: "default",
+            });
+          }
+          // Notify about overdue assignments
+          else if (daysUntilDue < 0 && assignment.status !== 'expired') {
+            toast({
+              title: "Survey Overdue",
+              description: `"${assignment.campaign?.name || assignment.survey.name}" is overdue`,
+              variant: "destructive",
+            });
+          }
+        }
+      });
+    }
+  }, [assignments, toast]);
+
+  // Subscribe to real-time updates for new assignments
+  useEffect(() => {
+    const channel = supabase
+      .channel('survey_assignments')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'survey_assignments',
+          filter: `user_id=eq.${supabase.auth.getUser().then(({ data }) => data.user?.id)}`
+        },
+        (payload) => {
+          toast({
+            title: "New Survey Assignment",
+            description: "You have been assigned a new survey",
+          });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [toast]);
+
+  const handleSelectSurvey = async (id: string) => {
     navigate(`/admin/my-surveys/${id}`);
   };
 
