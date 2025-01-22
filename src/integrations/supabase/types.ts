@@ -190,12 +190,14 @@ export type Database = {
           created_at: string
           created_by: string
           description: string | null
+          ends_at: string | null
           id: string
           is_recurring: boolean | null
           name: string
           recurring_days: number[] | null
           recurring_ends_at: string | null
           recurring_frequency: string | null
+          starts_at: string
           status: string
           survey_id: string
           updated_at: string
@@ -206,12 +208,14 @@ export type Database = {
           created_at?: string
           created_by: string
           description?: string | null
+          ends_at?: string | null
           id?: string
           is_recurring?: boolean | null
           name: string
           recurring_days?: number[] | null
           recurring_ends_at?: string | null
           recurring_frequency?: string | null
+          starts_at: string
           status?: string
           survey_id: string
           updated_at?: string
@@ -222,12 +226,14 @@ export type Database = {
           created_at?: string
           created_by?: string
           description?: string | null
+          ends_at?: string | null
           id?: string
           is_recurring?: boolean | null
           name?: string
           recurring_days?: number[] | null
           recurring_ends_at?: string | null
           recurring_frequency?: string | null
+          starts_at?: string
           status?: string
           survey_id?: string
           updated_at?: string
@@ -498,7 +504,13 @@ export type Database = {
       assignment_status: "pending" | "completed" | "expired"
       campaign_status: "draft" | "active" | "completed" | "archived"
       level_status: "active" | "inactive"
-      recurring_frequency: "one_time" | "daily" | "weekly" | "monthly"
+      recurring_frequency:
+        | "one_time"
+        | "daily"
+        | "weekly"
+        | "monthly"
+        | "quarterly"
+        | "yearly"
       survey_status: "draft" | "published" | "archived"
       user_role: "admin" | "user"
     }

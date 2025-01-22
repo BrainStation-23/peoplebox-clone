@@ -23,14 +23,40 @@ import {
 import { Switch } from "@/components/ui/switch";
 import { Card, CardContent } from "@/components/ui/card";
 import { useNavigate } from "react-router-dom";
+import { CalendarDateTime } from "@/components/ui/calendar-datetime";
 
 const campaignSchema = z.object({
   name: z.string().min(1, "Name is required"),
   description: z.string().optional(),
   survey_id: z.string().min(1, "Survey is required"),
+  starts_at: z.date({
+    required_error: "Start date is required",
+  }),
+  ends_at: z.date({
+    required_error: "End date is required",
+  }),
   is_recurring: z.boolean().default(false),
   recurring_frequency: z.string().optional(),
+  recurring_ends_at: z.date().optional(),
   status: z.string().default("draft"),
+}).refine((data) => {
+  // Ensure end date is after start date
+  if (data.ends_at <= data.starts_at) {
+    return false;
+  }
+  return true;
+}, {
+  message: "End date must be after start date",
+  path: ["ends_at"],
+}).refine((data) => {
+  // If recurring, ensure recurring end date is after start date
+  if (data.is_recurring && data.recurring_ends_at && data.recurring_ends_at <= data.starts_at) {
+    return false;
+  }
+  return true;
+}, {
+  message: "Recurring end date must be after start date",
+  path: ["recurring_ends_at"],
 });
 
 type CampaignFormData = z.infer<typeof campaignSchema>;
@@ -46,6 +72,14 @@ interface CampaignFormProps {
   defaultValues?: Partial<CampaignFormData>;
 }
 
+const frequencyOptions = [
+  { value: "daily", label: "Daily (Runs every day)" },
+  { value: "weekly", label: "Weekly (Runs every week on selected days)" },
+  { value: "monthly", label: "Monthly (Runs once a month on selected date)" },
+  { value: "quarterly", label: "Quarterly (Runs every 3 months)" },
+  { value: "yearly", label: "Yearly (Runs once a year)" },
+];
+
 export function CampaignForm({ onSubmit, surveys, defaultValues }: CampaignFormProps) {
   const navigate = useNavigate();
   const form = useForm<CampaignFormData>({
@@ -54,6 +88,8 @@ export function CampaignForm({ onSubmit, surveys, defaultValues }: CampaignFormP
       name: "",
       description: "",
       survey_id: "",
+      starts_at: new Date(),
+      ends_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // Default to 1 week from now
       is_recurring: false,
       recurring_frequency: "one_time",
       status: "draft",
@@ -126,6 +162,48 @@ export function CampaignForm({ onSubmit, surveys, defaultValues }: CampaignFormP
                 )}
               />
 
+              <div className="grid gap-4">
+                <FormField
+                  control={form.control}
+                  name="starts_at"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Start Date & Time</FormLabel>
+                      <FormControl>
+                        <CalendarDateTime 
+                          value={field.value} 
+                          onChange={field.onChange}
+                        />
+                      </FormControl>
+                      <FormDescription>
+                        When should the campaign start?
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="ends_at"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>End Date & Time</FormLabel>
+                      <FormControl>
+                        <CalendarDateTime 
+                          value={field.value} 
+                          onChange={field.onChange}
+                        />
+                      </FormControl>
+                      <FormDescription>
+                        When should the campaign end?
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
               <FormField
                 control={form.control}
                 name="is_recurring"
@@ -148,28 +226,52 @@ export function CampaignForm({ onSubmit, surveys, defaultValues }: CampaignFormP
               />
 
               {form.watch("is_recurring") && (
-                <FormField
-                  control={form.control}
-                  name="recurring_frequency"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Frequency</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <>
+                  <FormField
+                    control={form.control}
+                    name="recurring_frequency"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Frequency</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select frequency" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {frequencyOptions.map((option) => (
+                              <SelectItem key={option.value} value={option.value}>
+                                {option.label}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="recurring_ends_at"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Recurring End Date & Time</FormLabel>
                         <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select frequency" />
-                          </SelectTrigger>
+                          <CalendarDateTime 
+                            value={field.value} 
+                            onChange={field.onChange}
+                          />
                         </FormControl>
-                        <SelectContent>
-                          <SelectItem value="daily">Daily</SelectItem>
-                          <SelectItem value="weekly">Weekly</SelectItem>
-                          <SelectItem value="monthly">Monthly</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                        <FormDescription>
+                          When should the recurring campaign stop?
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </>
               )}
             </div>
           </CardContent>

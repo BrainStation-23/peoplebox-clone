@@ -11,3 +11,21 @@ export type Survey = {
   created_at: string;
   updated_at: string;
 };
+
+export type RecurringFrequency = 'daily' | 'weekly' | 'monthly' | 'quarterly' | 'yearly';
+
+export type Campaign = {
+  id: string;
+  name: string;
+  description: string | null;
+  survey_id: string;
+  starts_at: string;
+  ends_at: string;
+  is_recurring: boolean;
+  recurring_frequency?: RecurringFrequency;
+  recurring_ends_at?: string;
+  status: string;
+  created_by: string;
+  created_at: string;
+  updated_at: string;
+};
