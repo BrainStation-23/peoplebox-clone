@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { CampaignHeader } from "./components/CampaignHeader";
 import { CampaignTabs, TabPanel } from "./components/CampaignTabs";
 import { AssignmentInstanceList } from "./components/AssignmentInstanceList";
+import { OverviewTab } from "./components/OverviewTab";
 
 export default function CampaignDetailsPage() {
   const { id } = useParams();
@@ -45,41 +46,7 @@ export default function CampaignDetailsPage() {
     },
   });
 
-  const { data: assignments, isLoading: isLoadingAssignments } = useQuery({
-    queryKey: ["campaign-assignments", id],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("survey_assignments")
-        .select(`
-          id,
-          status,
-          due_date,
-          instance_number,
-          assignee:profiles!survey_assignments_user_id_fkey (
-            id,
-            email,
-            first_name,
-            last_name
-          ),
-          sbu_assignments:survey_sbu_assignments (
-            sbu:sbu_id (
-              id,
-              name
-            )
-          )
-        `)
-        .eq("campaign_id", id)
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-      
-      // Transform the data to match the expected Assignment type
-      return data?.map(assignment => ({
-        ...assignment,
-        user: assignment.assignee,
-      })) || [];
-    },
-  });
+  if (!id) return null;
 
   return (
     <div className="space-y-6">
@@ -91,12 +58,12 @@ export default function CampaignDetailsPage() {
 
       <CampaignTabs>
         <TabPanel value="overview">
-          <h2>Overview Content</h2>
+          <OverviewTab campaignId={id} />
         </TabPanel>
         <TabPanel value="assignments">
           <AssignmentInstanceList 
-            assignments={assignments || []} 
-            isLoading={isLoadingAssignments}
+            assignments={[]} 
+            isLoading={false}
             campaignId={id}
             surveyId={campaign?.survey_id}
           />
