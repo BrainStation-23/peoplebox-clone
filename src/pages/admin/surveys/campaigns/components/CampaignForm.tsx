@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Form } from "@/components/ui/form";
 import { BasicInfoForm } from "./BasicInfoForm";
 import { ScheduleConfig } from "./ScheduleConfig";
-import { CampaignReview } from "./CampaignReview";
+import { ReviewStep } from "./ReviewStep";
 
 const campaignSchema = z.object({
   name: z.string().min(1, "Name is required"),
@@ -77,7 +77,7 @@ export function CampaignForm({
       case 2:
         return <ScheduleConfig form={form} />;
       case 3:
-        return <CampaignReview form={form} />;
+        return <ReviewStep form={form} surveys={surveys} />;
       default:
         return null;
     }
