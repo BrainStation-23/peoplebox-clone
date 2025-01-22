@@ -3,10 +3,9 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { Button } from "@/components/ui/button";
 import { Form } from "@/components/ui/form";
-import { CampaignFormLayout } from "./CampaignFormLayout";
 import { BasicInfoForm } from "./BasicInfoForm";
 import { ScheduleConfig } from "./ScheduleConfig";
-import { CampaignPreview } from "./CampaignPreview";
+import { CampaignReview } from "./CampaignReview";
 
 const campaignSchema = z.object({
   name: z.string().min(1, "Name is required"),
@@ -35,9 +34,19 @@ interface CampaignFormProps {
   onSubmit: (data: CampaignFormData) => void;
   surveys: Survey[];
   defaultValues?: Partial<CampaignFormData>;
+  currentStep: number;
+  onStepComplete: (step: number) => void;
+  onStepBack: (step: number) => void;
 }
 
-export function CampaignForm({ onSubmit, surveys, defaultValues }: CampaignFormProps) {
+export function CampaignForm({ 
+  onSubmit, 
+  surveys, 
+  defaultValues,
+  currentStep,
+  onStepComplete,
+  onStepBack,
+}: CampaignFormProps) {
   const form = useForm<CampaignFormData>({
     resolver: zodResolver(campaignSchema),
     defaultValues: {
@@ -54,34 +63,51 @@ export function CampaignForm({ onSubmit, surveys, defaultValues }: CampaignFormP
     },
   });
 
+  const handleNext = async () => {
+    const isValid = await form.trigger();
+    if (isValid) {
+      onStepComplete(currentStep);
+    }
+  };
+
+  const renderStepContent = () => {
+    switch (currentStep) {
+      case 1:
+        return <BasicInfoForm form={form} surveys={surveys} />;
+      case 2:
+        return <ScheduleConfig form={form} />;
+      case 3:
+        return <CampaignReview form={form} />;
+      default:
+        return null;
+    }
+  };
+
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)}>
-        <CampaignFormLayout
-          leftPanel={
-            <>
-              <BasicInfoForm form={form} surveys={surveys} />
-              <ScheduleConfig form={form} />
-            </>
-          }
-          rightPanel={
-            <CampaignPreview form={form} />
-          }
-          actions={
-            <>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => window.history.back()}
-              >
-                Cancel
-              </Button>
-              <Button type="submit">
-                {defaultValues ? "Update" : "Create"} Campaign
-              </Button>
-            </>
-          }
-        />
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+        {renderStepContent()}
+        
+        <div className="flex justify-between pt-6 border-t">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => onStepBack(currentStep)}
+            disabled={currentStep === 1}
+          >
+            Back
+          </Button>
+          
+          {currentStep === 3 ? (
+            <Button type="submit">
+              Create Campaign
+            </Button>
+          ) : (
+            <Button type="button" onClick={handleNext}>
+              Continue
+            </Button>
+          )}
+        </div>
       </form>
     </Form>
   );

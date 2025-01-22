@@ -4,6 +4,9 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { CampaignForm, CampaignFormData } from "./components/CampaignForm";
+import { Button } from "@/components/ui/button";
+import { ChevronLeft } from "lucide-react";
+import { CampaignSteps } from "./components/CampaignSteps";
 import type { Database } from "@/integrations/supabase/types";
 
 type Campaign = Database['public']['Tables']['survey_campaigns']['Row'];
@@ -14,6 +17,8 @@ export default function CampaignFormPage() {
   const isEditMode = !!id;
   const navigate = useNavigate();
   const { toast } = useToast();
+  const [currentStep, setCurrentStep] = useState(1);
+  const [completedSteps, setCompletedSteps] = useState<number[]>([]);
 
   const { data: campaign, isLoading } = useQuery({
     queryKey: ['campaign', id],
@@ -126,16 +131,52 @@ export default function CampaignFormPage() {
   }
 
   return (
-    <div className="container max-w-4xl mx-auto py-6">
-      <h1 className="text-2xl font-bold mb-6">
-        {isEditMode ? 'Edit' : 'Create'} Campaign
-      </h1>
-      
-      <CampaignForm 
-        onSubmit={handleSubmit}
-        surveys={surveys || []}
-        defaultValues={campaign}
+    <div className="container max-w-7xl mx-auto py-6 space-y-8">
+      <div className="flex items-center justify-between">
+        <Button
+          variant="ghost"
+          className="gap-2"
+          onClick={() => navigate("/admin/surveys/campaigns")}
+        >
+          <ChevronLeft className="h-4 w-4" />
+          Back to Campaigns
+        </Button>
+        <h1 className="text-2xl font-bold">
+          {isEditMode ? 'Edit' : 'Create'} Campaign
+        </h1>
+      </div>
+
+      <CampaignSteps
+        currentStep={currentStep}
+        completedSteps={completedSteps}
       />
+      
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="lg:col-span-2">
+          <CampaignForm 
+            onSubmit={handleSubmit}
+            surveys={surveys || []}
+            defaultValues={campaign}
+            currentStep={currentStep}
+            onStepComplete={(step: number) => {
+              setCompletedSteps((prev) => [...new Set([...prev, step])]);
+              if (step < 3) {
+                setCurrentStep(step + 1);
+              }
+            }}
+            onStepBack={(step: number) => {
+              if (step > 1) {
+                setCurrentStep(step - 1);
+              }
+            }}
+          />
+        </div>
+        <div className="lg:col-span-1">
+          <div className="sticky top-6 space-y-6">
+            {/* Preview panel will be rendered here */}
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
