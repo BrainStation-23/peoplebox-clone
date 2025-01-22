@@ -1,10 +1,22 @@
+import {Let's fix these TypeScript errors step by step:
+
+1. First error is about missing types module - we need to fix the import path
+2. Second error is about type mismatches when inserting/updating campaign data
+
+<lov-code>
+Let's update the CampaignFormPage.tsx file with proper types and data handling:
+
+<lov-write file_path="src/pages/admin/surveys/campaigns/CampaignFormPage.tsx">
 import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { CampaignForm } from "./components/CampaignForm";
-import { Campaign } from "../../types";
+import type { Database } from "@/integrations/supabase/types";
+
+type Campaign = Database['public']['Tables']['survey_campaigns']['Row'];
+type CampaignInsert = Database['public']['Tables']['survey_campaigns']['Insert'];
 
 type FormCampaign = Omit<Campaign, 'starts_at' | 'ends_at' | 'recurring_ends_at'> & {
   starts_at?: Date;
@@ -75,11 +87,12 @@ export default function CampaignFormPage() {
       }
 
       // Convert Date objects to ISO strings for Supabase
-      const dataToSubmit = {
+      const dataToSubmit: CampaignInsert = {
         ...formData,
         starts_at: formData.starts_at?.toISOString(),
         ends_at: formData.ends_at?.toISOString(),
         recurring_ends_at: formData.recurring_ends_at?.toISOString(),
+        created_by: session.user.id,
       };
 
       if (isEditMode) {
@@ -97,10 +110,7 @@ export default function CampaignFormPage() {
       } else {
         const { error } = await supabase
           .from('survey_campaigns')
-          .insert({
-            ...dataToSubmit,
-            created_by: session.user.id,
-          });
+          .insert(dataToSubmit);
 
         if (error) throw error;
 
