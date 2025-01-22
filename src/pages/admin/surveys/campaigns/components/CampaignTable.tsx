@@ -89,12 +89,12 @@ export function CampaignTable({ campaigns }: CampaignTableProps) {
             <TableCell>
               <div className="flex items-center gap-2">
                 <Button variant="ghost" size="icon" asChild>
-                  <Link to={`/admin/surveys/campaigns/${campaign.id}`}>
+                  <Link to={`/admin/surveys/campaigns/${campaign.id}/preview`}>
                     <Eye className="h-4 w-4" />
                   </Link>
                 </Button>
                 <Button variant="ghost" size="icon" asChild>
-                  <Link to={`/admin/surveys/campaigns/${campaign.id}`}>
+                  <Link to={`/admin/surveys/campaigns/${campaign.id}/edit`}>
                     <Pencil className="h-4 w-4" />
                   </Link>
                 </Button>
@@ -105,8 +105,16 @@ export function CampaignTable({ campaigns }: CampaignTableProps) {
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
-                    <DropdownMenuItem>View Details</DropdownMenuItem>
-                    <DropdownMenuItem>View Responses</DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link to={`/admin/surveys/campaigns/${campaign.id}/preview`}>
+                        View Details
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link to={`/admin/surveys/campaigns/${campaign.id}/edit`}>
+                        Edit Campaign
+                      </Link>
+                    </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
               </div>
