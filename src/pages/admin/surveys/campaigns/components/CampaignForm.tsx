@@ -22,14 +22,6 @@ const campaignSchema = z.object({
   instance_end_time: z.string().optional(),
   ends_at: z.date().optional(),
   status: z.string().default("draft"),
-}).refine((data) => {
-  if (data.is_recurring) {
-    return data.recurring_ends_at && data.instance_duration_days && data.instance_end_time;
-  }
-  return data.ends_at !== undefined;
-}, {
-  message: "Please fill in all required fields",
-  path: ["ends_at"],
 });
 
 export type CampaignFormData = z.infer<typeof campaignSchema>;
