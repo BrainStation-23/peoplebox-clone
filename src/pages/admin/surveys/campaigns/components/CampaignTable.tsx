@@ -66,7 +66,12 @@ export function CampaignTable({ campaigns }: CampaignTableProps) {
         {campaigns.map((campaign) => (
           <TableRow key={campaign.id}>
             <TableCell className="font-medium">
-              {campaign.name}
+              <Link 
+                to={`/admin/surveys/campaigns/${campaign.id}`}
+                className="hover:underline"
+              >
+                {campaign.name}
+              </Link>
               {campaign.description && (
                 <p className="text-sm text-muted-foreground">{campaign.description}</p>
               )}

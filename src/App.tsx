@@ -22,6 +22,7 @@ import SurveyFormPage from "./pages/admin/surveys/SurveyFormPage";
 import PreviewSurveyPage from "./pages/admin/surveys/[id]/preview";
 import CampaignsPage from "./pages/admin/surveys/campaigns";
 import CampaignFormPage from "./pages/admin/surveys/campaigns/CampaignFormPage";
+import CampaignDetailsPage from "./pages/admin/surveys/campaigns/[id]";
 
 const queryClient = new QueryClient();
 
@@ -46,7 +47,7 @@ const App = () => (
             <Route path="surveys/:id/preview" element={<PreviewSurveyPage />} />
             <Route path="surveys/campaigns" element={<CampaignsPage />} />
             <Route path="surveys/campaigns/create" element={<CampaignFormPage />} />
-            <Route path="surveys/campaigns/:id" element={<CampaignFormPage />} />
+            <Route path="surveys/campaigns/:id" element={<CampaignDetailsPage />} />
             <Route path="config" element={<PlatformConfigLayout />}>
               <Route index element={<AdminConfig />} />
               <Route path="sbus" element={<SBUsConfig />} />
