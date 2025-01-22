@@ -80,7 +80,8 @@ export default function CampaignFormPage() {
         instance_duration_days: formData.instance_duration_days,
         instance_end_time: formData.instance_end_time || '23:59:59',
         ends_at: formData.ends_at?.toISOString(),
-        status: 'active', // Using text status instead of enum
+        campaign_type: formData.is_recurring ? 'recurring' : 'one_time',
+        status: 'draft',
         created_by: session.user.id,
       };
 
