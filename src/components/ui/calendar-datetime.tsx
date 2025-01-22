@@ -66,6 +66,7 @@ export function CalendarDateTime({
             mode="single"
             selected={value}
             onSelect={handleDateSelect}
+            defaultMonth={value}
             initialFocus
           />
         </PopoverContent>
