@@ -1,13 +1,21 @@
+import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { UseFormReturn, useWatch } from "react-hook-form";
 import { CampaignFormData } from "./CampaignForm";
 import { format, addDays, addWeeks, addMonths, addYears } from "date-fns";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 
 interface CampaignPreviewProps {
   form: UseFormReturn<CampaignFormData>;
 }
 
+const INSTANCES_PER_PAGE = 10;
+
 export function CampaignPreview({ form }: CampaignPreviewProps) {
+  const [currentPage, setCurrentPage] = useState(1);
+
   const isRecurring = useWatch({
     control: form.control,
     name: "is_recurring",
@@ -54,56 +62,132 @@ export function CampaignPreview({ form }: CampaignPreviewProps) {
     }
   };
 
-  const generateTimelineEvents = () => {
+  const generateAllTimelineEvents = () => {
     if (!startsAt || !frequency) return [];
 
     const events = [];
     let currentDate = new Date(startsAt);
-    let count = 0;
-    const maxEvents = 5;
 
-    while (count < maxEvents) {
-      if (recurringEndsAt && currentDate > recurringEndsAt) break;
-
+    while (!recurringEndsAt || currentDate <= recurringEndsAt) {
       events.push({
         startDate: currentDate,
         endDate: addDays(currentDate, instanceDurationDays || 7),
       });
 
       currentDate = getNextDate(currentDate);
-      count++;
+      
+      // Safety check to prevent infinite loops
+      if (events.length > 1000) break;
     }
 
     return events;
   };
 
-  const events = generateTimelineEvents();
+  const allEvents = generateAllTimelineEvents();
+  const totalPages = Math.ceil(allEvents.length / INSTANCES_PER_PAGE);
+  
+  const paginatedEvents = allEvents.slice(
+    (currentPage - 1) * INSTANCES_PER_PAGE,
+    currentPage * INSTANCES_PER_PAGE
+  );
+
+  const handlePreviousPage = () => {
+    setCurrentPage((prev) => Math.max(1, prev - 1));
+  };
+
+  const handleNextPage = () => {
+    setCurrentPage((prev) => Math.min(totalPages, prev + 1));
+  };
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Campaign Timeline</CardTitle>
+        <div className="flex items-center justify-between">
+          <CardTitle>Campaign Timeline</CardTitle>
+          <div className="text-sm text-muted-foreground">
+            Total Instances: {allEvents.length}
+          </div>
+        </div>
       </CardHeader>
       <CardContent>
-        <div className="space-y-4">
-          {events.map((event, index) => (
-            <div
-              key={index}
-              className="border rounded-lg p-4 space-y-2"
+        <div className="space-y-6">
+          {/* Timeline navigation */}
+          <div className="flex items-center justify-between">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handlePreviousPage}
+              disabled={currentPage === 1}
             >
-              <div className="text-sm font-medium">
-                Instance {index + 1}
-              </div>
-              <div className="text-sm text-muted-foreground">
-                Starts: {format(event.startDate, "PPP")}
-              </div>
-              <div className="text-sm text-muted-foreground">
-                Ends: {format(event.endDate, "PPP")}
-              </div>
-            </div>
-          ))}
+              <ChevronLeft className="h-4 w-4 mr-1" />
+              Previous
+            </Button>
+            <span className="text-sm text-muted-foreground">
+              Page {currentPage} of {totalPages}
+            </span>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleNextPage}
+              disabled={currentPage === totalPages}
+            >
+              Next
+              <ChevronRight className="h-4 w-4 ml-1" />
+            </Button>
+          </div>
+
+          {/* Timeline events */}
+          <div className="space-y-3">
+            {paginatedEvents.map((event, index) => {
+              const instanceNumber = (currentPage - 1) * INSTANCES_PER_PAGE + index + 1;
+              const isActive = event.startDate <= new Date() && event.endDate > new Date();
+              const isUpcoming = event.startDate > new Date();
+              
+              return (
+                <div
+                  key={index}
+                  className="relative pl-8 border-l-2 border-primary/20 pb-4 last:pb-0"
+                >
+                  {/* Timeline dot */}
+                  <div
+                    className={`absolute -left-2 w-4 h-4 rounded-full ${
+                      isActive
+                        ? "bg-green-500"
+                        : isUpcoming
+                        ? "bg-blue-500"
+                        : "bg-gray-500"
+                    }`}
+                  />
+
+                  {/* Instance card */}
+                  <div className="border rounded-lg p-4 transition-colors hover:bg-accent/5">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <Badge variant="outline">Instance {instanceNumber}</Badge>
+                        <h4 className="font-medium mt-2">
+                          {format(event.startDate, "PPP")} -{" "}
+                          {format(event.endDate, "PPP")}
+                        </h4>
+                      </div>
+                      <Badge
+                        variant={
+                          isActive ? "success" : isUpcoming ? "default" : "secondary"
+                        }
+                      >
+                        {isActive ? "Active" : isUpcoming ? "Upcoming" : "Completed"}
+                      </Badge>
+                    </div>
+                    <p className="text-sm text-muted-foreground mt-2">
+                      Duration: {instanceDurationDays} days
+                    </p>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+
           {recurringEndsAt && (
-            <div className="text-sm text-muted-foreground mt-4">
+            <div className="text-sm text-muted-foreground mt-4 pt-4 border-t">
               Campaign ends on {format(recurringEndsAt, "PPP")}
             </div>
           )}
