@@ -97,6 +97,8 @@ export default function CampaignDetailsPage() {
           <AssignmentInstanceList 
             assignments={assignments || []} 
             isLoading={isLoadingAssignments}
+            campaignId={id}
+            surveyId={campaign?.survey_id}
           />
         </TabPanel>
         <TabPanel value="responses">

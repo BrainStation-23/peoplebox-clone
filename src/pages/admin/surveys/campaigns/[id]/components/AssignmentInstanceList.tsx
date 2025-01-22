@@ -1,20 +1,13 @@
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { Button } from "@/components/ui/button";
+import { Users } from "lucide-react";
+import { AssignSurvey } from "@/pages/admin/surveys/components/AssignSurvey";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
-import { Database } from "@/integrations/supabase/types";
-
-type AssignmentStatus = Database["public"]["Enums"]["assignment_status"];
 
 interface Assignment {
   id: string;
-  status: AssignmentStatus;
+  status: "pending" | "completed" | "expired";
   due_date: string | null;
   instance_number: number | null;
   user: {
@@ -33,78 +26,90 @@ interface Assignment {
 
 interface AssignmentInstanceListProps {
   assignments: Assignment[];
-  isLoading: boolean;
+  isLoading?: boolean;
+  campaignId?: string;
+  surveyId?: string;
 }
 
-export function AssignmentInstanceList({ assignments, isLoading }: AssignmentInstanceListProps) {
+export function AssignmentInstanceList({ 
+  assignments, 
+  isLoading,
+  campaignId,
+  surveyId
+}: AssignmentInstanceListProps) {
   if (isLoading) {
     return <div>Loading assignments...</div>;
   }
 
-  if (assignments.length === 0) {
-    return (
-      <div className="text-center py-12">
-        <h3 className="text-lg font-semibold">No assignments found</h3>
-        <p className="text-muted-foreground">
-          Create new assignments using the "New Assignment" tab.
-        </p>
-      </div>
-    );
-  }
+  const getStatusColor = (status: Assignment["status"]) => {
+    switch (status) {
+      case "completed":
+        return "bg-green-500";
+      case "expired":
+        return "bg-red-500";
+      default:
+        return "bg-yellow-500";
+    }
+  };
 
   return (
-    <Table>
-      <TableHeader>
-        <TableRow>
-          <TableHead>Assignee</TableHead>
-          <TableHead>SBU</TableHead>
-          <TableHead>Due Date</TableHead>
-          <TableHead>Instance</TableHead>
-          <TableHead>Status</TableHead>
-        </TableRow>
-      </TableHeader>
-      <TableBody>
-        {assignments.map((assignment) => (
-          <TableRow key={assignment.id}>
-            <TableCell>
-              {assignment.user.first_name && assignment.user.last_name ? (
-                <>
-                  {assignment.user.first_name} {assignment.user.last_name}
+    <div className="space-y-4">
+      <div className="flex justify-between items-center">
+        <h3 className="text-lg font-semibold">Assignments</h3>
+        {surveyId && (
+          <AssignSurvey
+            surveyId={surveyId}
+            campaignId={campaignId}
+            onAssigned={() => {
+              // The page will automatically refresh due to React Query
+            }}
+          />
+        )}
+      </div>
+
+      <ScrollArea className="h-[600px] rounded-md border">
+        <div className="p-4 space-y-4">
+          {assignments.length === 0 ? (
+            <div className="text-center py-8 text-muted-foreground">
+              No assignments found
+            </div>
+          ) : (
+            assignments.map((assignment) => (
+              <div
+                key={assignment.id}
+                className="flex items-center justify-between p-4 border rounded-lg bg-card"
+              >
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2">
+                    <span className="font-medium">
+                      {assignment.user.first_name} {assignment.user.last_name}
+                    </span>
+                    <Badge variant="outline">
+                      Instance #{assignment.instance_number || 1}
+                    </Badge>
+                  </div>
                   <div className="text-sm text-muted-foreground">
                     {assignment.user.email}
                   </div>
-                </>
-              ) : (
-                assignment.user.email
-              )}
-            </TableCell>
-            <TableCell>
-              {assignment.sbu_assignments.map(({ sbu }) => (
-                <Badge key={sbu.id} variant="outline" className="mr-1">
-                  {sbu.name}
+                  {assignment.sbu_assignments.length > 0 && (
+                    <div className="text-sm text-muted-foreground">
+                      SBU: {assignment.sbu_assignments[0].sbu.name}
+                    </div>
+                  )}
+                  {assignment.due_date && (
+                    <div className="text-sm text-muted-foreground">
+                      Due: {format(new Date(assignment.due_date), "PPP")}
+                    </div>
+                  )}
+                </div>
+                <Badge className={getStatusColor(assignment.status)}>
+                  {assignment.status}
                 </Badge>
-              ))}
-            </TableCell>
-            <TableCell>
-              {assignment.due_date ? (
-                format(new Date(assignment.due_date), 'PPP')
-              ) : (
-                'No due date'
-              )}
-            </TableCell>
-            <TableCell>
-              {assignment.instance_number || 'One-time'}
-            </TableCell>
-            <TableCell>
-              <Badge
-                variant={assignment.status === 'completed' ? 'default' : 'secondary'}
-              >
-                {assignment.status}
-              </Badge>
-            </TableCell>
-          </TableRow>
-        ))}
-      </TableBody>
-    </Table>
+              </div>
+            ))
+          )}
+        </div>
+      </ScrollArea>
+    </div>
   );
 }
