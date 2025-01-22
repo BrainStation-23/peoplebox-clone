@@ -23,26 +23,31 @@ export default function CampaignDetailsPage() {
     },
   });
 
-  const { data: stats } = useQuery({
-    queryKey: ["campaign-stats", id],
+  const { data: assignments, isLoading: isLoadingAssignments } = useQuery({
+    queryKey: ["campaign-assignments", id],
     queryFn: async () => {
-      const { data: assignments, error } = await supabase
+      const { data, error } = await supabase
         .from("survey_assignments")
-        .select("id, status")
-        .eq("campaign_id", id);
+        .select(`
+          *,
+          user:profiles!survey_assignments_user_id_fkey (
+            id,
+            email,
+            first_name,
+            last_name
+          ),
+          sbu_assignments:survey_sbu_assignments (
+            sbu:sbus (
+              id,
+              name
+            )
+          )
+        `)
+        .eq("campaign_id", id)
+        .order("created_at", { ascending: false });
 
       if (error) throw error;
-
-      const totalAssignments = assignments?.length || 0;
-      const completedAssignments = assignments?.filter(a => a.status === 'completed').length || 0;
-      const completionRate = totalAssignments > 0 
-        ? Math.round((completedAssignments / totalAssignments) * 100) 
-        : 0;
-
-      return {
-        totalAssignments,
-        completionRate,
-      };
+      return data;
     },
   });
 
@@ -62,8 +67,8 @@ export default function CampaignDetailsPage() {
         </TabPanel>
         <TabPanel value="assignments">
           <AssignmentInstanceList 
-            assignments={[]} 
-            isLoading={false}
+            assignments={assignments || []}
+            isLoading={isLoadingAssignments}
             campaignId={id}
             surveyId={campaign?.survey_id}
           />
