@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { CampaignHeader } from "./components/CampaignHeader";
 import { CampaignTabs, TabPanel } from "./components/CampaignTabs";
+import { AssignmentInstanceList } from "./components/AssignmentInstanceList";
 
 export default function CampaignDetailsPage() {
   const { id } = useParams();
@@ -44,6 +45,37 @@ export default function CampaignDetailsPage() {
     },
   });
 
+  const { data: assignments, isLoading: isLoadingAssignments } = useQuery({
+    queryKey: ["campaign-assignments", id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("survey_assignments")
+        .select(`
+          id,
+          status,
+          due_date,
+          instance_number,
+          user:user_id (
+            id,
+            email,
+            first_name,
+            last_name
+          ),
+          sbu_assignments:survey_sbu_assignments (
+            sbu:sbu_id (
+              id,
+              name
+            )
+          )
+        `)
+        .eq("campaign_id", id)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      return data;
+    },
+  });
+
   return (
     <div className="space-y-6">
       <CampaignHeader 
@@ -57,7 +89,10 @@ export default function CampaignDetailsPage() {
           <h2>Overview Content</h2>
         </TabPanel>
         <TabPanel value="assignments">
-          <h2>Assignments Content</h2>
+          <AssignmentInstanceList 
+            assignments={assignments || []} 
+            isLoading={isLoadingAssignments}
+          />
         </TabPanel>
         <TabPanel value="responses">
           <h2>Responses Content</h2>
