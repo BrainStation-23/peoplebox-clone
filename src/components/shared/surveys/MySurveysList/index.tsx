@@ -15,7 +15,12 @@ export default function MySurveysList() {
             id,
             name,
             description,
-            status
+            status,
+            created_at,
+            created_by,
+            json_data,
+            tags,
+            updated_at
           )
         `)
         .eq("user_id", (await supabase.auth.getUser()).data.user?.id)

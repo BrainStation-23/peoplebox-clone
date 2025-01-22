@@ -3,8 +3,11 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Database } from "@/integrations/supabase/types";
 
-type Assignment = Database["public"]["Tables"]["survey_assignments"]["Row"] & {
-  survey: Database["public"]["Tables"]["surveys"]["Row"];
+type Survey = Database["public"]["Tables"]["surveys"]["Row"];
+type SurveyAssignment = Database["public"]["Tables"]["survey_assignments"]["Row"];
+
+type Assignment = SurveyAssignment & {
+  survey: Survey;
 };
 
 interface SurveyCardProps {
