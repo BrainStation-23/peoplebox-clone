@@ -4,6 +4,13 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { CampaignForm } from "./components/CampaignForm";
+import { Campaign } from "../../types";
+
+type FormCampaign = Omit<Campaign, 'starts_at' | 'ends_at' | 'recurring_ends_at'> & {
+  starts_at?: Date;
+  ends_at?: Date;
+  recurring_ends_at?: Date;
+};
 
 export default function CampaignFormPage() {
   const { id } = useParams();
@@ -25,14 +32,15 @@ export default function CampaignFormPage() {
 
       // Convert string dates to Date objects
       if (data) {
-        return {
+        const formattedData: FormCampaign = {
           ...data,
           starts_at: data.starts_at ? new Date(data.starts_at) : undefined,
           ends_at: data.ends_at ? new Date(data.ends_at) : undefined,
           recurring_ends_at: data.recurring_ends_at ? new Date(data.recurring_ends_at) : undefined,
         };
+        return formattedData;
       }
-      return data;
+      return null;
     },
     enabled: isEditMode,
   });
@@ -51,7 +59,7 @@ export default function CampaignFormPage() {
     },
   });
 
-  const handleSubmit = async (formData: any) => {
+  const handleSubmit = async (formData: FormCampaign) => {
     try {
       const { data: { session }, error: sessionError } = await supabase.auth.getSession();
       
