@@ -233,6 +233,8 @@ export type Database = {
           description: string | null
           ends_at: string | null
           id: string
+          instance_duration_days: number | null
+          instance_end_time: string | null
           is_recurring: boolean | null
           name: string
           recurring_days: number[] | null
@@ -251,6 +253,8 @@ export type Database = {
           description?: string | null
           ends_at?: string | null
           id?: string
+          instance_duration_days?: number | null
+          instance_end_time?: string | null
           is_recurring?: boolean | null
           name: string
           recurring_days?: number[] | null
@@ -269,6 +273,8 @@ export type Database = {
           description?: string | null
           ends_at?: string | null
           id?: string
+          instance_duration_days?: number | null
+          instance_end_time?: string | null
           is_recurring?: boolean | null
           name?: string
           recurring_days?: number[] | null
