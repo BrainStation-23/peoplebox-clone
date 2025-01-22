@@ -186,6 +186,7 @@ export type Database = {
       survey_campaigns: {
         Row: {
           campaign_type: string
+          completion_rate: number | null
           created_at: string
           created_by: string
           description: string | null
@@ -201,6 +202,7 @@ export type Database = {
         }
         Insert: {
           campaign_type?: string
+          completion_rate?: number | null
           created_at?: string
           created_by: string
           description?: string | null
@@ -216,6 +218,7 @@ export type Database = {
         }
         Update: {
           campaign_type?: string
+          completion_rate?: number | null
           created_at?: string
           created_by?: string
           description?: string | null
@@ -251,6 +254,7 @@ export type Database = {
           assignment_id: string
           created_at: string | null
           id: string
+          instance_number: number | null
           response_data: Json
           submitted_at: string | null
           updated_at: string | null
@@ -260,6 +264,7 @@ export type Database = {
           assignment_id: string
           created_at?: string | null
           id?: string
+          instance_number?: number | null
           response_data: Json
           submitted_at?: string | null
           updated_at?: string | null
@@ -269,6 +274,7 @@ export type Database = {
           assignment_id?: string
           created_at?: string | null
           id?: string
+          instance_number?: number | null
           response_data?: Json
           submitted_at?: string | null
           updated_at?: string | null
