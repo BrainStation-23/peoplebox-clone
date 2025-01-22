@@ -24,8 +24,9 @@ export function AssignmentDialog({ campaignId, surveyId }: AssignmentDialogProps
         return;
       }
 
-      const { data: session } = await supabase.auth.getSession();
-      if (!session?.user?.id) {
+      const { data: sessionData } = await supabase.auth.getSession();
+      
+      if (!sessionData?.session?.user?.id) {
         toast.error("No authenticated user found");
         return;
       }
@@ -33,7 +34,7 @@ export function AssignmentDialog({ campaignId, surveyId }: AssignmentDialogProps
       const assignments = selectedUsers.map(userId => ({
         survey_id: surveyId,
         user_id: userId,
-        created_by: session.user.id,
+        created_by: sessionData.session.user.id,
         campaign_id: campaignId,
       }));
 
