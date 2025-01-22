@@ -50,7 +50,7 @@ type Assignment = {
     instance_end_time: string | null;
     updated_at: string;
   };
-}
+};
 
 export default function MySurveysList() {
   const navigate = useNavigate();

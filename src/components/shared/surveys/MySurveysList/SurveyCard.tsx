@@ -6,13 +6,47 @@ import { cn } from "@/lib/utils";
 import CampaignProgress from "./components/CampaignProgress";
 import DueDateInfo from "./components/DueDateInfo";
 
-type Survey = Database["public"]["Tables"]["surveys"]["Row"];
-type SurveyAssignment = Database["public"]["Tables"]["survey_assignments"]["Row"];
-type Campaign = Database["public"]["Tables"]["survey_campaigns"]["Row"];
-
-type Assignment = SurveyAssignment & {
-  survey: Survey;
-  campaign?: Campaign;
+type Assignment = {
+  id: string;
+  survey_id: string;
+  user_id: string;
+  due_date: string | null;
+  status: Database["public"]["Enums"]["assignment_status"] | null;
+  created_by: string;
+  created_at: string | null;
+  updated_at: string | null;
+  is_organization_wide: boolean | null;
+  campaign_id: string | null;
+  survey: {
+    id: string;
+    name: string;
+    description: string | null;
+    status: Database["public"]["Enums"]["survey_status"] | null;
+    created_at: string;
+    created_by: string;
+    json_data: Database["public"]["Tables"]["surveys"]["Row"]["json_data"];
+    tags: string[] | null;
+    updated_at: string;
+  };
+  campaign?: {
+    id: string;
+    name: string;
+    description: string | null;
+    completion_rate: number | null;
+    status: string;
+    campaign_type: string;
+    created_at: string;
+    created_by: string;
+    ends_at: string | null;
+    is_recurring: boolean | null;
+    recurring_days: number[] | null;
+    recurring_ends_at: string | null;
+    recurring_frequency: string | null;
+    starts_at: string;
+    instance_duration_days: number | null;
+    instance_end_time: string | null;
+    updated_at: string;
+  };
 };
 
 interface SurveyCardProps {
@@ -40,7 +74,8 @@ const getDaysRemaining = (dueDate: string) => {
 };
 
 export default function SurveyCard({ assignment, onSelect }: SurveyCardProps) {
-  const daysRemaining = assignment.due_date ? getDaysRemaining(assignment.due_date) : null;
+  const effectiveDueDate = assignment.due_date || assignment.campaign?.ends_at;
+  const daysRemaining = effectiveDueDate ? getDaysRemaining(effectiveDueDate) : null;
   const isOverdue = daysRemaining !== null && daysRemaining < 0;
   const isDueSoon = daysRemaining !== null && daysRemaining <= 3 && daysRemaining > 0;
 
@@ -80,7 +115,7 @@ export default function SurveyCard({ assignment, onSelect }: SurveyCardProps) {
       </CardHeader>
       <CardContent className="space-y-4">
         <DueDateInfo
-          dueDate={assignment.due_date}
+          dueDate={effectiveDueDate}
           daysRemaining={daysRemaining}
           isOverdue={isOverdue}
           isDueSoon={isDueSoon}
