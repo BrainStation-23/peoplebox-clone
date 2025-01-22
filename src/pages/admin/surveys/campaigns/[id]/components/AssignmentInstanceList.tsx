@@ -8,7 +8,6 @@ interface Assignment {
   id: string;
   status: "pending" | "completed" | "expired";
   due_date: string | null;
-  instance_number: number | null;
   user: {
     id: string;
     email: string;
@@ -80,9 +79,6 @@ export function AssignmentInstanceList({
                     <span className="font-medium">
                       {assignment.user.first_name} {assignment.user.last_name}
                     </span>
-                    <Badge variant="outline">
-                      Instance #{assignment.instance_number || 1}
-                    </Badge>
                   </div>
                   <div className="text-sm text-muted-foreground">
                     {assignment.user.email}

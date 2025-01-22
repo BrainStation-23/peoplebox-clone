@@ -11,36 +11,36 @@ export type Database = {
     Tables: {
       campaign_instances: {
         Row: {
-          id: string
           campaign_id: string
-          period_number: number
-          starts_at: string
-          ends_at: string
-          status: Database["public"]["Enums"]["instance_status"]
           completion_rate: number | null
           created_at: string
+          ends_at: string
+          id: string
+          period_number: number
+          starts_at: string
+          status: Database["public"]["Enums"]["instance_status"]
           updated_at: string
         }
         Insert: {
-          id?: string
           campaign_id: string
-          period_number: number
-          starts_at: string
-          ends_at: string
-          status?: Database["public"]["Enums"]["instance_status"]
           completion_rate?: number | null
           created_at?: string
+          ends_at: string
+          id?: string
+          period_number: number
+          starts_at: string
+          status?: Database["public"]["Enums"]["instance_status"]
           updated_at?: string
         }
         Update: {
-          id?: string
           campaign_id?: string
-          period_number?: number
-          starts_at?: string
-          ends_at?: string
-          status?: Database["public"]["Enums"]["instance_status"]
           completion_rate?: number | null
           created_at?: string
+          ends_at?: string
+          id?: string
+          period_number?: number
+          starts_at?: string
+          status?: Database["public"]["Enums"]["instance_status"]
           updated_at?: string
         }
         Relationships: [
@@ -50,7 +50,7 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "survey_campaigns"
             referencedColumns: ["id"]
-          }
+          },
         ]
       }
       levels: {
@@ -158,6 +158,7 @@ export type Database = {
       }
       survey_assignments: {
         Row: {
+          campaign_id: string | null
           created_at: string | null
           created_by: string
           due_date: string | null
@@ -167,9 +168,9 @@ export type Database = {
           survey_id: string
           updated_at: string | null
           user_id: string
-          campaign_id: string | null
         }
         Insert: {
+          campaign_id?: string | null
           created_at?: string | null
           created_by: string
           due_date?: string | null
@@ -179,9 +180,9 @@ export type Database = {
           survey_id: string
           updated_at?: string | null
           user_id: string
-          campaign_id?: string | null
         }
         Update: {
+          campaign_id?: string | null
           created_at?: string | null
           created_by?: string
           due_date?: string | null
@@ -191,7 +192,6 @@ export type Database = {
           survey_id?: string
           updated_at?: string | null
           user_id?: string
-          campaign_id?: string | null
         }
         Relationships: [
           {
@@ -221,7 +221,7 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
-          }
+          },
         ]
       }
       survey_campaigns: {
@@ -299,33 +299,33 @@ export type Database = {
       survey_responses: {
         Row: {
           assignment_id: string
+          campaign_instance_id: string | null
           created_at: string | null
           id: string
           response_data: Json
           submitted_at: string | null
           updated_at: string | null
           user_id: string
-          campaign_instance_id: string | null
         }
         Insert: {
           assignment_id: string
+          campaign_instance_id?: string | null
           created_at?: string | null
           id?: string
           response_data: Json
           submitted_at?: string | null
           updated_at?: string | null
           user_id: string
-          campaign_instance_id?: string | null
         }
         Update: {
           assignment_id?: string
+          campaign_instance_id?: string | null
           created_at?: string | null
           id?: string
           response_data?: Json
           submitted_at?: string | null
           updated_at?: string | null
           user_id?: string
-          campaign_instance_id?: string | null
         }
         Relationships: [
           {
@@ -348,7 +348,7 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
-          }
+          },
         ]
       }
       survey_sbu_assignments: {
@@ -553,7 +553,13 @@ export type Database = {
       campaign_status: "draft" | "active" | "completed" | "archived"
       instance_status: "upcoming" | "active" | "completed"
       level_status: "active" | "inactive"
-      recurring_frequency: "one_time" | "daily" | "weekly" | "monthly" | "quarterly" | "yearly"
+      recurring_frequency:
+        | "one_time"
+        | "daily"
+        | "weekly"
+        | "monthly"
+        | "quarterly"
+        | "yearly"
       survey_status: "draft" | "published" | "archived"
       user_role: "admin" | "user"
     }

@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -6,9 +7,11 @@ import { CampaignTabs, TabPanel } from "./components/CampaignTabs";
 import { AssignmentInstanceList } from "./components/AssignmentInstanceList";
 import { OverviewTab } from "./components/OverviewTab";
 import { ResponsesTab } from "./components/ResponsesTab";
+import { InstanceSelector } from "./components/InstanceSelector";
 
 export default function CampaignDetailsPage() {
   const { id } = useParams();
+  const [selectedInstanceId, setSelectedInstanceId] = useState<string>();
 
   const { data: campaign, isLoading: isLoadingCampaign } = useQuery({
     queryKey: ["campaign", id],
@@ -48,7 +51,7 @@ export default function CampaignDetailsPage() {
   });
 
   const { data: assignments, isLoading: isLoadingAssignments } = useQuery({
-    queryKey: ["campaign-assignments", id],
+    queryKey: ["campaign-assignments", id, selectedInstanceId],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("survey_assignments")
@@ -85,6 +88,14 @@ export default function CampaignDetailsPage() {
         stats={stats}
       />
 
+      <div className="flex justify-end">
+        <InstanceSelector
+          campaignId={id}
+          selectedInstanceId={selectedInstanceId}
+          onInstanceSelect={setSelectedInstanceId}
+        />
+      </div>
+
       <CampaignTabs>
         <TabPanel value="overview">
           <OverviewTab campaignId={id} />
@@ -98,7 +109,7 @@ export default function CampaignDetailsPage() {
           />
         </TabPanel>
         <TabPanel value="responses">
-          <ResponsesTab />
+          <ResponsesTab instanceId={selectedInstanceId} />
         </TabPanel>
         <TabPanel value="reports">
           <h2>Reports Content</h2>

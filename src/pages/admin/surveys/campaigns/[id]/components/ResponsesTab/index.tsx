@@ -2,8 +2,6 @@ import { useState } from "react";
 import { useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { ResponsesList } from "./ResponsesList";
-import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -12,9 +10,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { ResponsesList } from "./ResponsesList";
 import type { FilterOptions, Response } from "./types";
 
-export function ResponsesTab() {
+interface ResponsesTabProps {
+  instanceId?: string;
+}
+
+export function ResponsesTab({ instanceId }: ResponsesTabProps) {
   const { id: campaignId } = useParams();
   const [filters, setFilters] = useState<FilterOptions>({
     search: "",
@@ -23,9 +26,9 @@ export function ResponsesTab() {
   });
 
   const { data: responses, isLoading } = useQuery({
-    queryKey: ["campaign-responses", campaignId],
+    queryKey: ["campaign-responses", campaignId, instanceId],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const query = supabase
         .from("survey_responses")
         .select(`
           id,
@@ -33,7 +36,7 @@ export function ResponsesTab() {
           submitted_at,
           created_at,
           updated_at,
-          instance_number,
+          campaign_instance_id,
           assignment_id,
           user_id,
           user:profiles!survey_responses_user_id_fkey (
@@ -47,9 +50,13 @@ export function ResponsesTab() {
             campaign_id
           )
         `)
-        .eq("assignment.campaign_id", campaignId)
-        .order("instance_number", { ascending: true })
-        .order("submitted_at", { ascending: false });
+        .eq("assignment.campaign_id", campaignId);
+
+      if (instanceId) {
+        query.eq("campaign_instance_id", instanceId);
+      }
+
+      const { data, error } = await query;
 
       if (error) throw error;
       return data as Response[];
@@ -59,9 +66,9 @@ export function ResponsesTab() {
   if (isLoading) {
     return (
       <div className="space-y-4">
-        <Skeleton className="h-12 w-full" />
-        <Skeleton className="h-32 w-full" />
-        <Skeleton className="h-32 w-full" />
+        <div className="h-12 w-full animate-pulse bg-muted rounded" />
+        <div className="h-32 w-full animate-pulse bg-muted rounded" />
+        <div className="h-32 w-full animate-pulse bg-muted rounded" />
       </div>
     );
   }
@@ -87,16 +94,6 @@ export function ResponsesTab() {
         : nameA.localeCompare(nameB);
     }
   });
-
-  // Group responses by instance number
-  const groupedResponses = sortedResponses.reduce((acc, response) => {
-    const instanceNumber = response.instance_number || 0;
-    if (!acc[instanceNumber]) {
-      acc[instanceNumber] = [];
-    }
-    acc[instanceNumber].push(response);
-    return acc;
-  }, {} as Record<number, Response[]>);
 
   return (
     <div className="space-y-6">
@@ -139,7 +136,7 @@ export function ResponsesTab() {
         </Select>
       </div>
 
-      <ResponsesList groupedResponses={groupedResponses} />
+      <ResponsesList responses={sortedResponses} />
     </div>
   );
 }

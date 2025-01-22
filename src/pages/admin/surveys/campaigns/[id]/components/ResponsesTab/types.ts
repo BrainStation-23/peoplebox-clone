@@ -13,11 +13,6 @@ export type Response = Database["public"]["Tables"]["survey_responses"]["Row"] &
   };
 };
 
-export type ResponseGroup = {
-  instanceNumber: number;
-  responses: Response[];
-};
-
 export type SortOption = "date" | "name";
 export type SortDirection = "asc" | "desc";
 
