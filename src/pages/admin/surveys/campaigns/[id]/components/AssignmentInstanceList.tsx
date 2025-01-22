@@ -1,9 +1,8 @@
 import { Button } from "@/components/ui/button";
-import { Users } from "lucide-react";
-import { AssignSurvey } from "@/pages/admin/surveys/components/AssignSurvey";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
+import { AssignCampaignUsers } from "./AssignCampaignUsers";
 
 interface Assignment {
   id: string;
@@ -56,13 +55,10 @@ export function AssignmentInstanceList({
     <div className="space-y-4">
       <div className="flex justify-between items-center">
         <h3 className="text-lg font-semibold">Assignments</h3>
-        {surveyId && (
-          <AssignSurvey
+        {surveyId && campaignId && (
+          <AssignCampaignUsers
             surveyId={surveyId}
             campaignId={campaignId}
-            onAssigned={() => {
-              // The page will automatically refresh due to React Query
-            }}
           />
         )}
       </div>
@@ -94,11 +90,6 @@ export function AssignmentInstanceList({
                   {assignment.sbu_assignments.length > 0 && (
                     <div className="text-sm text-muted-foreground">
                       SBU: {assignment.sbu_assignments[0].sbu.name}
-                    </div>
-                  )}
-                  {assignment.due_date && (
-                    <div className="text-sm text-muted-foreground">
-                      Due: {format(new Date(assignment.due_date), "PPP")}
                     </div>
                   )}
                 </div>
