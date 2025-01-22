@@ -20,10 +20,11 @@ export type Campaign = {
   description: string | null;
   survey_id: string;
   starts_at: string;
-  ends_at: string;
   is_recurring: boolean;
   recurring_frequency?: RecurringFrequency;
   recurring_ends_at?: string;
+  instance_duration_days?: number;
+  instance_end_time?: string;
   status: string;
   created_by: string;
   created_at: string;

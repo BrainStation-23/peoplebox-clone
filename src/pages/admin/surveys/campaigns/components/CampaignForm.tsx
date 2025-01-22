@@ -32,30 +32,19 @@ const campaignSchema = z.object({
   starts_at: z.date({
     required_error: "Start date is required",
   }),
-  ends_at: z.date({
-    required_error: "End date is required",
-  }),
   is_recurring: z.boolean().default(false),
   recurring_frequency: z.string().optional(),
   recurring_ends_at: z.date().optional(),
+  instance_duration_days: z.number().optional(),
+  instance_end_time: z.string().optional(),
   status: z.string().default("draft"),
 }).refine((data) => {
-  // Ensure end date is after start date
-  if (data.ends_at <= data.starts_at) {
-    return false;
+  if (data.is_recurring) {
+    return data.recurring_ends_at && data.instance_duration_days && data.instance_end_time;
   }
   return true;
 }, {
-  message: "End date must be after start date",
-  path: ["ends_at"],
-}).refine((data) => {
-  // If recurring, ensure recurring end date is after start date
-  if (data.is_recurring && data.recurring_ends_at && data.recurring_ends_at <= data.starts_at) {
-    return false;
-  }
-  return true;
-}, {
-  message: "Recurring end date must be after start date",
+  message: "Recurring campaigns require end date, duration, and end time",
   path: ["recurring_ends_at"],
 });
 
@@ -74,8 +63,8 @@ interface CampaignFormProps {
 
 const frequencyOptions = [
   { value: "daily", label: "Daily (Runs every day)" },
-  { value: "weekly", label: "Weekly (Runs every week on selected days)" },
-  { value: "monthly", label: "Monthly (Runs once a month on selected date)" },
+  { value: "weekly", label: "Weekly (Runs every week)" },
+  { value: "monthly", label: "Monthly (Runs once a month)" },
   { value: "quarterly", label: "Quarterly (Runs every 3 months)" },
   { value: "yearly", label: "Yearly (Runs once a year)" },
 ];
@@ -89,13 +78,35 @@ export function CampaignForm({ onSubmit, surveys, defaultValues }: CampaignFormP
       description: "",
       survey_id: "",
       starts_at: new Date(),
-      ends_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // Default to 1 week from now
       is_recurring: false,
-      recurring_frequency: "one_time",
+      recurring_frequency: undefined,
+      instance_duration_days: 7,
+      instance_end_time: "23:59",
       status: "draft",
       ...defaultValues,
     },
   });
+
+  const isRecurring = form.watch("is_recurring");
+  const frequency = form.watch("recurring_frequency");
+
+  // Set default duration based on frequency
+  const handleFrequencyChange = (value: string) => {
+    form.setValue("recurring_frequency", value);
+    let defaultDuration = 7; // default for weekly
+    switch (value) {
+      case "monthly":
+        defaultDuration = 30;
+        break;
+      case "quarterly":
+        defaultDuration = 90;
+        break;
+      case "yearly":
+        defaultDuration = 365;
+        break;
+    }
+    form.setValue("instance_duration_days", defaultDuration);
+  };
 
   return (
     <Form {...form}>
@@ -162,47 +173,25 @@ export function CampaignForm({ onSubmit, surveys, defaultValues }: CampaignFormP
                 )}
               />
 
-              <div className="grid gap-4">
-                <FormField
-                  control={form.control}
-                  name="starts_at"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Start Date & Time</FormLabel>
-                      <FormControl>
-                        <CalendarDateTime 
-                          value={field.value} 
-                          onChange={field.onChange}
-                        />
-                      </FormControl>
-                      <FormDescription>
-                        When should the campaign start?
-                      </FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="ends_at"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>End Date & Time</FormLabel>
-                      <FormControl>
-                        <CalendarDateTime 
-                          value={field.value} 
-                          onChange={field.onChange}
-                        />
-                      </FormControl>
-                      <FormDescription>
-                        When should the campaign end?
-                      </FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
+              <FormField
+                control={form.control}
+                name="starts_at"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Start Date & Time</FormLabel>
+                    <FormControl>
+                      <CalendarDateTime 
+                        value={field.value} 
+                        onChange={field.onChange}
+                      />
+                    </FormControl>
+                    <FormDescription>
+                      When should the campaign start?
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
               <FormField
                 control={form.control}
@@ -225,7 +214,7 @@ export function CampaignForm({ onSubmit, surveys, defaultValues }: CampaignFormP
                 )}
               />
 
-              {form.watch("is_recurring") && (
+              {isRecurring && (
                 <>
                   <FormField
                     control={form.control}
@@ -233,7 +222,10 @@ export function CampaignForm({ onSubmit, surveys, defaultValues }: CampaignFormP
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Frequency</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <Select 
+                          onValueChange={handleFrequencyChange} 
+                          defaultValue={field.value}
+                        >
                           <FormControl>
                             <SelectTrigger>
                               <SelectValue placeholder="Select frequency" />
@@ -247,6 +239,47 @@ export function CampaignForm({ onSubmit, surveys, defaultValues }: CampaignFormP
                             ))}
                           </SelectContent>
                         </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="instance_duration_days"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Instance Duration (days)</FormLabel>
+                        <FormControl>
+                          <Input 
+                            type="number" 
+                            {...field} 
+                            onChange={(e) => field.onChange(parseInt(e.target.value))}
+                          />
+                        </FormControl>
+                        <FormDescription>
+                          How many days should each instance last?
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="instance_end_time"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Instance End Time</FormLabel>
+                        <FormControl>
+                          <Input 
+                            type="time" 
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormDescription>
+                          What time should instances end each day?
+                        </FormDescription>
                         <FormMessage />
                       </FormItem>
                     )}
