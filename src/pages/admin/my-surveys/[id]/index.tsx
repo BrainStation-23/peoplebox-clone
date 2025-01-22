@@ -67,23 +67,21 @@ export default function SurveyResponsePage() {
       // Handle auto-save
       surveyModel.onValueChanged.add(async (sender, options) => {
         try {
-          const response = existingResponse
-            ? await supabase
-                .from("survey_responses")
-                .update({
-                  response_data: sender.data,
-                  updated_at: new Date().toISOString(),
-                })
-                .eq("id", existingResponse.id)
-            : await supabase
-                .from("survey_responses")
-                .insert({
-                  assignment_id: id,
-                  user_id: (await supabase.auth.getUser()).data.user?.id,
-                  response_data: sender.data,
-                });
+          const userId = (await supabase.auth.getUser()).data.user?.id;
+          if (!userId) throw new Error("User not authenticated");
 
-          if (response.error) throw response.error;
+          const { error } = await supabase
+            .from("survey_responses")
+            .upsert({
+              assignment_id: id,
+              user_id: userId,
+              response_data: sender.data,
+              updated_at: new Date().toISOString(),
+            }, {
+              onConflict: 'assignment_id,user_id'
+            });
+
+          if (error) throw error;
           setLastSaved(new Date());
         } catch (error) {
           console.error("Error saving response:", error);
@@ -98,25 +96,29 @@ export default function SurveyResponsePage() {
       // Handle survey completion
       surveyModel.onComplete.add(async (sender) => {
         try {
-          const response = await supabase
+          const userId = (await supabase.auth.getUser()).data.user?.id;
+          if (!userId) throw new Error("User not authenticated");
+
+          const { error: responseError } = await supabase
             .from("survey_responses")
             .upsert({
-              id: existingResponse?.id,
               assignment_id: id,
-              user_id: (await supabase.auth.getUser()).data.user?.id,
+              user_id: userId,
               response_data: sender.data,
               submitted_at: new Date().toISOString(),
+            }, {
+              onConflict: 'assignment_id,user_id'
             });
 
-          if (response.error) throw response.error;
+          if (responseError) throw responseError;
 
           // Update assignment status
-          const assignmentUpdate = await supabase
+          const { error: assignmentError } = await supabase
             .from("survey_assignments")
             .update({ status: "completed" })
             .eq("id", id);
 
-          if (assignmentUpdate.error) throw assignmentUpdate.error;
+          if (assignmentError) throw assignmentError;
 
           toast({
             title: "Survey completed",
