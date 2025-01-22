@@ -1,12 +1,3 @@
-import {Let's fix these TypeScript errors step by step:
-
-1. First error is about missing types module - we need to fix the import path
-2. Second error is about type mismatches when inserting/updating campaign data
-
-<lov-code>
-Let's update the CampaignFormPage.tsx file with proper types and data handling:
-
-<lov-write file_path="src/pages/admin/surveys/campaigns/CampaignFormPage.tsx">
 import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
