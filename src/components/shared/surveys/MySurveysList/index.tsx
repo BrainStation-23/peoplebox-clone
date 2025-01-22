@@ -1,9 +1,12 @@
 import { useQuery } from "@tanstack/react-query";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import SurveyCard from "./SurveyCard";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
 export default function MySurveysList() {
+  const navigate = useNavigate();
+  
   const { data: assignments, isLoading } = useQuery({
     queryKey: ["my-survey-assignments"],
     queryFn: async () => {
@@ -32,8 +35,7 @@ export default function MySurveysList() {
   });
 
   const handleSelectSurvey = (id: string) => {
-    // Will implement in next phase
-    console.log("Selected survey:", id);
+    navigate(`/admin/my-surveys/${id}`);
   };
 
   if (isLoading) {

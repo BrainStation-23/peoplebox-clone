@@ -24,6 +24,7 @@ import CampaignsPage from "./pages/admin/surveys/campaigns";
 import CampaignFormPage from "./pages/admin/surveys/campaigns/CampaignFormPage";
 import CampaignDetailsPage from "./pages/admin/surveys/campaigns/[id]";
 import MySurveysPage from "./pages/admin/my-surveys";
+import SurveyResponsePage from "./pages/admin/my-surveys/[id]";
 
 const queryClient = new QueryClient();
 
@@ -42,6 +43,7 @@ const App = () => (
             <Route index element={<Navigate to="/admin/dashboard" replace />} />
             <Route path="dashboard" element={<AdminDashboard />} />
             <Route path="my-surveys" element={<MySurveysPage />} />
+            <Route path="my-surveys/:id" element={<SurveyResponsePage />} />
             <Route path="users" element={<Users />} />
             <Route path="surveys" element={<SurveysPage />} />
             <Route path="surveys/create" element={<SurveyFormPage />} />
