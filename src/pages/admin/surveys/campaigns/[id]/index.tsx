@@ -55,7 +55,7 @@ export default function CampaignDetailsPage() {
           status,
           due_date,
           instance_number,
-          user:user_id (
+          assignee:profiles!survey_assignments_user_id_fkey (
             id,
             email,
             first_name,
@@ -72,7 +72,12 @@ export default function CampaignDetailsPage() {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      return data;
+      
+      // Transform the data to match the expected Assignment type
+      return data?.map(assignment => ({
+        ...assignment,
+        user: assignment.assignee,
+      })) || [];
     },
   });
 
