@@ -62,7 +62,7 @@ export function AssignmentDialog({ campaignId, surveyId }: AssignmentDialogProps
           Assign Users
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-[600px]">
         <DialogHeader>
           <DialogTitle>Assign Users to Campaign</DialogTitle>
         </DialogHeader>
