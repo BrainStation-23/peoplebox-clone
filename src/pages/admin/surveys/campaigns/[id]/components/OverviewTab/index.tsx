@@ -85,7 +85,7 @@ export function OverviewTab({ campaignId }: { campaignId: string }) {
     },
   });
 
-  // Fetch recent activity
+  // Fetch recent activity with proper join
   const { data: recentActivity } = useQuery({
     queryKey: ["campaign-recent-activity", campaignId],
     queryFn: async () => {
@@ -93,6 +93,7 @@ export function OverviewTab({ campaignId }: { campaignId: string }) {
         .from("survey_responses")
         .select(`
           created_at,
+          assignment:survey_assignments!inner(campaign_id),
           user:profiles!survey_responses_user_id_fkey (
             first_name,
             last_name,
