@@ -1,6 +1,7 @@
 import * as React from "react"
 import { TooltipProvider } from "@/components/ui/tooltip"
 import { useIsMobile } from "@/hooks/use-mobile"
+import { cn } from "@/lib/utils"
 
 const SIDEBAR_COOKIE_NAME = "sidebar:state"
 const SIDEBAR_COOKIE_MAX_AGE = 60 * 60 * 24 * 7
@@ -26,7 +27,7 @@ export function useSidebar() {
   return context
 }
 
-interface SidebarProviderProps extends React.ComponentProps<"div"> {
+export interface SidebarProviderProps extends React.ComponentProps<"div"> {
   defaultOpen?: boolean
   open?: boolean
   onOpenChange?: (open: boolean) => void
