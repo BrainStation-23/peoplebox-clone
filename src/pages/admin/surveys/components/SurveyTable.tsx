@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { Eye, MoreVertical, Pencil, Trash, Send } from "lucide-react";
+import { Eye, MoreVertical, Pencil, Play, Archive, Trash } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -28,6 +28,8 @@ export function SurveyTable({ surveys, onDelete, onStatusChange }: SurveyTablePr
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'published':
+        return 'success';
+      case 'draft':
         return 'secondary';
       case 'archived':
         return 'destructive';
@@ -44,7 +46,7 @@ export function SurveyTable({ surveys, onDelete, onStatusChange }: SurveyTablePr
           <TableHead>Description</TableHead>
           <TableHead>Tags</TableHead>
           <TableHead>Status</TableHead>
-          <TableHead className="w-[180px]">Actions</TableHead>
+          <TableHead className="w-[100px]">Actions</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
@@ -55,7 +57,7 @@ export function SurveyTable({ surveys, onDelete, onStatusChange }: SurveyTablePr
             <TableCell>
               <div className="flex gap-1 flex-wrap">
                 {survey.tags?.map((tag) => (
-                  <Badge key={tag} variant="secondary">
+                  <Badge key={tag} variant="outline">
                     {tag}
                   </Badge>
                 ))}
@@ -66,13 +68,6 @@ export function SurveyTable({ surveys, onDelete, onStatusChange }: SurveyTablePr
             </TableCell>
             <TableCell>
               <div className="flex items-center gap-2">
-                {survey.status === 'published' && (
-                  <Button variant="ghost" size="icon" asChild>
-                    <Link to={`/admin/surveys/assign/${survey.id}`}>
-                      <Send className="h-4 w-4" />
-                    </Link>
-                  </Button>
-                )}
                 <Button variant="ghost" size="icon" asChild>
                   <Link to={`/admin/surveys/${survey.id}/preview`}>
                     <Eye className="h-4 w-4" />
@@ -92,28 +87,28 @@ export function SurveyTable({ surveys, onDelete, onStatusChange }: SurveyTablePr
                   <DropdownMenuContent align="end">
                     {survey.status === 'draft' && (
                       <DropdownMenuItem onClick={() => onStatusChange(survey.id, 'published')}>
+                        <Play className="mr-2 h-4 w-4" />
                         Publish
                       </DropdownMenuItem>
                     )}
                     {survey.status === 'published' && (
-                      <DropdownMenuItem onClick={() => onStatusChange(survey.id, 'draft')}>
-                        Unpublish
-                      </DropdownMenuItem>
-                    )}
-                    {survey.status !== 'archived' && (
-                      <DropdownMenuItem onClick={() => onStatusChange(survey.id, 'archived')}>
-                        Archive
-                      </DropdownMenuItem>
-                    )}
-                    {survey.status === 'archived' && (
-                      <DropdownMenuItem onClick={() => onStatusChange(survey.id, 'draft')}>
-                        Unarchive
-                      </DropdownMenuItem>
+                      <>
+                        <DropdownMenuItem asChild>
+                          <Link to={`/admin/surveys/campaigns/create?surveyId=${survey.id}`}>
+                            Create Campaign
+                          </Link>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => onStatusChange(survey.id, 'archived')}>
+                          <Archive className="mr-2 h-4 w-4" />
+                          Archive
+                        </DropdownMenuItem>
+                      </>
                     )}
                     <DropdownMenuItem
-                      className="text-destructive"
                       onClick={() => onDelete(survey.id)}
+                      className="text-destructive"
                     >
+                      <Trash className="mr-2 h-4 w-4" />
                       Delete
                     </DropdownMenuItem>
                   </DropdownMenuContent>
