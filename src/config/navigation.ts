@@ -4,12 +4,13 @@ import {
   UserRound, 
   Users, 
   FileText, 
-  Grid 
+  Grid,
+  ClipboardList
 } from "lucide-react";
 
 export type NavigationItem = {
   title: string;
-  icon: any; // Using any here since Lucide icons don't share a common type
+  icon: any;
   path: string;
   children?: NavigationItem[];
 };
@@ -19,6 +20,11 @@ export const navigationItems: NavigationItem[] = [
     title: "Dashboard",
     icon: LayoutDashboard,
     path: "/admin/dashboard",
+  },
+  {
+    title: "My Surveys",
+    icon: ClipboardList,
+    path: "/admin/my-surveys",
   },
   {
     title: "Users",
