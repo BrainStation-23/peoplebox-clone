@@ -11,20 +11,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Eye } from "lucide-react";
 import { ResponseDetails } from "./ResponseDetails";
-import type { Database } from "@/integrations/supabase/types";
-
-type Response = Database["public"]["Tables"]["survey_responses"]["Row"] & {
-  user: {
-    id: string;
-    first_name: string | null;
-    last_name: string | null;
-    email: string;
-  };
-  assignment: {
-    id: string;
-    campaign_id: string;
-  };
-};
+import type { Response } from "./types";
 
 interface ResponseGroupProps {
   responses: Response[];

@@ -5,20 +5,7 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { format } from "date-fns";
-import type { Database } from "@/integrations/supabase/types";
-
-type Response = Database["public"]["Tables"]["survey_responses"]["Row"] & {
-  user: {
-    id: string;
-    first_name: string | null;
-    last_name: string | null;
-    email: string;
-  };
-  assignment: {
-    id: string;
-    campaign_id: string;
-  };
-};
+import type { Response } from "./types";
 
 interface ResponseDetailsProps {
   response: Response | null;
