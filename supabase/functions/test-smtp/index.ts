@@ -42,12 +42,13 @@ serve(async (req) => {
     });
 
     try {
-      // Try to send a test email
+      // Try to send a test email with explicit content type
       await client.send({
         from: `${config.from_name} <${config.from_email}>`,
         to: config.from_email,
         subject: "SMTP Test",
         content: "This is a test email to verify SMTP configuration.",
+        html: "<p>This is a test email to verify SMTP configuration.</p>",
       });
 
       await client.close();
