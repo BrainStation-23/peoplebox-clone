@@ -5,14 +5,16 @@ export function usePendingSurveysCount() {
   return useQuery({
     queryKey: ["pending-surveys-count"],
     queryFn: async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error("No user found");
-
       const { count, error } = await supabase
         .from("survey_assignments")
-        .select("*, campaign:survey_campaigns!inner(status)", { count: 'exact', head: true })
+        .select(`
+          *,
+          campaign:survey_campaigns!inner (
+            status
+          )
+        `, { count: 'exact', head: true })
         .eq("status", "pending")
-        .eq("user_id", user.id)
+        .eq("user_id", (await supabase.auth.getUser()).data.user?.id)
         .neq("campaign.status", "draft");
 
       if (error) throw error;
