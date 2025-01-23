@@ -13,7 +13,15 @@ interface ResponseDetailsProps {
 }
 
 export function ResponseDetails({ response, onClose }: ResponseDetailsProps) {
-  const formatAnswer = (value: any) => {
+  const formatAnswer = (value: any, questionData: any) => {
+    if (!value) return "No response";
+
+    // Handle rating questions
+    if (questionData.type === "rating") {
+      const rateMax = questionData.rateMax || 5; // Default to 5 if not specified
+      return `${value} out of ${rateMax}`;
+    }
+
     if (typeof value === "boolean") {
       return value ? "Yes" : "No";
     }
@@ -30,6 +38,37 @@ export function ResponseDetails({ response, onClose }: ResponseDetailsProps) {
       return value.toString();
     }
     return value;
+  };
+
+  // Get the survey structure from the assignment
+  const surveyJson = response?.assignment?.survey?.json_data;
+
+  // Function to find question title from survey structure
+  const getQuestionTitle = (questionName: string) => {
+    if (!surveyJson?.pages) return questionName;
+
+    for (const page of surveyJson.pages) {
+      for (const element of page.elements) {
+        if (element.name === questionName) {
+          return element.title || element.name;
+        }
+      }
+    }
+    return questionName;
+  };
+
+  // Function to get question data from survey structure
+  const getQuestionData = (questionName: string) => {
+    if (!surveyJson?.pages) return null;
+
+    for (const page of surveyJson.pages) {
+      for (const element of page.elements) {
+        if (element.name === questionName) {
+          return element;
+        }
+      }
+    }
+    return null;
   };
 
   return (
@@ -68,14 +107,19 @@ export function ResponseDetails({ response, onClose }: ResponseDetailsProps) {
                 Responses
               </h3>
               <div className="border rounded-lg divide-y">
-                {Object.entries(response.response_data).map(([question, answer]) => (
-                  <div key={question} className="p-4">
-                    <div className="font-medium mb-2">{question}</div>
-                    <div className="text-sm text-muted-foreground">
-                      {formatAnswer(answer)}
+                {Object.entries(response.response_data).map(([questionName, answer]) => {
+                  const questionData = getQuestionData(questionName);
+                  return (
+                    <div key={questionName} className="p-4">
+                      <div className="font-medium mb-2">
+                        {getQuestionTitle(questionName)}
+                      </div>
+                      <div className="text-sm text-muted-foreground">
+                        {formatAnswer(answer, questionData)}
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
           </div>
