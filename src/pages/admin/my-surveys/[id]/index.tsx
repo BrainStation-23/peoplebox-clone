@@ -8,6 +8,7 @@ import { ArrowLeft } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
+import { SurveyStateData, isSurveyStateData } from "@/types/survey";
 
 import "survey-core/defaultV2.min.css";
 
@@ -93,8 +94,9 @@ export default function SurveyResponsePage() {
         surveyModel.start();
         
         // Restore last page from state_data if available
-        if (existingResponse.state_data?.lastPageNo !== undefined) {
-          surveyModel.currentPageNo = existingResponse.state_data.lastPageNo;
+        const stateData = existingResponse.state_data;
+        if (stateData && isSurveyStateData(stateData)) {
+          surveyModel.currentPageNo = stateData.lastPageNo;
         } else {
           surveyModel.currentPageNo = surveyModel.maxValidPageNo;
         }
@@ -109,7 +111,7 @@ export default function SurveyResponsePage() {
             const userId = (await supabase.auth.getUser()).data.user?.id;
             if (!userId) throw new Error("User not authenticated");
 
-            const stateData = {
+            const stateData: SurveyStateData = {
               lastPageNo: sender.currentPageNo,
               lastUpdated: new Date().toISOString()
             };
