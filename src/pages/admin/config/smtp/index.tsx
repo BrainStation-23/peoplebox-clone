@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -69,6 +69,13 @@ export default function SMTPConfig() {
     },
   });
 
+  // Use useEffect to set form values when data loads
+  useEffect(() => {
+    if (smtpConfig) {
+      form.reset(smtpConfig);
+    }
+  }, [smtpConfig, form]);
+
   const updateConfig = useMutation({
     mutationFn: async (values: FormValues) => {
       // Ensure all required fields are present
@@ -119,11 +126,6 @@ export default function SMTPConfig() {
   const onSubmit = (values: FormValues) => {
     updateConfig.mutate(values);
   };
-
-  // Set form values when data is loaded
-  if (smtpConfig && !form.formState.isDirty) {
-    form.reset(smtpConfig);
-  }
 
   return (
     <div className="space-y-6">
