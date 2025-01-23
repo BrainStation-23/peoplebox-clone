@@ -105,7 +105,9 @@ export function ResponsesTab({ instanceId }: ResponsesTabProps) {
 
   const analysisData: QuestionAnalysis[] = responses && surveyData?.json_data
     ? processResponses(surveyData.json_data, responses.map(r => ({
-        response_data: r.response_data as Record<string, any>,
+        response_data: typeof r.response_data === 'object' && r.response_data !== null 
+          ? r.response_data as Record<string, any>
+          : {},
         user_id: r.user.id,
         submitted_at: r.submitted_at || "",
       })))
