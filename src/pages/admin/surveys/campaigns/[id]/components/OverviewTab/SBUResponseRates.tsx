@@ -25,14 +25,13 @@ export function SBUResponseRates({ campaignId, instanceId }: Props) {
         .from("survey_assignments")
         .select(`
           id,
-          user_id,
           user:profiles!survey_assignments_user_id_fkey (
-            user_sbus!profiles_id_fkey (
-              sbu:sbus!user_sbus_sbu_id_fkey (
+            user_sbus (
+              is_primary,
+              sbu:sbus (
                 id,
                 name
-              ),
-              is_primary
+              )
             )
           ),
           responses:survey_responses!survey_responses_assignment_id_fkey (
