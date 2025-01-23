@@ -163,6 +163,7 @@ export type Database = {
           from_name: string
           host: string
           id: string
+          is_singleton: boolean | null
           password: string
           port: number
           updated_at: string
@@ -175,6 +176,7 @@ export type Database = {
           from_name: string
           host: string
           id?: string
+          is_singleton?: boolean | null
           password: string
           port: number
           updated_at?: string
@@ -187,6 +189,7 @@ export type Database = {
           from_name?: string
           host?: string
           id?: string
+          is_singleton?: boolean | null
           password?: string
           port?: number
           updated_at?: string

@@ -1,5 +1,5 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import { SmtpClient } from "https://deno.land/x/smtp@v0.7.0/mod.ts";
+import { SMTPClient } from "https://deno.land/x/denomailer@1.6.0/mod.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -29,23 +29,25 @@ serve(async (req) => {
       password: '***' // Hide password in logs
     });
     
-    const client = new SmtpClient();
-
-    try {
-      await client.connect({
+    const client = new SMTPClient({
+      connection: {
         hostname: config.host,
         port: config.port,
-        username: config.username,
-        password: config.password,
         tls: config.use_ssl,
-      });
+        auth: {
+          username: config.username,
+          password: config.password,
+        },
+      },
+    });
 
-      // Try to verify sender address
+    try {
+      // Try to send a test email
       await client.send({
         from: `${config.from_name} <${config.from_email}>`,
-        to: [config.from_email],
+        to: config.from_email,
         subject: "SMTP Test",
-        content: "",
+        content: "This is a test email to verify SMTP configuration.",
       });
 
       await client.close();
