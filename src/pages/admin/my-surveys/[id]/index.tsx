@@ -3,14 +3,14 @@ import { useParams, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { Model } from "survey-core";
 import { Survey } from "survey-react-ui";
+import { LayeredDarkPanelless } from "survey-core/themes";
 import { ArrowLeft } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 
 // Import only the modern theme CSS
-import "survey-core/modern.min.css";
-import "survey-core/modern-dark.min.css";
+import "survey-core/defaultV2.min.css";
 
 export default function SurveyResponsePage() {
   const { id } = useParams();
@@ -46,7 +46,6 @@ export default function SurveyResponsePage() {
     },
   });
 
-  // Fetch active campaign instance if this is a campaign-based survey
   const { data: activeInstance } = useQuery({
     queryKey: ["active-campaign-instance", assignment?.campaign_id],
     enabled: !!assignment?.campaign_id,
@@ -63,7 +62,6 @@ export default function SurveyResponsePage() {
     },
   });
 
-  // Check for existing response
   const { data: existingResponse } = useQuery({
     queryKey: ["survey-response", id, activeInstance?.id],
     queryFn: async () => {
@@ -89,12 +87,8 @@ export default function SurveyResponsePage() {
     if (assignment?.survey.json_data) {
       const surveyModel = new Model(assignment.survey.json_data);
       
-      // Apply modern dark theme
-      surveyModel.applyTheme({
-        themeName: "modern",
-        isDark: true,
-        isPanelless: false
-      });
+      // Apply the LayeredDarkPanelless theme
+      surveyModel.applyTheme(LayeredDarkPanelless);
       
       // Load existing response data if available
       if (existingResponse?.response_data) {
@@ -104,7 +98,6 @@ export default function SurveyResponsePage() {
       if (assignment.status === 'completed') {
         surveyModel.mode = 'display';
       } else {
-        // Handle auto-save
         surveyModel.onValueChanged.add(async (sender, options) => {
           try {
             const userId = (await supabase.auth.getUser()).data.user?.id;
@@ -138,7 +131,6 @@ export default function SurveyResponsePage() {
           }
         });
 
-        // Handle survey completion
         surveyModel.onComplete.add(async (sender) => {
           try {
             const userId = (await supabase.auth.getUser()).data.user?.id;
