@@ -1,4 +1,3 @@
-import type { Json } from "@/integrations/supabase/types";
 import type { 
   QuestionType, 
   SurveyQuestion, 
@@ -8,7 +7,6 @@ import type {
 } from "../types/reports";
 
 export function detectQuestionType(question: any): QuestionType {
-  // Special case for NPS questions
   if (
     question.type === "rating" && 
     question.rateMax === 10 && 
@@ -17,7 +15,6 @@ export function detectQuestionType(question: any): QuestionType {
     return "nps";
   }
   
-  // Standard question types
   if ([
     "radiogroup",
     "checkbox",
@@ -29,7 +26,7 @@ export function detectQuestionType(question: any): QuestionType {
     return question.type as QuestionType;
   }
   
-  return "text"; // Default fallback
+  return "text";
 }
 
 export function processResponses(

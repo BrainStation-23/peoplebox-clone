@@ -29,22 +29,28 @@ export function ResponsesTab({ instanceId }: ResponsesTabProps) {
     sortDirection: "desc",
   });
 
+  // First, get the survey ID from responses for this instance
   const { data: surveyData } = useQuery({
     queryKey: ["survey-data", instanceId],
     queryFn: async () => {
-      const { data: assignments } = await supabase
-        .from("survey_assignments")
+      if (!instanceId) return null;
+      
+      // Get the first response for this instance to get the survey ID
+      const { data: response } = await supabase
+        .from("survey_responses")
         .select(`
-          survey:surveys (
-            id,
-            json_data
+          assignment:survey_assignments!survey_responses_assignment_id_fkey (
+            survey:surveys (
+              id,
+              json_data
+            )
           )
         `)
         .eq("campaign_instance_id", instanceId)
         .limit(1)
         .maybeSingle();
 
-      return assignments?.survey;
+      return response?.assignment?.survey;
     },
     enabled: !!instanceId,
   });
@@ -52,7 +58,7 @@ export function ResponsesTab({ instanceId }: ResponsesTabProps) {
   const { data: responses = [], isLoading } = useQuery({
     queryKey: ["campaign-responses", instanceId],
     queryFn: async () => {
-      const query = supabase
+      const { data, error } = await supabase
         .from("survey_responses")
         .select(`
           id,
@@ -60,9 +66,6 @@ export function ResponsesTab({ instanceId }: ResponsesTabProps) {
           submitted_at,
           created_at,
           updated_at,
-          campaign_instance_id,
-          assignment_id,
-          user_id,
           user:profiles!survey_responses_user_id_fkey (
             id,
             first_name,
@@ -73,68 +76,18 @@ export function ResponsesTab({ instanceId }: ResponsesTabProps) {
             id,
             campaign_id
           )
-        `);
-
-      if (instanceId) {
-        query.eq("campaign_instance_id", instanceId);
-      }
-
-      const { data, error } = await query;
+        `)
+        .eq("campaign_instance_id", instanceId);
 
       if (error) {
         console.error("Error fetching responses:", error);
         throw error;
       }
+
       return data as Response[];
     },
     enabled: !!instanceId,
   });
-
-  const analysisData: QuestionAnalysis[] = responses && surveyData?.json_data
-    ? processResponses(surveyData.json_data, responses)
-    : [];
-
-  const renderQuestionAnalysis = (analysis: QuestionAnalysis) => {
-    switch (analysis.question.type) {
-      case "radiogroup":
-        const chartData: ChartData[] = Object.entries(analysis.summary)
-          .filter(([key]) => key !== "totalResponses")
-          .map(([name, value]) => ({
-            name,
-            value: typeof value === "number" ? value : 0,
-          }));
-        return (
-          <SingleChoiceChart
-            data={chartData}
-            title={analysis.question.title}
-          />
-        );
-      
-      case "nps":
-        const { promoters, passives, detractors, npsScore } = analysis.summary;
-        return (
-          <NPSVisualizer
-            promoters={promoters as number}
-            passives={passives as number}
-            detractors={detractors as number}
-            npsScore={npsScore as number}
-            title={analysis.question.title}
-          />
-        );
-      
-      default:
-        return null;
-    }
-  };
-
-  if (isLoading) {
-    return (
-      <div className="space-y-4">
-        <div className="h-12 w-full animate-pulse bg-muted rounded" />
-        <div className="h-32 w-full animate-pulse bg-muted rounded" />
-      </div>
-    );
-  }
 
   // Filter and sort responses based on current filters
   const filteredAndSortedResponses = [...responses].filter(response => {
@@ -152,6 +105,23 @@ export function ResponsesTab({ instanceId }: ResponsesTabProps) {
     }
     return direction * (a.user.email.localeCompare(b.user.email));
   });
+
+  const analysisData: QuestionAnalysis[] = responses && surveyData?.json_data
+    ? processResponses(surveyData.json_data, responses.map(r => ({
+        response_data: r.response_data as Record<string, any>,
+        user_id: r.user.id,
+        submitted_at: r.submitted_at || "",
+      })))
+    : [];
+
+  if (isLoading) {
+    return (
+      <div className="space-y-4">
+        <div className="h-12 w-full animate-pulse bg-muted rounded" />
+        <div className="h-32 w-full animate-pulse bg-muted rounded" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
