@@ -1,26 +1,8 @@
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
-import { format } from "date-fns";
 import { AssignCampaignUsers } from "./AssignCampaignUsers";
-
-interface Assignment {
-  id: string;
-  status: "pending" | "completed" | "expired";
-  due_date: string | null;
-  user: {
-    id: string;
-    email: string;
-    first_name: string | null;
-    last_name: string | null;
-  };
-  sbu_assignments: {
-    sbu: {
-      id: string;
-      name: string;
-    };
-  }[];
-}
+import type { Assignment } from "@/pages/admin/surveys/types";
 
 interface AssignmentInstanceListProps {
   assignments: Assignment[];
@@ -48,6 +30,10 @@ export function AssignmentInstanceList({
       default:
         return "bg-yellow-500";
     }
+  };
+
+  const getPrimarySBU = (assignment: Assignment) => {
+    return assignment.user.user_sbus?.find(us => us.is_primary)?.sbu.name;
   };
 
   return (
@@ -83,9 +69,9 @@ export function AssignmentInstanceList({
                   <div className="text-sm text-muted-foreground">
                     {assignment.user.email}
                   </div>
-                  {assignment.sbu_assignments.length > 0 && (
+                  {getPrimarySBU(assignment) && (
                     <div className="text-sm text-muted-foreground">
-                      SBU: {assignment.sbu_assignments[0].sbu.name}
+                      SBU: {getPrimarySBU(assignment)}
                     </div>
                   )}
                 </div>

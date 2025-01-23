@@ -40,12 +40,13 @@ export default function CampaignDetailsPage() {
             id,
             email,
             first_name,
-            last_name
-          ),
-          sbu_assignments:survey_sbu_assignments (
-            sbu:sbus (
-              id,
-              name
+            last_name,
+            user_sbus (
+              is_primary,
+              sbu:sbus (
+                id,
+                name
+              )
             )
           )
         `)

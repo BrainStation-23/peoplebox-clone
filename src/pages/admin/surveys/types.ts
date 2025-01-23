@@ -30,3 +30,22 @@ export type Campaign = {
   created_at: string;
   updated_at: string;
 };
+
+export type Assignment = {
+  id: string;
+  status: "pending" | "completed" | "expired";
+  due_date: string | null;
+  user: {
+    id: string;
+    email: string;
+    first_name: string | null;
+    last_name: string | null;
+    user_sbus?: {
+      sbu: {
+        id: string;
+        name: string;
+      };
+      is_primary: boolean;
+    }[];
+  };
+};
