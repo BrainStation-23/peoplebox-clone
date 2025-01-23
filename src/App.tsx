@@ -23,6 +23,7 @@ import SBUDetails from "@/pages/admin/config/sbus/[id]";
 import EmailConfig from "@/pages/admin/config/email";
 import LevelConfig from "@/pages/admin/config/level";
 import SurveyResponsePage from "@/pages/admin/my-surveys/[id]";
+import UserSurveyResponsePage from "@/pages/surveys/[id]";
 
 const queryClient = new QueryClient();
 
@@ -33,8 +34,11 @@ function App() {
         <TooltipProvider>
           <Routes>
             <Route path="/login" element={<Login />} />
-            <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/profile" element={<Profile />} />
+            <Route path="/dashboard/*" element={<Dashboard />}>
+              <Route index element={<AdminDashboard />} />
+              <Route path="profile" element={<Profile />} />
+              <Route path="my-surveys/:id" element={<UserSurveyResponsePage />} />
+            </Route>
             <Route path="/admin/*" element={<AdminLayout />}>
               <Route index element={<Navigate to="/admin/dashboard" replace />} />
               <Route path="dashboard" element={<AdminDashboard />} />

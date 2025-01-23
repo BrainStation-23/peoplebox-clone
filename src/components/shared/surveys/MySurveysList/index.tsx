@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -54,6 +54,7 @@ type Assignment = {
 
 export default function MySurveysList() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { toast } = useToast();
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
@@ -135,7 +136,9 @@ export default function MySurveysList() {
   }, [assignments, toast]);
 
   const handleSelectSurvey = async (id: string) => {
-    navigate(`/admin/my-surveys/${id}`);
+    // Check if we're in the admin section
+    const isAdminRoute = location.pathname.startsWith('/admin');
+    navigate(isAdminRoute ? `/admin/my-surveys/${id}` : `/dashboard/my-surveys/${id}`);
   };
 
   const filteredAssignments = assignments?.filter((assignment) => {
