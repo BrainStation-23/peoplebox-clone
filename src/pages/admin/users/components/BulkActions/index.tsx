@@ -47,7 +47,7 @@ export function BulkActions() {
           levels (
             name
           ),
-          user_roles (
+          user_roles!inner (
             role
           ),
           user_sbus (
@@ -62,7 +62,7 @@ export function BulkActions() {
 
       const csvData = users.map((user) => {
         const primarySbu = user.user_sbus?.find(sbu => sbu.is_primary)?.sbu?.name || '';
-        const userRole = (user.user_roles?.[0]?.role || 'user') as UserRole;
+        const userRole = user.user_roles[0].role as UserRole;
         const level = user.levels?.name || '';
 
         return {
