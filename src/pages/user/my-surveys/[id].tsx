@@ -39,7 +39,7 @@ export default function UserSurveyResponsePage() {
           )
         `)
         .eq("id", id)
-        .maybeSingle(); // Using maybeSingle instead of single
+        .maybeSingle();
 
       if (error) throw error;
       if (!data) throw new Error("Survey assignment not found");
@@ -90,11 +90,18 @@ export default function UserSurveyResponsePage() {
       // Apply the LayeredDarkPanelless theme
       surveyModel.applyTheme(LayeredDarkPanelless);
       
-      // Load existing response data if available and navigate to last valid page
+      // Load existing response data if available and navigate to last active page
       if (existingResponse?.response_data) {
         surveyModel.data = existingResponse.response_data;
         surveyModel.start(); // This validates all pages
-        surveyModel.currentPageNo = surveyModel.maxValidPageNo;
+        
+        // Use lastNavigatedPageNo to go to the last page user was on
+        if (surveyModel.lastNavigatedPageNo !== undefined) {
+          surveyModel.currentPageNo = surveyModel.lastNavigatedPageNo;
+        } else {
+          // Fallback to maxValidPageNo if lastNavigatedPageNo is not available
+          surveyModel.currentPageNo = surveyModel.maxValidPageNo;
+        }
       }
 
       if (assignment.status === 'completed') {
