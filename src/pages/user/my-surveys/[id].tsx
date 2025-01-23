@@ -84,16 +84,17 @@ export default function UserSurveyResponsePage() {
   });
 
   useEffect(() => {
-    // Only proceed if we have the assignment and survey data
     if (assignment?.survey?.json_data) {
       const surveyModel = new Model(assignment.survey.json_data);
       
       // Apply the LayeredDarkPanelless theme
       surveyModel.applyTheme(LayeredDarkPanelless);
       
-      // Load existing response data if available
+      // Load existing response data if available and navigate to last valid page
       if (existingResponse?.response_data) {
         surveyModel.data = existingResponse.response_data;
+        surveyModel.start(); // This validates all pages
+        surveyModel.currentPageNo = surveyModel.maxValidPageNo;
       }
 
       if (assignment.status === 'completed') {
