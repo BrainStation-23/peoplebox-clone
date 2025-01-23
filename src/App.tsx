@@ -8,11 +8,10 @@ import Login from "@/pages/Login";
 import Profile from "@/pages/Profile";
 import AdminDashboard from "@/pages/admin/Dashboard";
 import AdminProfile from "@/pages/admin/Profile";
-import AdminUsers from "@/pages/admin/Users";
-import AdminSurveys from "@/pages/admin/Surveys";
 import AdminConfig from "@/pages/admin/Config";
-import AdminMySurveys from "@/pages/admin/MySurveys";
-import AdminSurveyCampaigns from "@/pages/admin/surveys/Campaigns";
+import AdminSurveys from "@/pages/admin/surveys";
+import AdminMySurveys from "@/pages/admin/my-surveys";
+import AdminSurveyCampaigns from "@/pages/admin/surveys/campaigns";
 
 const queryClient = new QueryClient();
 
@@ -29,7 +28,6 @@ function App() {
               <Route index element={<Admin />} />
               <Route path="dashboard" element={<AdminDashboard />} />
               <Route path="profile" element={<AdminProfile />} />
-              <Route path="users" element={<AdminUsers />} />
               <Route path="surveys" element={<AdminSurveys />} />
               <Route path="my-surveys" element={<AdminMySurveys />} />
               <Route path="config" element={<AdminConfig />} />
