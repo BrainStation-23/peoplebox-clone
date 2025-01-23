@@ -38,12 +38,22 @@ export function BulkActions() {
       const { data: users, error } = await supabase
         .from("profiles")
         .select(`
-          *,
-          levels (name),
-          user_roles!inner (role),
-          user_sbus!inner (
+          id,
+          email,
+          first_name,
+          last_name,
+          org_id,
+          levels (
+            name
+          ),
+          user_roles (
+            role
+          ),
+          user_sbus (
             is_primary,
-            sbu:sbus (name)
+            sbu:sbus (
+              name
+            )
           )
         `);
 
@@ -51,7 +61,7 @@ export function BulkActions() {
 
       const csvData = users.map((user) => {
         const primarySbu = user.user_sbus?.find(sbu => sbu.is_primary)?.sbu?.name || '';
-        const role = user.user_roles?.role || 'user';
+        const role = user.user_roles?.[0]?.role || 'user';
         const level = user.levels?.name || '';
 
         return {
