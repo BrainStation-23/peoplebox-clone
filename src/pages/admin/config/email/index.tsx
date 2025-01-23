@@ -132,26 +132,28 @@ export default function EmailConfig() {
             <div className="space-y-2">
               <Label>Email Provider</Label>
               <div className="flex gap-4 items-start">
-                <Select defaultValue="resend" disabled={false} className="flex-1">
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select provider" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="resend">Resend</SelectItem>
-                    <SelectItem value="sendgrid" disabled>
-                      <div className="flex items-center">
-                        <Mail className="mr-2 h-4 w-4" />
-                        SendGrid (Coming Soon)
-                      </div>
-                    </SelectItem>
-                    <SelectItem value="smtp" disabled>
-                      <div className="flex items-center">
-                        <Server className="mr-2 h-4 w-4" />
-                        SMTP (Coming Soon)
-                      </div>
-                    </SelectItem>
-                  </SelectContent>
-                </Select>
+                <div className="flex-1">
+                  <Select defaultValue="resend" disabled={false}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select provider" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="resend">Resend</SelectItem>
+                      <SelectItem value="sendgrid" disabled>
+                        <div className="flex items-center">
+                          <Mail className="mr-2 h-4 w-4" />
+                          SendGrid (Coming Soon)
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="smtp" disabled>
+                        <div className="flex items-center">
+                          <Server className="mr-2 h-4 w-4" />
+                          SMTP (Coming Soon)
+                        </div>
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
                 <Button
                   type="button"
                   variant="outline"
