@@ -1,3 +1,20 @@
+import { Json } from "@/integrations/supabase/types";
+
+export type SurveyElement = {
+  name: string;
+  title?: string;
+  type: string;
+  rateMax?: number;
+};
+
+export type SurveyPage = {
+  elements: SurveyElement[];
+};
+
+export type SurveyStructure = {
+  pages: SurveyPage[];
+};
+
 export type Response = {
   id: string;
   assignment_id: string;
@@ -15,16 +32,7 @@ export type Response = {
   };
   assignment?: {
     survey?: {
-      json_data: {
-        pages: Array<{
-          elements: Array<{
-            name: string;
-            title?: string;
-            type: string;
-            rateMax?: number;
-          }>;
-        }>;
-      };
+      json_data: SurveyStructure;
     };
   };
 };

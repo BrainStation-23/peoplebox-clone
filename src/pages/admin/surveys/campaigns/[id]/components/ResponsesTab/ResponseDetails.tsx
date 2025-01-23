@@ -5,7 +5,7 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { format } from "date-fns";
-import type { Response } from "./types";
+import type { Response, SurveyElement } from "./types";
 
 interface ResponseDetailsProps {
   response: Response | null;
@@ -13,7 +13,7 @@ interface ResponseDetailsProps {
 }
 
 export function ResponseDetails({ response, onClose }: ResponseDetailsProps) {
-  const formatAnswer = (value: any, questionData: any) => {
+  const formatAnswer = (value: any, questionData: SurveyElement | null) => {
     if (!value) return "No response";
 
     // Handle rating questions
@@ -58,7 +58,7 @@ export function ResponseDetails({ response, onClose }: ResponseDetailsProps) {
   };
 
   // Function to get question data from survey structure
-  const getQuestionData = (questionName: string) => {
+  const getQuestionData = (questionName: string): SurveyElement | null => {
     if (!surveyJson?.pages) return null;
 
     for (const page of surveyJson.pages) {
