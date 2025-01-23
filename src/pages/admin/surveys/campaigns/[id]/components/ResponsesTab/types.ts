@@ -1,6 +1,11 @@
-import type { Database } from "@/integrations/supabase/types";
+import type { Json } from "@/integrations/supabase/types";
 
-export type Response = Database["public"]["Tables"]["survey_responses"]["Row"] & {
+export type Response = {
+  id: string;
+  response_data: Record<string, any>;
+  submitted_at: string | null;
+  created_at: string | null;
+  updated_at: string | null;
   user: {
     id: string;
     first_name: string | null;

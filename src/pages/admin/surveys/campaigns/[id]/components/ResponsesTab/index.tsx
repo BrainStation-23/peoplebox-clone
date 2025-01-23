@@ -16,7 +16,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { SingleChoiceChart } from "./components/QuestionAnalytics/SingleChoiceChart";
 import { NPSVisualizer } from "./components/QuestionAnalytics/NPSVisualizer";
 import type { FilterOptions } from "./types";
-import type { Response } from "@/pages/admin/surveys/types";
+import type { Response } from "./types";
 
 interface ResponsesTabProps {
   instanceId?: string;

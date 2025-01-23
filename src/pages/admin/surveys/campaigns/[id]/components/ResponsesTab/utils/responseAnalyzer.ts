@@ -34,7 +34,7 @@ export function detectQuestionType(question: any): QuestionType {
 
 export function processResponses(
   surveyQuestions: Record<string, any>,
-  responses: Array<{ response_data: Record<string, Json>; user_id: string; submitted_at: string }>
+  responses: Array<{ response_data: Record<string, any>; user_id: string; submitted_at: string }>
 ): QuestionAnalysis[] {
   const questions = Object.entries(surveyQuestions.questions || {}).map(
     ([name, q]: [string, any]) => ({
@@ -50,7 +50,7 @@ export function processResponses(
   return questions.map((question) => {
     const processedResponses: ProcessedResponse[] = responses.map((response) => ({
       questionId: question.name,
-      answer: response.response_data[question.name],
+      answer: response.response_data[question.name] || null,
       respondentId: response.user_id,
       submittedAt: response.submitted_at,
     }));
