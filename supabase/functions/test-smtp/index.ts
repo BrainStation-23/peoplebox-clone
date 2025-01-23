@@ -21,6 +21,7 @@ serve(async (req) => {
       password: '***' // Hide password in logs
     });
     
+    // Create SMTP client with explicit connection options
     client = new SMTPClient({
       connection: {
         hostname: config.host,
@@ -33,7 +34,11 @@ serve(async (req) => {
       },
     });
 
-    // Send a test email - using only text content to avoid content type issues
+    // Connect to verify credentials
+    await client.connect();
+    console.log("SMTP connection established successfully");
+
+    // Send a simple test email with text content only
     await client.send({
       from: `${config.from_name} <${config.from_email}>`,
       to: [config.from_email],
@@ -68,6 +73,7 @@ serve(async (req) => {
     if (client) {
       try {
         await client.close();
+        console.log("SMTP connection closed");
       } catch (closeError) {
         console.error("Error closing SMTP connection:", closeError);
       }
