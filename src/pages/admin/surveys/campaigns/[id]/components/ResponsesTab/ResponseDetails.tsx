@@ -17,7 +17,7 @@ export function ResponseDetails({ response, onClose }: ResponseDetailsProps) {
     if (!value) return "No response";
 
     // Handle rating questions
-    if (questionData.type === "rating") {
+    if (questionData?.type === "rating") {
       const rateMax = questionData.rateMax || 5; // Default to 5 if not specified
       return `${value} out of ${rateMax}`;
     }

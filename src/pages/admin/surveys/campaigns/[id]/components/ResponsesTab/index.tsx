@@ -46,7 +46,11 @@ export function ResponsesTab({ instanceId }: ResponsesTabProps) {
           ),
           assignment:survey_assignments!survey_responses_assignment_id_fkey (
             id,
-            campaign_id
+            campaign_id,
+            survey:surveys!survey_assignments_survey_id_fkey (
+              id,
+              json_data
+            )
           )
         `);
 
