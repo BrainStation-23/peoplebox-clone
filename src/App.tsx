@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Login from "./pages/Login";
 import AdminLayout from "./components/layouts/AdminLayout";
+import UserLayout from "./components/layouts/UserLayout";
 import Dashboard from "./pages/Dashboard";
 
 // Admin pages
@@ -26,6 +27,12 @@ import CampaignDetailsPage from "./pages/admin/surveys/campaigns/[id]";
 import MySurveysPage from "./pages/admin/my-surveys";
 import SurveyResponsePage from "./pages/admin/my-surveys/[id]";
 
+// User pages
+import UserDashboard from "./pages/user/Dashboard";
+import UserProfile from "./pages/user/Profile";
+import UserMySurveys from "./pages/user/my-surveys";
+import UserSurveyResponse from "./pages/user/my-surveys/[id]";
+
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -36,7 +43,15 @@ const App = () => (
         <Sonner />
         <Routes>
           <Route path="/login" element={<Login />} />
-          <Route path="/dashboard" element={<Dashboard />} />
+          
+          {/* User routes */}
+          <Route path="/user" element={<UserLayout />}>
+            <Route index element={<Navigate to="/user/dashboard" replace />} />
+            <Route path="dashboard" element={<UserDashboard />} />
+            <Route path="my-surveys" element={<UserMySurveys />} />
+            <Route path="my-surveys/:id" element={<UserSurveyResponse />} />
+            <Route path="profile" element={<UserProfile />} />
+          </Route>
           
           {/* Admin routes */}
           <Route path="/admin" element={<AdminLayout />}>
