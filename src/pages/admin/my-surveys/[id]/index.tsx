@@ -9,13 +9,8 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 
-// Import all theme CSS files
+// Import only the base theme CSS
 import "survey-core/defaultV2.min.css";
-import "survey-core/defaultV2-dark.min.css";
-import "survey-core/modern.min.css";
-import "survey-core/modern-dark.min.css";
-import "survey-core/survey.min.css";
-import "survey-core/survey-dark.min.css";
 
 type SurveyTheme = 
   | "defaultV2" 
@@ -103,15 +98,19 @@ export default function SurveyResponsePage() {
     if (assignment?.survey.json_data) {
       const surveyModel = new Model(assignment.survey.json_data);
       
-      // Apply theme
-      surveyModel.applyTheme(theme);
+      // Apply theme using the modern approach
+      const themeSettings = {
+        themeName: theme,
+        isDark: theme.includes("dark")
+      };
+      
+      surveyModel.applyTheme(themeSettings);
       
       // Load existing response data if available
       if (existingResponse?.response_data) {
         surveyModel.data = existingResponse.response_data;
       }
       
-      // Make survey read-only if completed
       if (assignment.status === 'completed') {
         surveyModel.mode = 'display';
       } else {
