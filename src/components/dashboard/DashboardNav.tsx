@@ -1,12 +1,11 @@
-import { ClipboardList, Home, Settings2, User } from "lucide-react";
+import { ClipboardList, Home, User } from "lucide-react";
 import { NavLink } from "react-router-dom";
 import { cn } from "@/lib/utils";
 
 const navigation = [
   { name: "Home", href: "/dashboard", icon: Home },
-  { name: "My Surveys", href: "/my-surveys", icon: ClipboardList },
-  { name: "Profile", href: "/profile", icon: User },
-  { name: "Settings", href: "/settings", icon: Settings2 },
+  { name: "My Surveys", href: "/dashboard/my-surveys", icon: ClipboardList },
+  { name: "Profile", href: "/dashboard/profile", icon: User },
 ];
 
 export function DashboardNav() {
