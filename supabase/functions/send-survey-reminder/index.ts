@@ -44,6 +44,21 @@ const handler = async (req: Request): Promise<Response> => {
 
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
+    // Get the email configuration
+    const { data: emailConfig, error: configError } = await supabase
+      .from('email_config')
+      .select('*')
+      .single();
+
+    if (configError) {
+      console.error("Error fetching email config:", configError);
+      throw new Error("Failed to fetch email configuration");
+    }
+
+    if (!emailConfig) {
+      throw new Error("No email configuration found");
+    }
+
     // Check if a reminder was sent in the last 24 hours
     const { data: assignment } = await supabase
       .from('survey_assignments')
@@ -70,7 +85,7 @@ const handler = async (req: Request): Promise<Response> => {
       }
     }
 
-    // Send email using Resend
+    // Send reminder email using Resend
     console.log("Sending email via Resend...");
     const dueDateText = reminderRequest.dueDate 
       ? `This survey is due by ${new Date(reminderRequest.dueDate).toLocaleDateString()}.` 
@@ -83,7 +98,7 @@ const handler = async (req: Request): Promise<Response> => {
         Authorization: `Bearer ${RESEND_API_KEY}`,
       },
       body: JSON.stringify({
-        from: "Survey System <onboarding@resend.dev>",
+        from: `${emailConfig.from_name} <${emailConfig.from_email}>`,
         to: [reminderRequest.recipientEmail],
         subject: `Reminder: ${reminderRequest.surveyName} Survey Pending`,
         html: `

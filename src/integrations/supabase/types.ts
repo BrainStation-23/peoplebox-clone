@@ -53,6 +53,39 @@ export type Database = {
           },
         ]
       }
+      email_config: {
+        Row: {
+          created_at: string
+          from_email: string
+          from_name: string
+          id: string
+          is_singleton: boolean | null
+          provider: Database["public"]["Enums"]["email_provider"]
+          provider_settings: Json
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          from_email: string
+          from_name: string
+          id?: string
+          is_singleton?: boolean | null
+          provider?: Database["public"]["Enums"]["email_provider"]
+          provider_settings?: Json
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          from_email?: string
+          from_name?: string
+          id?: string
+          is_singleton?: boolean | null
+          provider?: Database["public"]["Enums"]["email_provider"]
+          provider_settings?: Json
+          updated_at?: string
+        }
+        Relationships: []
+      }
       levels: {
         Row: {
           created_at: string
@@ -155,48 +188,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
-      }
-      smtp_config: {
-        Row: {
-          created_at: string
-          from_email: string
-          from_name: string
-          host: string
-          id: string
-          is_singleton: boolean | null
-          password: string
-          port: number
-          updated_at: string
-          use_ssl: boolean | null
-          username: string
-        }
-        Insert: {
-          created_at?: string
-          from_email: string
-          from_name: string
-          host: string
-          id?: string
-          is_singleton?: boolean | null
-          password: string
-          port: number
-          updated_at?: string
-          use_ssl?: boolean | null
-          username: string
-        }
-        Update: {
-          created_at?: string
-          from_email?: string
-          from_name?: string
-          host?: string
-          id?: string
-          is_singleton?: boolean | null
-          password?: string
-          port?: number
-          updated_at?: string
-          use_ssl?: boolean | null
-          username?: string
-        }
-        Relationships: []
       }
       survey_assignments: {
         Row: {
@@ -566,6 +557,7 @@ export type Database = {
     Enums: {
       assignment_status: "pending" | "completed" | "expired"
       campaign_status: "draft" | "active" | "completed" | "archived"
+      email_provider: "resend"
       instance_status: "upcoming" | "active" | "completed"
       level_status: "active" | "inactive"
       recurring_frequency:
