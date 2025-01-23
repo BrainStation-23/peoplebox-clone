@@ -71,6 +71,15 @@ export function CampaignForm({
     }
   };
 
+  const handleSubmit = (e: React.FormEvent) => {
+    if (currentStep !== 3) {
+      e.preventDefault();
+      handleNext();
+    } else {
+      form.handleSubmit(onSubmit)(e);
+    }
+  };
+
   const renderStepContent = () => {
     switch (currentStep) {
       case 1:
@@ -86,7 +95,7 @@ export function CampaignForm({
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+      <form onSubmit={handleSubmit} className="space-y-6">
         {renderStepContent()}
         
         <div className="flex justify-between pt-6 border-t">
