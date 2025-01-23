@@ -62,7 +62,7 @@ export default function SMTPConfig() {
       const { data, error } = await supabase
         .from("smtp_config")
         .select("*")
-        .single();
+        .maybeSingle();
 
       if (error) throw error;
       return data;
@@ -71,9 +71,20 @@ export default function SMTPConfig() {
 
   const updateConfig = useMutation({
     mutationFn: async (values: FormValues) => {
+      // Ensure all required fields are present
+      const configData = {
+        host: values.host,
+        port: values.port,
+        username: values.username,
+        password: values.password,
+        from_email: values.from_email,
+        from_name: values.from_name,
+        use_ssl: values.use_ssl,
+      };
+
       const { error } = await supabase
         .from("smtp_config")
-        .upsert(values, { onConflict: "id" });
+        .upsert(configData, { onConflict: "id" });
 
       if (error) throw error;
     },
