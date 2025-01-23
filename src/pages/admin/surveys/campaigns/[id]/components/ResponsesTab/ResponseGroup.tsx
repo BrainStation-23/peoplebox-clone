@@ -9,7 +9,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Eye } from "lucide-react";
+import { FileText } from "lucide-react";
 import { ResponseDetails } from "./ResponseDetails";
 import type { Response } from "./types";
 
@@ -49,7 +49,7 @@ export function ResponseGroup({ responses }: ResponseGroupProps) {
                   size="sm"
                   onClick={() => setSelectedResponse(response)}
                 >
-                  <Eye className="h-4 w-4" />
+                  <FileText className="h-4 w-4" />
                 </Button>
               </TableCell>
             </TableRow>

@@ -9,7 +9,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
-import { ResponsesList } from "./ResponsesList";
+import { ResponseGroup } from "./ResponseGroup";
 import type { FilterOptions, Response } from "./types";
 
 interface ResponsesTabProps {
@@ -71,31 +71,17 @@ export function ResponsesTab({ instanceId }: ResponsesTabProps) {
       <div className="space-y-4">
         <div className="h-12 w-full animate-pulse bg-muted rounded" />
         <div className="h-32 w-full animate-pulse bg-muted rounded" />
-        <div className="h-32 w-full animate-pulse bg-muted rounded" />
       </div>
     );
   }
 
-  // Filter and sort responses
+  // Filter responses
   const filteredResponses = responses?.filter((response) => {
     if (!filters.search) return true;
     const searchTerm = filters.search.toLowerCase();
     const userName = `${response.user.first_name || ''} ${response.user.last_name || ''} ${response.user.email}`.toLowerCase();
     return userName.includes(searchTerm);
-  });
-
-  // Group responses by instance
-  const groupedResponses = filteredResponses?.reduce((acc, response) => {
-    const instanceNumber = response.campaign_instance_id 
-      ? parseInt(response.campaign_instance_id.split('-')[0], 10) 
-      : 1;
-    
-    if (!acc[instanceNumber]) {
-      acc[instanceNumber] = [];
-    }
-    acc[instanceNumber].push(response);
-    return acc;
-  }, {} as Record<number, Response[]>) || {};
+  }) || [];
 
   return (
     <div className="space-y-6">
@@ -138,7 +124,7 @@ export function ResponsesTab({ instanceId }: ResponsesTabProps) {
         </Select>
       </div>
 
-      <ResponsesList groupedResponses={groupedResponses} />
+      <ResponseGroup responses={filteredResponses} />
     </div>
   );
 }
