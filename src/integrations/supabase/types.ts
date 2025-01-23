@@ -156,6 +156,45 @@ export type Database = {
           },
         ]
       }
+      smtp_config: {
+        Row: {
+          created_at: string
+          from_email: string
+          from_name: string
+          host: string
+          id: string
+          password: string
+          port: number
+          updated_at: string
+          use_ssl: boolean | null
+          username: string
+        }
+        Insert: {
+          created_at?: string
+          from_email: string
+          from_name: string
+          host: string
+          id?: string
+          password: string
+          port: number
+          updated_at?: string
+          use_ssl?: boolean | null
+          username: string
+        }
+        Update: {
+          created_at?: string
+          from_email?: string
+          from_name?: string
+          host?: string
+          id?: string
+          password?: string
+          port?: number
+          updated_at?: string
+          use_ssl?: boolean | null
+          username?: string
+        }
+        Relationships: []
+      }
       survey_assignments: {
         Row: {
           campaign_id: string | null
