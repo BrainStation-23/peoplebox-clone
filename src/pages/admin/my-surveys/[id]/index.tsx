@@ -6,8 +6,24 @@ import { Survey } from "survey-react-ui";
 import { ArrowLeft } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
+
+// Import all theme CSS files
 import "survey-core/defaultV2.min.css";
+import "survey-core/defaultV2-dark.min.css";
+import "survey-core/modern.min.css";
+import "survey-core/modern-dark.min.css";
+import "survey-core/survey.min.css";
+import "survey-core/survey-dark.min.css";
+
+type SurveyTheme = 
+  | "defaultV2" 
+  | "defaultV2-dark" 
+  | "modern" 
+  | "modern-dark" 
+  | "bootstrap" 
+  | "bootstrap-dark";
 
 export default function SurveyResponsePage() {
   const { id } = useParams();
@@ -15,6 +31,7 @@ export default function SurveyResponsePage() {
   const { toast } = useToast();
   const [survey, setSurvey] = useState<Model | null>(null);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
+  const [theme, setTheme] = useState<SurveyTheme>("defaultV2-dark");
 
   const { data: assignment, isLoading } = useQuery({
     queryKey: ["survey-assignment", id],
@@ -85,6 +102,9 @@ export default function SurveyResponsePage() {
   useEffect(() => {
     if (assignment?.survey.json_data) {
       const surveyModel = new Model(assignment.survey.json_data);
+      
+      // Apply theme
+      surveyModel.applyTheme(theme);
       
       // Load existing response data if available
       if (existingResponse?.response_data) {
@@ -180,7 +200,19 @@ export default function SurveyResponsePage() {
 
       setSurvey(surveyModel);
     }
-  }, [assignment, existingResponse, id, navigate, toast, activeInstance]);
+  }, [assignment, existingResponse, id, navigate, toast, activeInstance, theme]);
+
+  const handleThemeChange = (newTheme: SurveyTheme) => {
+    setTheme(newTheme);
+    localStorage.setItem("surveyTheme", newTheme);
+  };
+
+  useEffect(() => {
+    const savedTheme = localStorage.getItem("surveyTheme") as SurveyTheme;
+    if (savedTheme) {
+      setTheme(savedTheme);
+    }
+  }, []);
 
   if (isLoading || !survey) {
     return <div>Loading...</div>;
@@ -201,11 +233,32 @@ export default function SurveyResponsePage() {
             {assignment.campaign?.name || assignment.survey.name}
           </h1>
         </div>
-        {lastSaved && (
-          <p className="text-sm text-muted-foreground">
-            Last saved: {lastSaved.toLocaleTimeString()}
-          </p>
-        )}
+        <div className="flex items-center gap-4">
+          {lastSaved && (
+            <p className="text-sm text-muted-foreground">
+              Last saved: {lastSaved.toLocaleTimeString()}
+            </p>
+          )}
+          <Select value={theme} onValueChange={handleThemeChange}>
+            <SelectTrigger className="w-[180px]">
+              <SelectValue placeholder="Select theme" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectGroup>
+                <SelectLabel>Light Themes</SelectLabel>
+                <SelectItem value="defaultV2">Default V2</SelectItem>
+                <SelectItem value="modern">Modern</SelectItem>
+                <SelectItem value="bootstrap">Bootstrap</SelectItem>
+              </SelectGroup>
+              <SelectGroup>
+                <SelectLabel>Dark Themes</SelectLabel>
+                <SelectItem value="defaultV2-dark">Default V2 Dark</SelectItem>
+                <SelectItem value="modern-dark">Modern Dark</SelectItem>
+                <SelectItem value="bootstrap-dark">Bootstrap Dark</SelectItem>
+              </SelectGroup>
+            </SelectContent>
+          </Select>
+        </div>
       </div>
       
       <div className="bg-card rounded-lg border p-6">
