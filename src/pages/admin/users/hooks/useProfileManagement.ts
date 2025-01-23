@@ -9,6 +9,7 @@ export function useProfileManagement(user: User | null) {
   const [lastName, setLastName] = useState("");
   const [profileImageUrl, setProfileImageUrl] = useState("");
   const [selectedLevel, setSelectedLevel] = useState<string>("");
+  const [orgId, setOrgId] = useState("");
   const queryClient = useQueryClient();
 
   // Fetch complete profile data
@@ -40,6 +41,7 @@ export function useProfileManagement(user: User | null) {
       setLastName(profileData.last_name || '');
       setProfileImageUrl(profileData.profile_image_url || '');
       setSelectedLevel(profileData.level_id || '');
+      setOrgId(profileData.org_id || '');
     }
   }, [profileData]);
 
@@ -52,6 +54,7 @@ export function useProfileManagement(user: User | null) {
         last_name: lastName,
         profile_image_url: profileImageUrl,
         level_id: selectedLevel,
+        org_id: orgId,
       });
 
       const { error: profileError } = await supabase
@@ -61,6 +64,7 @@ export function useProfileManagement(user: User | null) {
           last_name: lastName,
           profile_image_url: profileImageUrl,
           level_id: selectedLevel || null,
+          org_id: orgId || null,
         })
         .eq("id", user.id);
 
@@ -89,6 +93,8 @@ export function useProfileManagement(user: User | null) {
     setProfileImageUrl,
     selectedLevel,
     setSelectedLevel,
+    orgId,
+    setOrgId,
     profileData,
     profileError,
     updateProfileMutation,

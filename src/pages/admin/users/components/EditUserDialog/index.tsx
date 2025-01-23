@@ -37,6 +37,8 @@ export default function EditUserDialog({
     setProfileImageUrl,
     selectedLevel,
     setSelectedLevel,
+    orgId,
+    setOrgId,
     profileError,
     updateProfileMutation,
   } = useProfileManagement(user);
@@ -69,6 +71,7 @@ export default function EditUserDialog({
       firstName,
       lastName,
       selectedLevel,
+      orgId,
     });
     updateProfileMutation.mutate();
   };
@@ -100,6 +103,8 @@ export default function EditUserDialog({
               setProfileImageUrl={setProfileImageUrl}
               selectedLevel={selectedLevel}
               setSelectedLevel={setSelectedLevel}
+              orgId={orgId}
+              setOrgId={setOrgId}
             />
           </TabsContent>
 
