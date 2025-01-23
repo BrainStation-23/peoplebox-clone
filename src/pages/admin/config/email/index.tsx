@@ -12,6 +12,14 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Mail, Server } from "lucide-react";
 
 export default function EmailConfig() {
   const [isTestingEmail, setIsTestingEmail] = useState(false);
@@ -36,15 +44,13 @@ export default function EmailConfig() {
         provider: "resend" as const,
         from_email: values.from_email,
         from_name: values.from_name,
+        provider_settings: {},
+        is_singleton: true,
       };
 
       const { error } = await supabase
         .from("email_config")
-        .upsert({
-          ...configData,
-          provider_settings: {},
-          is_singleton: true,
-        });
+        .upsert(configData);
 
       if (error) throw error;
     },
@@ -104,6 +110,30 @@ export default function EmailConfig() {
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="space-y-2">
+              <Label>Email Provider</Label>
+              <Select defaultValue="resend" disabled={false}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select provider" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="resend">Resend</SelectItem>
+                  <SelectItem value="sendgrid" disabled>
+                    <div className="flex items-center">
+                      <Mail className="mr-2 h-4 w-4" />
+                      SendGrid (Coming Soon)
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="smtp" disabled>
+                    <div className="flex items-center">
+                      <Server className="mr-2 h-4 w-4" />
+                      SMTP (Coming Soon)
+                    </div>
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
             <div className="grid gap-4">
               <div className="space-y-2">
                 <Label htmlFor="from_email">From Email</Label>
