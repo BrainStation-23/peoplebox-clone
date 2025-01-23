@@ -50,34 +50,6 @@ export default function CampaignDetailsPage() {
     },
   });
 
-  const { data: assignments, isLoading: isLoadingAssignments } = useQuery({
-    queryKey: ["campaign-assignments", id, selectedInstanceId],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("survey_assignments")
-        .select(`
-          *,
-          user:profiles!survey_assignments_user_id_fkey (
-            id,
-            email,
-            first_name,
-            last_name
-          ),
-          sbu_assignments:survey_sbu_assignments (
-            sbu:sbus (
-              id,
-              name
-            )
-          )
-        `)
-        .eq("campaign_id", id)
-        .order("created_at", { ascending: false });
-
-      if (error) throw error;
-      return data;
-    },
-  });
-
   if (!id) return null;
 
   return (
@@ -98,7 +70,10 @@ export default function CampaignDetailsPage() {
 
       <CampaignTabs>
         <TabPanel value="overview">
-          <OverviewTab campaignId={id} />
+          <OverviewTab 
+            campaignId={id} 
+            selectedInstanceId={selectedInstanceId}
+          />
         </TabPanel>
         <TabPanel value="assignments">
           <AssignmentInstanceList 
