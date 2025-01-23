@@ -24,37 +24,71 @@ serve(async (req) => {
 
   try {
     const config: SMTPConfig = await req.json();
+    console.log("Testing SMTP connection with config:", {
+      ...config,
+      password: '***' // Hide password in logs
+    });
     
     const client = new SmtpClient();
-    
-    await client.connectTLS({
-      hostname: config.host,
-      port: config.port,
-      username: config.username,
-      password: config.password,
-    });
 
-    await client.close();
+    try {
+      await client.connect({
+        hostname: config.host,
+        port: config.port,
+        username: config.username,
+        password: config.password,
+        tls: config.use_ssl,
+      });
 
-    return new Response(
-      JSON.stringify({ success: true, message: "SMTP connection successful" }),
-      { 
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-        status: 200 
+      // Try to verify sender address
+      await client.send({
+        from: `${config.from_name} <${config.from_email}>`,
+        to: [config.from_email],
+        subject: "SMTP Test",
+        content: "",
+      });
+
+      await client.close();
+
+      return new Response(
+        JSON.stringify({ success: true, message: "SMTP connection successful" }),
+        { 
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 200 
+        }
+      );
+    } catch (smtpError) {
+      console.error("SMTP connection error:", smtpError);
+      return new Response(
+        JSON.stringify({ 
+          success: false, 
+          message: "SMTP connection failed", 
+          error: smtpError.message 
+        }),
+        { 
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 500 
+        }
+      );
+    } finally {
+      // Ensure client is closed even if there's an error
+      try {
+        await client.close();
+      } catch (closeError) {
+        console.error("Error closing SMTP connection:", closeError);
       }
-    );
+    }
   } catch (error) {
-    console.error("SMTP test error:", error);
-    
+    console.error("Request processing error:", error);
     return new Response(
       JSON.stringify({ 
         success: false, 
-        message: "SMTP connection failed", 
+        message: "Failed to process request", 
         error: error.message 
       }),
       { 
         headers: { ...corsHeaders, "Content-Type": "application/json" },
-        status: 500 
+        status: 400 
       }
     );
   }
