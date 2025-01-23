@@ -27,29 +27,6 @@ export default function CampaignDetailsPage() {
     },
   });
 
-  const { data: stats } = useQuery({
-    queryKey: ["campaign-stats", id],
-    queryFn: async () => {
-      const { data: assignments, error } = await supabase
-        .from("survey_assignments")
-        .select("id, status")
-        .eq("campaign_id", id);
-
-      if (error) throw error;
-
-      const totalAssignments = assignments?.length || 0;
-      const completedAssignments = assignments?.filter(a => a.status === 'completed').length || 0;
-      const completionRate = totalAssignments > 0 
-        ? Math.round((completedAssignments / totalAssignments) * 100) 
-        : 0;
-
-      return {
-        totalAssignments,
-        completionRate,
-      };
-    },
-  });
-
   const { data: assignments, isLoading: isLoadingAssignments } = useQuery({
     queryKey: ["campaign-assignments", id],
     queryFn: async () => {
@@ -86,7 +63,6 @@ export default function CampaignDetailsPage() {
       <CampaignHeader 
         campaign={campaign} 
         isLoading={isLoadingCampaign}
-        stats={stats}
       />
 
       <div className="flex justify-end">
