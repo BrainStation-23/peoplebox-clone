@@ -6,7 +6,6 @@ import CreateUserDialog from "./components/CreateUserDialog";
 import EditUserDialog from "./components/EditUserDialog"; 
 import { User } from "./types";
 import { useToast } from "@/hooks/use-toast";
-import { BulkActions } from "./components/BulkActions";
 
 export default function UsersPage() {
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
@@ -148,8 +147,6 @@ export default function UsersPage() {
           Add User
         </button>
       </div>
-
-      <BulkActions />
 
       <UserTable
         users={users || []}
