@@ -2,10 +2,12 @@ import { useQuery } from "@tanstack/react-query";
 import { useParams, Link } from "react-router-dom";
 import { Survey as SurveyComponent } from "survey-react-ui";
 import { Model } from "survey-core";
+import { LayeredDarkPanelless } from "survey-core/themes";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Survey } from "../types";
+import "survey-core/defaultV2.min.css";
 
 export default function PreviewSurveyPage() {
   const { id } = useParams();
@@ -32,6 +34,9 @@ export default function PreviewSurveyPage() {
     return <div>Survey not found</div>;
   }
 
+  const surveyModel = new Model(survey.json_data);
+  surveyModel.applyTheme(LayeredDarkPanelless);
+
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-4">
@@ -49,7 +54,7 @@ export default function PreviewSurveyPage() {
       </div>
 
       <div className="bg-white rounded-lg shadow p-6">
-        <SurveyComponent model={new Model(survey.json_data)} />
+        <SurveyComponent model={surveyModel} />
       </div>
     </div>
   );

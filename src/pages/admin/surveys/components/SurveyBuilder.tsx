@@ -2,9 +2,10 @@ import { useEffect, useState } from "react";
 import Editor from "@monaco-editor/react";
 import { Model } from "survey-core";
 import { Survey } from "survey-react-ui";
-import "survey-core/defaultV2.min.css";
+import { LayeredDarkPanelless } from "survey-core/themes";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import "survey-core/defaultV2.min.css";
 
 interface SurveyBuilderProps {
   onSubmit: (jsonData: any) => void;
@@ -21,6 +22,7 @@ export function SurveyBuilder({ onSubmit, defaultValue }: SurveyBuilderProps) {
     try {
       const parsedJson = JSON.parse(jsonContent);
       const surveyModel = new Model(parsedJson);
+      surveyModel.applyTheme(LayeredDarkPanelless);
       setSurvey(surveyModel);
       setError(null);
     } catch (err: any) {
