@@ -40,8 +40,8 @@ export function BulkActions() {
         .select(`
           *,
           levels (name),
-          user_roles (role),
-          user_sbus (
+          user_roles!inner (role),
+          user_sbus!inner (
             is_primary,
             sbu:sbus (name)
           )
