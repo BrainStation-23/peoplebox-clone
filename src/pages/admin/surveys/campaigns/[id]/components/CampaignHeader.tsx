@@ -2,7 +2,6 @@ import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -30,13 +29,9 @@ interface CampaignHeaderProps {
     ends_at: string;
   } | undefined;
   isLoading: boolean;
-  stats?: {
-    totalAssignments: number;
-    completionRate: number;
-  };
 }
 
-export function CampaignHeader({ campaign, isLoading, stats }: CampaignHeaderProps) {
+export function CampaignHeader({ campaign, isLoading }: CampaignHeaderProps) {
   const { id } = useParams();
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -214,27 +209,6 @@ export function CampaignHeader({ campaign, isLoading, stats }: CampaignHeaderPro
           </div>
         )}
       </div>
-
-      {stats && (
-        <div className="grid gap-4 md:grid-cols-2">
-          <Card>
-            <CardContent className="pt-6">
-              <div className="flex items-center gap-2">
-                <span className="text-sm font-medium">Assignments</span>
-              </div>
-              <p className="mt-2 text-2xl font-bold">{stats.totalAssignments}</p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="pt-6">
-              <div className="flex items-center gap-2">
-                <span className="text-sm font-medium">Completion Rate</span>
-              </div>
-              <p className="mt-2 text-2xl font-bold">{stats.completionRate}%</p>
-            </CardContent>
-          </Card>
-        </div>
-      )}
     </div>
   );
 }
