@@ -27,7 +27,19 @@ export interface ProcessedResponse {
 
 export interface QuestionSummary {
   totalResponses: number;
-  [key: string]: number | string;
+  // For NPS
+  promoters?: number;
+  passives?: number;
+  detractors?: number;
+  npsScore?: number;
+  // For ratings and numeric
+  average?: number;
+  min?: number;
+  max?: number;
+  // For matrix
+  matrixData?: Record<string, Record<string, number>>;
+  // For choice questions (radio/checkbox)
+  [key: string]: number | Record<string, Record<string, number>> | undefined;
 }
 
 export interface QuestionAnalysis {
