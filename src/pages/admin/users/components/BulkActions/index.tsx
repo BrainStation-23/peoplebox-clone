@@ -5,6 +5,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import ImportDialog from "./ImportDialog";
+import { UserRole } from "../../types";
 
 export function BulkActions() {
   const [isImportOpen, setIsImportOpen] = useState(false);
@@ -61,7 +62,7 @@ export function BulkActions() {
 
       const csvData = users.map((user) => {
         const primarySbu = user.user_sbus?.find(sbu => sbu.is_primary)?.sbu?.name || '';
-        const role = user.user_roles?.[0]?.role || 'user';
+        const userRole = (user.user_roles?.[0]?.role || 'user') as UserRole;
         const level = user.levels?.name || '';
 
         return {
@@ -71,7 +72,7 @@ export function BulkActions() {
           org_id: user.org_id || '',
           level,
           primary_sbu: primarySbu,
-          is_admin: role === 'admin',
+          is_admin: userRole === 'admin',
           action: 'update'
         };
       });
