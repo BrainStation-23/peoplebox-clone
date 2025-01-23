@@ -1,8 +1,6 @@
+# Project ID from the Supabase project settings
 project_id = "iqpgjxbqoeioqlfzosvu"
 
-[api]
-enabled = true
-url = "https://iqpgjxbqoeioqlfzosvu.supabase.co"
-
+[functions]
 [functions.send-survey-reminder]
 verify_jwt = true
