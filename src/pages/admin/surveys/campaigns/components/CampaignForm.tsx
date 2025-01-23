@@ -7,6 +7,7 @@ import { BasicInfoForm } from "./BasicInfoForm";
 import { ScheduleConfig } from "./ScheduleConfig";
 import { ReviewStep } from "./ReviewStep";
 import { ArrowLeft, ArrowRight, Send } from "lucide-react";
+import { useState } from "react";
 
 const campaignSchema = z.object({
   name: z.string().min(1, "Name is required"),
@@ -48,6 +49,7 @@ export function CampaignForm({
   onStepComplete,
   onStepBack,
 }: CampaignFormProps) {
+  const [isReadyToProceed, setIsReadyToProceed] = useState(false);
   const form = useForm<CampaignFormData>({
     resolver: zodResolver(campaignSchema),
     defaultValues: {
@@ -80,8 +82,12 @@ export function CampaignForm({
       e.preventDefault();
       handleNext();
     } else {
-      // For step 3, allow the form to submit normally
-      form.handleSubmit(onSubmit)(e);
+      // For step 3, allow the form to submit normally if ready to proceed
+      if (isReadyToProceed) {
+        form.handleSubmit(onSubmit)(e);
+      } else {
+        e.preventDefault();
+      }
     }
   };
 
@@ -92,7 +98,14 @@ export function CampaignForm({
       case 2:
         return <ScheduleConfig form={form} />;
       case 3:
-        return <ReviewStep form={form} surveys={surveys} />;
+        return (
+          <ReviewStep 
+            form={form} 
+            surveys={surveys} 
+            isReadyToProceed={isReadyToProceed}
+            onReadyToProceedChange={setIsReadyToProceed}
+          />
+        );
       default:
         return null;
     }
@@ -115,7 +128,7 @@ export function CampaignForm({
           </Button>
           
           {currentStep === 3 ? (
-            <Button type="submit">
+            <Button type="submit" disabled={!isReadyToProceed}>
               <Send className="mr-2 h-4 w-4" />
               Create Campaign
             </Button>

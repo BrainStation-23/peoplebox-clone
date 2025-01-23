@@ -5,14 +5,18 @@ import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
 import { CampaignPreview } from "./CampaignPreview";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { AlertTriangle, Calendar, FileText, Users } from "lucide-react";
+import { AlertTriangle, Calendar, CheckCircle, FileText, Users } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
 
 interface ReviewStepProps {
   form: UseFormReturn<CampaignFormData>;
   surveys: { id: string; name: string; }[];
+  isReadyToProceed: boolean;
+  onReadyToProceedChange: (checked: boolean) => void;
 }
 
-export function ReviewStep({ form, surveys }: ReviewStepProps) {
+export function ReviewStep({ form, surveys, isReadyToProceed, onReadyToProceedChange }: ReviewStepProps) {
   const values = form.getValues();
   const selectedSurvey = surveys.find(s => s.id === values.survey_id);
 
@@ -132,6 +136,21 @@ export function ReviewStep({ form, surveys }: ReviewStepProps) {
           <CampaignPreview form={form} />
         </CardContent>
       </Card>
+
+      <div className="flex items-center space-x-2 border-t pt-6">
+        <Checkbox
+          id="ready-to-proceed"
+          checked={isReadyToProceed}
+          onCheckedChange={(checked) => onReadyToProceedChange(checked as boolean)}
+        />
+        <Label
+          htmlFor="ready-to-proceed"
+          className="text-sm text-muted-foreground font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 flex items-center gap-2"
+        >
+          <CheckCircle className="h-4 w-4" />
+          I have reviewed all details and I'm ready to proceed
+        </Label>
+      </div>
     </div>
   );
 }
