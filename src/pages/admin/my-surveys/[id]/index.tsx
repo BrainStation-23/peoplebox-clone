@@ -111,10 +111,10 @@ export default function SurveyResponsePage() {
             const userId = (await supabase.auth.getUser()).data.user?.id;
             if (!userId) throw new Error("User not authenticated");
 
-            const stateData: SurveyStateData = {
+            const stateData = {
               lastPageNo: sender.currentPageNo,
               lastUpdated: new Date().toISOString()
-            };
+            } as SurveyStateData;
 
             const { error } = await supabase
               .from("survey_responses")

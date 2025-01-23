@@ -1,6 +1,7 @@
 import { Json } from "@/integrations/supabase/types";
 
 export interface SurveyStateData {
+  [key: string]: Json | undefined;
   lastPageNo: number;
   lastUpdated: string;
 }
