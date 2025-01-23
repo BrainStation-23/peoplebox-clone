@@ -43,15 +43,38 @@ export default function SurveyResponsePage() {
     },
   });
 
-  // Load or create survey response
-  const { data: existingResponse } = useQuery({
-    queryKey: ["survey-response", id],
+  // Fetch active campaign instance if this is a campaign-based survey
+  const { data: activeInstance } = useQuery({
+    queryKey: ["active-campaign-instance", assignment?.campaign_id],
+    enabled: !!assignment?.campaign_id,
     queryFn: async () => {
       const { data, error } = await supabase
+        .from("campaign_instances")
+        .select("*")
+        .eq("campaign_id", assignment.campaign_id)
+        .eq("status", "active")
+        .maybeSingle();
+
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  // Check for existing response
+  const { data: existingResponse } = useQuery({
+    queryKey: ["survey-response", id, activeInstance?.id],
+    queryFn: async () => {
+      const query = supabase
         .from("survey_responses")
         .select("*")
-        .eq("assignment_id", id)
-        .maybeSingle();
+        .eq("assignment_id", id);
+
+      // If this is a campaign instance, check for response in this instance
+      if (activeInstance?.id) {
+        query.eq("campaign_instance_id", activeInstance.id);
+      }
+
+      const { data, error } = await query.maybeSingle();
 
       if (error) throw error;
       return data;
@@ -78,15 +101,20 @@ export default function SurveyResponsePage() {
             const userId = (await supabase.auth.getUser()).data.user?.id;
             if (!userId) throw new Error("User not authenticated");
 
+            const responseData = {
+              assignment_id: id,
+              user_id: userId,
+              response_data: sender.data,
+              updated_at: new Date().toISOString(),
+              campaign_instance_id: activeInstance?.id || null,
+            };
+
             const { error } = await supabase
               .from("survey_responses")
-              .upsert({
-                assignment_id: id,
-                user_id: userId,
-                response_data: sender.data,
-                updated_at: new Date().toISOString(),
-              }, {
-                onConflict: 'assignment_id,user_id'
+              .upsert(responseData, {
+                onConflict: activeInstance?.id 
+                  ? 'assignment_id,user_id,campaign_instance_id' 
+                  : 'assignment_id,user_id'
               });
 
             if (error) throw error;
@@ -107,15 +135,20 @@ export default function SurveyResponsePage() {
             const userId = (await supabase.auth.getUser()).data.user?.id;
             if (!userId) throw new Error("User not authenticated");
 
+            const responseData = {
+              assignment_id: id,
+              user_id: userId,
+              response_data: sender.data,
+              submitted_at: new Date().toISOString(),
+              campaign_instance_id: activeInstance?.id || null,
+            };
+
             const { error: responseError } = await supabase
               .from("survey_responses")
-              .upsert({
-                assignment_id: id,
-                user_id: userId,
-                response_data: sender.data,
-                submitted_at: new Date().toISOString(),
-              }, {
-                onConflict: 'assignment_id,user_id'
+              .upsert(responseData, {
+                onConflict: activeInstance?.id 
+                  ? 'assignment_id,user_id,campaign_instance_id' 
+                  : 'assignment_id,user_id'
               });
 
             if (responseError) throw responseError;
@@ -147,7 +180,7 @@ export default function SurveyResponsePage() {
 
       setSurvey(surveyModel);
     }
-  }, [assignment, existingResponse, id, navigate, toast]);
+  }, [assignment, existingResponse, id, navigate, toast, activeInstance]);
 
   if (isLoading || !survey) {
     return <div>Loading...</div>;
