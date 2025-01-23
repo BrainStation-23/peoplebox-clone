@@ -39,7 +39,7 @@ import { Switch } from "@/components/ui/switch";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { TooltipProvider } from "@/components/ui/tooltip";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 const formSchema = z.object({
   name: z.string().min(1, "Name is required"),
@@ -161,176 +161,174 @@ export default function LevelConfig() {
   };
 
   return (
-    <TooltipProvider>
-      <div>
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => navigate(-1)}
-              className="mr-4"
-            >
-              <ArrowLeft className="h-4 w-4" />
+    <div>
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => navigate(-1)}
+            className="mr-4"
+          >
+            <ArrowLeft className="h-4 w-4" />
+          </Button>
+          <h1 className="text-2xl font-bold">Level Configuration</h1>
+        </div>
+        <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
+          <DialogTrigger asChild>
+            <Button>
+              <Plus className="mr-2 h-4 w-4" />
+              Add Level
             </Button>
-            <h1 className="text-2xl font-bold">Level Configuration</h1>
-          </div>
-          <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
-            <DialogTrigger asChild>
-              <Button>
-                <Plus className="mr-2 h-4 w-4" />
-                Add Level
-              </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Create New Level</DialogTitle>
-                <DialogDescription>
-                  Add a new level to assign to profiles.
-                </DialogDescription>
-              </DialogHeader>
-              <Form {...form}>
-                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-                  <FormField
-                    control={form.control}
-                    name="name"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Name</FormLabel>
-                        <FormControl>
-                          <Input placeholder="Enter level name" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <DialogFooter>
-                    <Button type="submit">Create Level</Button>
-                  </DialogFooter>
-                </form>
-              </Form>
-            </DialogContent>
-          </Dialog>
-        </div>
-
-        <div className="rounded-md border">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Name</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Created At</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {isLoading ? (
-                <TableRow>
-                  <TableCell colSpan={4} className="text-center">
-                    Loading...
-                  </TableCell>
-                </TableRow>
-              ) : levels?.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={4} className="text-center">
-                    No levels found
-                  </TableCell>
-                </TableRow>
-              ) : (
-                levels?.map((level) => (
-                  <TableRow key={level.id}>
-                    <TableCell>{level.name}</TableCell>
-                    <TableCell>
-                      <Switch
-                        checked={level.status === "active"}
-                        onCheckedChange={(checked) =>
-                          toggleStatusMutation.mutate({
-                            id: level.id,
-                            status: checked ? "active" : "inactive",
-                          })
-                        }
-                      />
-                    </TableCell>
-                    <TableCell>
-                      {new Date(level.created_at).toLocaleDateString()}
-                    </TableCell>
-                    <TableCell className="text-right space-x-2">
-                      <Dialog
-                        open={editingLevel?.id === level.id}
-                        onOpenChange={(open) => !open && setEditingLevel(null)}
-                      >
-                        <DialogTrigger asChild>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => {
-                              setEditingLevel(level);
-                              form.setValue("name", level.name);
-                            }}
-                          >
-                            Edit
-                          </Button>
-                        </DialogTrigger>
-                        <DialogContent>
-                          <DialogHeader>
-                            <DialogTitle>Edit Level</DialogTitle>
-                            <DialogDescription>
-                              Update the level details.
-                            </DialogDescription>
-                          </DialogHeader>
-                          <Form {...form}>
-                            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-                              <FormField
-                                control={form.control}
-                                name="name"
-                                render={({ field }) => (
-                                  <FormItem>
-                                    <FormLabel>Name</FormLabel>
-                                    <FormControl>
-                                      <Input {...field} />
-                                    </FormControl>
-                                    <FormMessage />
-                                  </FormItem>
-                                )}
-                              />
-                              <DialogFooter>
-                                <Button type="submit">Save Changes</Button>
-                              </DialogFooter>
-                            </form>
-                          </Form>
-                        </DialogContent>
-                      </Dialog>
-                      <AlertDialog>
-                        <AlertDialogTrigger asChild>
-                          <Button variant="destructive" size="sm">
-                            Delete
-                          </Button>
-                        </AlertDialogTrigger>
-                        <AlertDialogContent>
-                          <AlertDialogHeader>
-                            <AlertDialogTitle>Delete Level</AlertDialogTitle>
-                            <AlertDialogDescription>
-                              Are you sure you want to delete this level? This action cannot be undone.
-                            </AlertDialogDescription>
-                          </AlertDialogHeader>
-                          <AlertDialogFooter>
-                            <AlertDialogCancel>Cancel</AlertDialogCancel>
-                            <AlertDialogAction
-                              onClick={() => deleteMutation.mutate(level.id)}
-                            >
-                              Delete
-                            </AlertDialogAction>
-                          </AlertDialogFooter>
-                        </AlertDialogContent>
-                      </AlertDialog>
-                    </TableCell>
-                  </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
-        </div>
+          </DialogTrigger>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Create New Level</DialogTitle>
+              <DialogDescription>
+                Add a new level to assign to profiles.
+              </DialogDescription>
+            </DialogHeader>
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                <FormField
+                  control={form.control}
+                  name="name"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Name</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Enter level name" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <DialogFooter>
+                  <Button type="submit">Create Level</Button>
+                </DialogFooter>
+              </form>
+            </Form>
+          </DialogContent>
+        </Dialog>
       </div>
-    </TooltipProvider>
+
+      <div className="rounded-md border">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Name</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead>Created At</TableHead>
+              <TableHead className="text-right">Actions</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {isLoading ? (
+              <TableRow>
+                <TableCell colSpan={4} className="text-center">
+                  Loading...
+                </TableCell>
+              </TableRow>
+            ) : levels?.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={4} className="text-center">
+                  No levels found
+                </TableCell>
+              </TableRow>
+            ) : (
+              levels?.map((level) => (
+                <TableRow key={level.id}>
+                  <TableCell>{level.name}</TableCell>
+                  <TableCell>
+                    <Switch
+                      checked={level.status === "active"}
+                      onCheckedChange={(checked) =>
+                        toggleStatusMutation.mutate({
+                          id: level.id,
+                          status: checked ? "active" : "inactive",
+                        })
+                      }
+                    />
+                  </TableCell>
+                  <TableCell>
+                    {new Date(level.created_at).toLocaleDateString()}
+                  </TableCell>
+                  <TableCell className="text-right space-x-2">
+                    <Dialog
+                      open={editingLevel?.id === level.id}
+                      onOpenChange={(open) => !open && setEditingLevel(null)}
+                    >
+                      <DialogTrigger asChild>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            setEditingLevel(level);
+                            form.setValue("name", level.name);
+                          }}
+                        >
+                          Edit
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent>
+                        <DialogHeader>
+                          <DialogTitle>Edit Level</DialogTitle>
+                          <DialogDescription>
+                            Update the level details.
+                          </DialogDescription>
+                        </DialogHeader>
+                        <Form {...form}>
+                          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                            <FormField
+                              control={form.control}
+                              name="name"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Name</FormLabel>
+                                  <FormControl>
+                                    <Input {...field} />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                            <DialogFooter>
+                              <Button type="submit">Save Changes</Button>
+                            </DialogFooter>
+                          </form>
+                        </Form>
+                      </DialogContent>
+                    </Dialog>
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button variant="destructive" size="sm">
+                          Delete
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Delete Level</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            Are you sure you want to delete this level? This action cannot be undone.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancel</AlertDialogCancel>
+                          <AlertDialogAction
+                            onClick={() => deleteMutation.mutate(level.id)}
+                          >
+                            Delete
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  </TableCell>
+                </TableRow>
+              ))
+            )}
+          </TableBody>
+        </Table>
+      </div>
+    </div>
   );
 }

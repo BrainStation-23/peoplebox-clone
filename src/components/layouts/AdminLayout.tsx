@@ -3,6 +3,7 @@ import { useNavigate, Outlet } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { useToast } from "@/hooks/use-toast";
+import { TooltipProvider } from "@/components/ui/tooltip";
 import AdminHeader from "./AdminHeader";
 import AdminSidebar from "./AdminSidebar";
 
@@ -88,16 +89,18 @@ export default function AdminLayout() {
   };
 
   return (
-    <SidebarProvider>
-      <div className="min-h-screen flex w-full bg-background">
-        <AdminSidebar onSignOut={handleSignOut} />
-        <div className="flex-1 flex flex-col min-h-screen">
-          <AdminHeader />
-          <main className="flex-1 p-6">
-            <Outlet />
-          </main>
+    <TooltipProvider>
+      <SidebarProvider>
+        <div className="min-h-screen flex w-full bg-background">
+          <AdminSidebar onSignOut={handleSignOut} />
+          <div className="flex-1 flex flex-col min-h-screen">
+            <AdminHeader />
+            <main className="flex-1 p-6">
+              <Outlet />
+            </main>
+          </div>
         </div>
-      </div>
-    </SidebarProvider>
+      </SidebarProvider>
+    </TooltipProvider>
   );
 }
