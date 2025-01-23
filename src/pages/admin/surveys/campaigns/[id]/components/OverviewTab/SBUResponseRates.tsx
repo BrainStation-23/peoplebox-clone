@@ -21,29 +21,41 @@ export function SBUResponseRates({ campaignId, instanceId }: Props) {
   const { data: sbuStats, isLoading } = useQuery({
     queryKey: ["sbu-response-rates", campaignId, instanceId],
     queryFn: async () => {
-      // First, get all SBUs that have assignments for this campaign
-      const { data: sbuAssignments, error: sbuError } = await supabase
-        .from("survey_sbu_assignments")
+      const { data: assignments, error } = await supabase
+        .from("survey_assignments")
         .select(`
-          sbu:sbus(id, name),
-          assignment:survey_assignments!inner(
-            id,
-            status,
-            responses:survey_responses(
-              id,
-              campaign_instance_id
+          id,
+          user_id,
+          user:profiles!survey_assignments_user_id_fkey (
+            user_sbus!profiles_id_fkey (
+              sbu:sbus!user_sbus_sbu_id_fkey (
+                id,
+                name
+              ),
+              is_primary
             )
+          ),
+          responses:survey_responses!survey_responses_assignment_id_fkey (
+            id,
+            campaign_instance_id
           )
         `)
-        .eq("assignment.campaign_id", campaignId);
+        .eq("campaign_id", campaignId);
 
-      if (sbuError) throw sbuError;
+      if (error) throw error;
 
       // Process data to calculate response rates by SBU
       const sbuMap = new Map<string, SBUStats>();
-      
-      sbuAssignments?.forEach((record) => {
-        const sbuName = record.sbu?.name || "Unknown";
+
+      assignments?.forEach((assignment) => {
+        // Get primary SBU for the user
+        const primarySbu = assignment.user?.user_sbus?.find(
+          (us) => us.is_primary && us.sbu
+        );
+        
+        if (!primarySbu?.sbu) return;
+
+        const sbuName = primarySbu.sbu.name;
         const current = sbuMap.get(sbuName) || {
           sbu_name: sbuName,
           total_assignments: 0,
@@ -53,12 +65,9 @@ export function SBUResponseRates({ campaignId, instanceId }: Props) {
 
         current.total_assignments += 1;
 
-        // Check if there's a response for this assignment
-        const hasResponse = record.assignment?.responses?.some(response => 
-          // If instanceId is provided, check for specific instance
-          instanceId 
-            ? response.campaign_instance_id === instanceId
-            : true
+        // Check if there's a response for this assignment matching the instance
+        const hasResponse = assignment.responses?.some((response) =>
+          instanceId ? response.campaign_instance_id === instanceId : true
         );
 
         if (hasResponse) {
@@ -69,14 +78,31 @@ export function SBUResponseRates({ campaignId, instanceId }: Props) {
       });
 
       // Calculate response rates and convert to array
-      return Array.from(sbuMap.values()).map(sbu => ({
+      return Array.from(sbuMap.values()).map((sbu) => ({
         ...sbu,
-        response_rate: Math.round((sbu.completed_assignments / sbu.total_assignments) * 100),
+        response_rate: Math.round(
+          (sbu.completed_assignments / sbu.total_assignments) * 100
+        ),
       }));
     },
   });
 
   if (isLoading) return <div>Loading...</div>;
+
+  if (!sbuStats?.length) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Response Rates by Department</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="text-sm text-muted-foreground">
+            No department data available
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <Card>
@@ -96,15 +122,15 @@ export function SBUResponseRates({ campaignId, instanceId }: Props) {
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="sbu_name" />
                 <YAxis unit="%" />
-                <Tooltip 
+                <Tooltip
                   formatter={(value: number, name: string) => {
                     if (name === "Response Rate") return `${value}%`;
                     return value;
                   }}
                 />
-                <Bar 
-                  dataKey="response_rate" 
-                  fill="#8884d8" 
+                <Bar
+                  dataKey="response_rate"
+                  fill="#8884d8"
                   name="Response Rate"
                 />
               </BarChart>
@@ -122,11 +148,15 @@ export function SBUResponseRates({ campaignId, instanceId }: Props) {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {sbuStats?.map((sbu) => (
+                {sbuStats.map((sbu) => (
                   <TableRow key={sbu.sbu_name}>
                     <TableCell>{sbu.sbu_name}</TableCell>
-                    <TableCell className="text-right">{sbu.total_assignments}</TableCell>
-                    <TableCell className="text-right">{sbu.completed_assignments}</TableCell>
+                    <TableCell className="text-right">
+                      {sbu.total_assignments}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      {sbu.completed_assignments}
+                    </TableCell>
                     <TableCell className="text-right">{sbu.response_rate}%</TableCell>
                   </TableRow>
                 ))}
