@@ -11,11 +11,12 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { ResponseGroup } from "./ResponseGroup";
 import { processResponses } from "./utils/responseAnalyzer";
-import type { FilterOptions, Response } from "./types";
 import type { ChartData, QuestionAnalysis } from "./types/reports";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { SingleChoiceChart } from "./components/QuestionAnalytics/SingleChoiceChart";
 import { NPSVisualizer } from "./components/QuestionAnalytics/NPSVisualizer";
+import type { FilterOptions } from "./types";
+import type { Response } from "@/pages/admin/surveys/types";
 
 interface ResponsesTabProps {
   instanceId?: string;

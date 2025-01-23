@@ -1,5 +1,11 @@
 import type { Json } from "@/integrations/supabase/types";
-import type { QuestionType, SurveyQuestion, ProcessedResponse, QuestionAnalysis } from "../types/reports";
+import type { 
+  QuestionType, 
+  SurveyQuestion, 
+  ProcessedResponse, 
+  QuestionAnalysis,
+  QuestionSummary 
+} from "../types/reports";
 
 export function detectQuestionType(question: any): QuestionType {
   if (question.type === "rating" && question.rateMax === 10 && question.rateMin === 0) {
@@ -42,8 +48,8 @@ export function processResponses(
 function calculateSummary(
   question: SurveyQuestion,
   responses: ProcessedResponse[]
-): Record<string, number | string> {
-  const summary: Record<string, number> = {
+): QuestionSummary {
+  const summary: QuestionSummary = {
     totalResponses: responses.length,
   };
 
