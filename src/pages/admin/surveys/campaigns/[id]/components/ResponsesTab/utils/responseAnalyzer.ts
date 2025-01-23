@@ -42,7 +42,7 @@ export function processResponses(
 function calculateSummary(
   question: SurveyQuestion,
   responses: ProcessedResponse[]
-): Record<string, number | string> {
+): QuestionSummary {
   const summary: Record<string, number> = {
     totalResponses: responses.length,
   };
@@ -76,7 +76,7 @@ function calculateSummary(
 
     case "rating":
       const ratings = responses.map((r) => Number(r.answer)).filter((n) => !isNaN(n));
-      summary.average = ratings.reduce((a, b) => a + b, 0) / ratings.length;
+      summary.average = ratings.reduce((a, b) => a + b, 0) / ratings.length || 0;
       break;
   }
 

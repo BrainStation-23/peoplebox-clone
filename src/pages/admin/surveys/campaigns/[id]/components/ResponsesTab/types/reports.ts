@@ -25,11 +25,18 @@ export interface ProcessedResponse {
   submittedAt: string;
 }
 
+export interface QuestionSummary {
+  totalResponses: number;
+  [key: string]: number | string;
+}
+
 export interface QuestionAnalysis {
   question: SurveyQuestion;
   responses: ProcessedResponse[];
-  summary: {
-    totalResponses: number;
-    [key: string]: number | string;
-  };
+  summary: QuestionSummary;
+}
+
+export interface ChartData {
+  name: string;
+  value: number;
 }

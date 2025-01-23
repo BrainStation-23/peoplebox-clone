@@ -12,8 +12,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { ResponseGroup } from "./ResponseGroup";
 import { processResponses } from "./utils/responseAnalyzer";
 import type { FilterOptions, Response } from "./types";
-import type { QuestionAnalysis } from "./types/reports";
+import type { ChartData, QuestionAnalysis } from "./types/reports";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { SingleChoiceChart } from "./components/QuestionAnalytics/SingleChoiceChart";
+import { NPSVisualizer } from "./components/QuestionAnalytics/NPSVisualizer";
 
 interface ResponsesTabProps {
   instanceId?: string;
@@ -39,7 +41,7 @@ export function ResponsesTab({ instanceId }: ResponsesTabProps) {
         `)
         .eq("campaign_instance_id", instanceId)
         .limit(1)
-        .single();
+        .maybeSingle();
 
       return assignments?.survey;
     },
@@ -49,7 +51,6 @@ export function ResponsesTab({ instanceId }: ResponsesTabProps) {
   const { data: responses, isLoading } = useQuery({
     queryKey: ["campaign-responses", instanceId],
     queryFn: async () => {
-      console.log("Fetching responses for instance:", instanceId);
       const query = supabase
         .from("survey_responses")
         .select(`
@@ -83,15 +84,47 @@ export function ResponsesTab({ instanceId }: ResponsesTabProps) {
         console.error("Error fetching responses:", error);
         throw error;
       }
-      console.log("Fetched responses:", data);
       return data as Response[];
     },
     enabled: !!instanceId,
   });
 
-  const analysisData: QuestionAnalysis[] = responses && surveyData
+  const analysisData: QuestionAnalysis[] = responses && surveyData?.json_data
     ? processResponses(surveyData.json_data, responses)
     : [];
+
+  const renderQuestionAnalysis = (analysis: QuestionAnalysis) => {
+    switch (analysis.question.type) {
+      case "radiogroup":
+        const chartData: ChartData[] = Object.entries(analysis.summary)
+          .filter(([key]) => key !== "totalResponses")
+          .map(([name, value]) => ({
+            name,
+            value: typeof value === "number" ? value : 0,
+          }));
+        return (
+          <SingleChoiceChart
+            data={chartData}
+            title={analysis.question.title}
+          />
+        );
+      
+      case "nps":
+        const { promoters, passives, detractors, npsScore } = analysis.summary;
+        return (
+          <NPSVisualizer
+            promoters={promoters as number}
+            passives={passives as number}
+            detractors={detractors as number}
+            npsScore={npsScore as number}
+            title={analysis.question.title}
+          />
+        );
+      
+      default:
+        return null;
+    }
+  };
 
   if (isLoading) {
     return (
@@ -101,14 +134,6 @@ export function ResponsesTab({ instanceId }: ResponsesTabProps) {
       </div>
     );
   }
-
-  // Filter responses
-  const filteredResponses = responses?.filter((response) => {
-    if (!filters.search) return true;
-    const searchTerm = filters.search.toLowerCase();
-    const userName = `${response.user.first_name || ''} ${response.user.last_name || ''} ${response.user.email}`.toLowerCase();
-    return userName.includes(searchTerm);
-  }) || [];
 
   return (
     <div className="space-y-6">
@@ -169,9 +194,13 @@ export function ResponsesTab({ instanceId }: ResponsesTabProps) {
                 No responses available for analysis.
               </div>
             ) : (
-              <pre className="bg-muted p-4 rounded-lg overflow-auto">
-                {JSON.stringify(analysisData, null, 2)}
-              </pre>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {analysisData.map((analysis) => (
+                  <div key={analysis.question.name} className="border rounded-lg">
+                    {renderQuestionAnalysis(analysis)}
+                  </div>
+                ))}
+              </div>
             )}
           </div>
         </TabsContent>
