@@ -135,7 +135,18 @@ export default function MySurveysList() {
   }, [assignments, toast]);
 
   const handleSelectSurvey = async (id: string) => {
-    navigate(`/admin/my-surveys/${id}`);
+    // Check if user is admin
+    const { data: roleData } = await supabase
+      .from('user_roles')
+      .select('role')
+      .eq('user_id', (await supabase.auth.getUser()).data.user?.id)
+      .single();
+
+    if (roleData?.role === 'admin') {
+      navigate(`/admin/my-surveys/${id}`);
+    } else {
+      navigate(`/user/my-surveys/${id}`);
+    }
   };
 
   const filteredAssignments = assignments?.filter((assignment) => {
