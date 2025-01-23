@@ -19,7 +19,7 @@ export default function UserSurveyResponsePage() {
   const [survey, setSurvey] = useState<Model | null>(null);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
 
-  const { data: assignment, isLoading } = useQuery({
+  const { data: assignment, isLoading, error } = useQuery({
     queryKey: ["survey-assignment", id],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -39,9 +39,10 @@ export default function UserSurveyResponsePage() {
           )
         `)
         .eq("id", id)
-        .single();
+        .maybeSingle(); // Using maybeSingle instead of single
 
       if (error) throw error;
+      if (!data) throw new Error("Survey assignment not found");
       return data;
     },
   });
@@ -64,13 +65,13 @@ export default function UserSurveyResponsePage() {
 
   const { data: existingResponse } = useQuery({
     queryKey: ["survey-response", id, activeInstance?.id],
+    enabled: !!id,
     queryFn: async () => {
       const query = supabase
         .from("survey_responses")
         .select("*")
         .eq("assignment_id", id);
 
-      // If this is a campaign instance, check for response in this instance
       if (activeInstance?.id) {
         query.eq("campaign_instance_id", activeInstance.id);
       }
@@ -80,11 +81,11 @@ export default function UserSurveyResponsePage() {
       if (error) throw error;
       return data;
     },
-    enabled: !!id,
   });
 
   useEffect(() => {
-    if (assignment?.survey.json_data) {
+    // Only proceed if we have the assignment and survey data
+    if (assignment?.survey?.json_data) {
       const surveyModel = new Model(assignment.survey.json_data);
       
       // Apply the LayeredDarkPanelless theme
@@ -183,8 +184,24 @@ export default function UserSurveyResponsePage() {
     }
   }, [assignment, existingResponse, id, navigate, toast, activeInstance]);
 
-  if (isLoading || !survey) {
+  if (isLoading) {
     return <div>Loading...</div>;
+  }
+
+  if (error || !assignment) {
+    return (
+      <div className="text-center py-8">
+        <p className="text-muted-foreground">Survey not found or you don't have access to it.</p>
+        <Button
+          variant="ghost"
+          onClick={() => navigate("/user/my-surveys")}
+          className="mt-4"
+        >
+          <ArrowLeft className="h-4 w-4 mr-2" />
+          Back to My Surveys
+        </Button>
+      </div>
+    );
   }
 
   return (
@@ -210,7 +227,13 @@ export default function UserSurveyResponsePage() {
       </div>
       
       <div className="bg-card rounded-lg border p-6">
-        <Survey model={survey} />
+        {survey ? (
+          <Survey model={survey} />
+        ) : (
+          <div className="text-center py-8 text-muted-foreground">
+            Unable to load survey. Please try again later.
+          </div>
+        )}
       </div>
     </div>
   );
