@@ -1,5 +1,5 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import { SmtpClient } from "https://deno.land/x/smtp@v0.7.0/mod.ts";
+import { SMTPClient } from "https://deno.land/x/denomailer@1.6.0/mod.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -11,6 +11,8 @@ serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
+
+  let client: SMTPClient | null = null;
   
   try {
     const config = await req.json();
@@ -19,33 +21,32 @@ serve(async (req) => {
       password: '***' // Hide password in logs
     });
     
-    const client = new SmtpClient();
+    // Create SMTP client with explicit connection options
+    client = new SMTPClient({
+      connection: {
+        hostname: config.host,
+        port: config.port,
+        tls: config.use_ssl,
+        auth: {
+          username: config.username,
+          password: config.password,
+        },
+      },
+    });
 
-    const connectConfig = {
-      hostname: config.host,
-      port: config.port,
-      username: config.username,
-      password: config.password,
-      tls: config.use_ssl,
-    };
-
-    console.log("Attempting to connect to SMTP server...");
-    await client.connectTLS(connectConfig);
+    // Connect to verify credentials
+    await client.connect();
     console.log("SMTP connection established successfully");
 
-    const testEmail = {
+    // Send a simple test email with text content only
+    await client.send({
       from: `${config.from_name} <${config.from_email}>`,
-      to: config.from_email,
+      to: [config.from_email],
       subject: "SMTP Test",
       content: "This is a test email to verify SMTP configuration.",
-    };
+    });
 
-    console.log("Sending test email...");
-    await client.send(testEmail);
-    console.log("Test email sent successfully");
-
-    await client.close();
-    console.log("SMTP connection closed");
+    console.log("SMTP test email sent successfully");
 
     return new Response(
       JSON.stringify({ success: true, message: "SMTP connection successful" }),
@@ -67,5 +68,15 @@ serve(async (req) => {
         status: 500 
       }
     );
+  } finally {
+    // Always try to close the client connection
+    if (client) {
+      try {
+        await client.close();
+        console.log("SMTP connection closed");
+      } catch (closeError) {
+        console.error("Error closing SMTP connection:", closeError);
+      }
+    }
   }
 });
