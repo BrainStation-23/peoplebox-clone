@@ -15,7 +15,7 @@ import Users from "./pages/admin/users";
 import PlatformConfigLayout from "./components/layouts/PlatformConfigLayout";
 import SBUsConfig from "./pages/admin/config/sbus";
 import SBUDetails from "./pages/admin/config/sbus/[id]";
-import SMTPConfig from "./pages/admin/config/smtp";
+import EmailConfig from "./pages/admin/config/email";
 import LevelConfig from "./pages/admin/config/level";
 import SurveysPage from "./pages/admin/surveys";
 import SurveyFormPage from "./pages/admin/surveys/SurveyFormPage";
@@ -57,7 +57,7 @@ const App = () => (
               <Route index element={<AdminConfig />} />
               <Route path="sbus" element={<SBUsConfig />} />
               <Route path="sbus/:id" element={<SBUDetails />} />
-              <Route path="smtp" element={<SMTPConfig />} />
+              <Route path="email" element={<EmailConfig />} />
               <Route path="level" element={<LevelConfig />} />
             </Route>
             <Route path="profile" element={<AdminProfile />} />
