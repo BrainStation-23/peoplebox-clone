@@ -10,7 +10,10 @@ import {
 } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { ResponseGroup } from "./ResponseGroup";
+import { processResponses } from "./utils/responseAnalyzer";
 import type { FilterOptions, Response } from "./types";
+import type { QuestionAnalysis } from "./types/reports";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface ResponsesTabProps {
   instanceId?: string;
@@ -21,6 +24,26 @@ export function ResponsesTab({ instanceId }: ResponsesTabProps) {
     search: "",
     sortBy: "date",
     sortDirection: "desc",
+  });
+
+  const { data: surveyData } = useQuery({
+    queryKey: ["survey-data", instanceId],
+    queryFn: async () => {
+      const { data: assignments } = await supabase
+        .from("survey_assignments")
+        .select(`
+          survey:surveys (
+            id,
+            json_data
+          )
+        `)
+        .eq("campaign_instance_id", instanceId)
+        .limit(1)
+        .single();
+
+      return assignments?.survey;
+    },
+    enabled: !!instanceId,
   });
 
   const { data: responses, isLoading } = useQuery({
@@ -66,6 +89,10 @@ export function ResponsesTab({ instanceId }: ResponsesTabProps) {
     enabled: !!instanceId,
   });
 
+  const analysisData: QuestionAnalysis[] = responses && surveyData
+    ? processResponses(surveyData.json_data, responses)
+    : [];
+
   if (isLoading) {
     return (
       <div className="space-y-4">
@@ -85,46 +112,70 @@ export function ResponsesTab({ instanceId }: ResponsesTabProps) {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row gap-4">
-        <Input
-          placeholder="Search respondents..."
-          value={filters.search}
-          onChange={(e) => setFilters(prev => ({ ...prev, search: e.target.value }))}
-          className="flex-1"
-        />
-        <Select
-          value={filters.sortBy}
-          onValueChange={(value) => setFilters(prev => ({ 
-            ...prev, 
-            sortBy: value as FilterOptions["sortBy"]
-          }))}
-        >
-          <SelectTrigger className="w-[180px]">
-            <SelectValue placeholder="Sort by" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="date">Date</SelectItem>
-            <SelectItem value="name">Name</SelectItem>
-          </SelectContent>
-        </Select>
-        <Select
-          value={filters.sortDirection}
-          onValueChange={(value) => setFilters(prev => ({ 
-            ...prev, 
-            sortDirection: value as FilterOptions["sortDirection"] 
-          }))}
-        >
-          <SelectTrigger className="w-[180px]">
-            <SelectValue placeholder="Sort direction" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="asc">Ascending</SelectItem>
-            <SelectItem value="desc">Descending</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
+      <Tabs defaultValue="list" className="w-full">
+        <TabsList>
+          <TabsTrigger value="list">Response List</TabsTrigger>
+          <TabsTrigger value="analysis">Analysis</TabsTrigger>
+        </TabsList>
 
-      <ResponseGroup responses={filteredResponses} />
+        <TabsContent value="list">
+          <div className="flex flex-col sm:flex-row gap-4">
+            <Input
+              placeholder="Search respondents..."
+              value={filters.search}
+              onChange={(e) => setFilters(prev => ({ ...prev, search: e.target.value }))}
+              className="flex-1"
+            />
+            <Select
+              value={filters.sortBy}
+              onValueChange={(value) => setFilters(prev => ({ 
+                ...prev, 
+                sortBy: value as FilterOptions["sortBy"]
+              }))}
+            >
+              <SelectTrigger className="w-[180px]">
+                <SelectValue placeholder="Sort by" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="date">Date</SelectItem>
+                <SelectItem value="name">Name</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select
+              value={filters.sortDirection}
+              onValueChange={(value) => setFilters(prev => ({ 
+                ...prev, 
+                sortDirection: value as FilterOptions["sortDirection"] 
+              }))}
+            >
+              <SelectTrigger className="w-[180px]">
+                <SelectValue placeholder="Sort direction" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="asc">Ascending</SelectItem>
+                <SelectItem value="desc">Descending</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <ResponseGroup responses={filteredResponses} />
+        </TabsContent>
+
+        <TabsContent value="analysis">
+          <div className="space-y-6">
+            <h2 className="text-2xl font-bold">Response Analysis</h2>
+            {analysisData.length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground">
+                No responses available for analysis.
+              </div>
+            ) : (
+              <pre className="bg-muted p-4 rounded-lg overflow-auto">
+                {JSON.stringify(analysisData, null, 2)}
+              </pre>
+            )}
+          </div>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
