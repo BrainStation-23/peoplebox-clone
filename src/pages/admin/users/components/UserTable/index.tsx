@@ -159,6 +159,7 @@ export default function UserTable({
           <TableRow>
             <TableHead>Name</TableHead>
             <TableHead>Email</TableHead>
+            <TableHead>Org ID</TableHead>
             <TableHead>Role</TableHead>
             <TableHead>Primary SBU</TableHead>
             <TableHead className="w-[200px]">Actions</TableHead>
@@ -173,6 +174,7 @@ export default function UserTable({
                   : "N/A"}
               </TableCell>
               <TableCell>{user.email}</TableCell>
+              <TableCell>{user.org_id || "N/A"}</TableCell>
               <TableCell className="space-x-2">
                 <Badge variant={user.user_roles.role === "admin" ? "default" : "secondary"}>
                   {user.user_roles.role}

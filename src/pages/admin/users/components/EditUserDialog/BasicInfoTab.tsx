@@ -14,6 +14,8 @@ interface BasicInfoTabProps {
   setProfileImageUrl: (value: string) => void;
   selectedLevel: string;
   setSelectedLevel: (value: string) => void;
+  orgId: string;
+  setOrgId: (value: string) => void;
 }
 
 export function BasicInfoTab({
@@ -25,6 +27,8 @@ export function BasicInfoTab({
   setProfileImageUrl,
   selectedLevel,
   setSelectedLevel,
+  orgId,
+  setOrgId,
 }: BasicInfoTabProps) {
   // Fetch levels
   const { data: levels } = useQuery({
@@ -57,6 +61,16 @@ export function BasicInfoTab({
           id="lastName"
           value={lastName}
           onChange={(e) => setLastName(e.target.value)}
+        />
+      </div>
+
+      <div className="grid gap-2">
+        <Label htmlFor="orgId">Organization ID</Label>
+        <Input
+          id="orgId"
+          value={orgId}
+          onChange={(e) => setOrgId(e.target.value)}
+          placeholder="Enter organization ID"
         />
       </div>
 
