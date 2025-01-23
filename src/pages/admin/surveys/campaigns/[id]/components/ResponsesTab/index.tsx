@@ -11,12 +11,11 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { ResponseGroup } from "./ResponseGroup";
 import { processResponses } from "./utils/responseAnalyzer";
-import type { ChartData, QuestionAnalysis } from "./types/reports";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { SingleChoiceChart } from "./components/QuestionAnalytics/SingleChoiceChart";
 import { NPSVisualizer } from "./components/QuestionAnalytics/NPSVisualizer";
-import type { FilterOptions } from "./types";
-import type { Response } from "./types";
+import type { FilterOptions, Response } from "./types";
+import type { QuestionAnalysis } from "./types/reports";
 
 interface ResponsesTabProps {
   instanceId?: string;
@@ -29,14 +28,12 @@ export function ResponsesTab({ instanceId }: ResponsesTabProps) {
     sortDirection: "desc",
   });
 
-  // First, get the survey ID from responses for this instance
   const { data: surveyData } = useQuery({
     queryKey: ["survey-data", instanceId],
     queryFn: async () => {
       if (!instanceId) return null;
       
-      // Get the first response for this instance to get the survey ID
-      const { data: response } = await supabase
+      const { data: responses } = await supabase
         .from("survey_responses")
         .select(`
           assignment:survey_assignments!survey_responses_assignment_id_fkey (
@@ -50,7 +47,7 @@ export function ResponsesTab({ instanceId }: ResponsesTabProps) {
         .limit(1)
         .maybeSingle();
 
-      return response?.assignment?.survey;
+      return responses?.assignment?.survey;
     },
     enabled: !!instanceId,
   });
@@ -113,6 +110,39 @@ export function ResponsesTab({ instanceId }: ResponsesTabProps) {
         submitted_at: r.submitted_at || "",
       })))
     : [];
+
+  const renderQuestionAnalysis = (analysis: QuestionAnalysis) => {
+    switch (analysis.question.type) {
+      case "nps":
+        return (
+          <div className="p-4">
+            <h3 className="text-lg font-semibold mb-4">{analysis.question.title}</h3>
+            <NPSVisualizer data={analysis.summary} />
+          </div>
+        );
+      case "radiogroup":
+      case "checkbox":
+        if (!analysis.summary) return null;
+        const chartData = Object.entries(analysis.summary)
+          .filter(([key]) => key !== "totalResponses")
+          .map(([name, value]) => ({ name, value: value as number }));
+        return (
+          <div className="p-4">
+            <h3 className="text-lg font-semibold mb-4">{analysis.question.title}</h3>
+            <SingleChoiceChart data={chartData} />
+          </div>
+        );
+      default:
+        return (
+          <div className="p-4">
+            <h3 className="text-lg font-semibold mb-4">{analysis.question.title}</h3>
+            <p className="text-sm text-muted-foreground">
+              {analysis.summary.totalResponses} responses
+            </p>
+          </div>
+        );
+    }
+  };
 
   if (isLoading) {
     return (
