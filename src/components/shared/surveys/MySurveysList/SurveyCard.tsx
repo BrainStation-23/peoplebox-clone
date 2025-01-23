@@ -3,7 +3,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { AlertCircle } from "lucide-react";
 import { Database } from "@/integrations/supabase/types";
 import { cn } from "@/lib/utils";
-import CampaignProgress from "./components/CampaignProgress";
 import DueDateInfo from "./components/DueDateInfo";
 
 type Assignment = {
@@ -113,17 +112,13 @@ export default function SurveyCard({ assignment, onSelect }: SurveyCardProps) {
           </Badge>
         </div>
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent>
         <DueDateInfo
           dueDate={effectiveDueDate}
           daysRemaining={daysRemaining}
           isOverdue={isOverdue}
           isDueSoon={isDueSoon}
         />
-
-        {assignment.campaign && (
-          <CampaignProgress campaign={assignment.campaign} />
-        )}
       </CardContent>
     </Card>
   );
