@@ -9,7 +9,6 @@ import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 
-// Import only the modern theme CSS
 import "survey-core/defaultV2.min.css";
 
 export default function UserSurveyResponsePage() {
@@ -87,19 +86,16 @@ export default function UserSurveyResponsePage() {
     if (assignment?.survey?.json_data) {
       const surveyModel = new Model(assignment.survey.json_data);
       
-      // Apply the LayeredDarkPanelless theme
       surveyModel.applyTheme(LayeredDarkPanelless);
       
-      // Load existing response data if available and navigate to last active page
       if (existingResponse?.response_data) {
         surveyModel.data = existingResponse.response_data;
-        surveyModel.start(); // This validates all pages
+        surveyModel.start();
         
-        // Use lastNavigatedPageNo to go to the last page user was on
-        if (surveyModel.lastNavigatedPageNo !== undefined) {
-          surveyModel.currentPageNo = surveyModel.lastNavigatedPageNo;
+        // Restore last page from state_data if available
+        if (existingResponse.state_data?.lastPageNo !== undefined) {
+          surveyModel.currentPageNo = existingResponse.state_data.lastPageNo;
         } else {
-          // Fallback to maxValidPageNo if lastNavigatedPageNo is not available
           surveyModel.currentPageNo = surveyModel.maxValidPageNo;
         }
       }
@@ -107,6 +103,37 @@ export default function UserSurveyResponsePage() {
       if (assignment.status === 'completed') {
         surveyModel.mode = 'display';
       } else {
+        // Save state when page changes
+        surveyModel.onCurrentPageChanged.add(async (sender) => {
+          try {
+            const userId = (await supabase.auth.getUser()).data.user?.id;
+            if (!userId) throw new Error("User not authenticated");
+
+            const stateData = {
+              lastPageNo: sender.currentPageNo,
+              lastUpdated: new Date().toISOString()
+            };
+
+            const { error } = await supabase
+              .from("survey_responses")
+              .upsert({
+                assignment_id: id,
+                user_id: userId,
+                response_data: existingResponse?.response_data || {},
+                state_data: stateData,
+                campaign_instance_id: activeInstance?.id || null,
+              }, {
+                onConflict: activeInstance?.id 
+                  ? 'assignment_id,user_id,campaign_instance_id' 
+                  : 'assignment_id,user_id'
+              });
+
+            if (error) throw error;
+          } catch (error) {
+            console.error("Error saving page state:", error);
+          }
+        });
+
         surveyModel.onValueChanged.add(async (sender, options) => {
           try {
             const userId = (await supabase.auth.getUser()).data.user?.id;
