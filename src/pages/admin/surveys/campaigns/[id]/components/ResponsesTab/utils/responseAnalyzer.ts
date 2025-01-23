@@ -42,7 +42,7 @@ export function processResponses(
 function calculateSummary(
   question: SurveyQuestion,
   responses: ProcessedResponse[]
-): QuestionSummary {
+): Record<string, number | string> {
   const summary: Record<string, number> = {
     totalResponses: responses.length,
   };

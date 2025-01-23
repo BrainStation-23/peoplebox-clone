@@ -48,7 +48,7 @@ export function ResponsesTab({ instanceId }: ResponsesTabProps) {
     enabled: !!instanceId,
   });
 
-  const { data: responses, isLoading } = useQuery({
+  const { data: responses = [], isLoading } = useQuery({
     queryKey: ["campaign-responses", instanceId],
     queryFn: async () => {
       const query = supabase
@@ -135,6 +135,23 @@ export function ResponsesTab({ instanceId }: ResponsesTabProps) {
     );
   }
 
+  // Filter and sort responses based on current filters
+  const filteredAndSortedResponses = [...responses].filter(response => {
+    if (!filters.search) return true;
+    const searchTerm = filters.search.toLowerCase();
+    return (
+      response.user.email.toLowerCase().includes(searchTerm) ||
+      (response.user.first_name && response.user.first_name.toLowerCase().includes(searchTerm)) ||
+      (response.user.last_name && response.user.last_name.toLowerCase().includes(searchTerm))
+    );
+  }).sort((a, b) => {
+    const direction = filters.sortDirection === "asc" ? 1 : -1;
+    if (filters.sortBy === "date") {
+      return direction * (new Date(a.submitted_at || 0).getTime() - new Date(b.submitted_at || 0).getTime());
+    }
+    return direction * (a.user.email.localeCompare(b.user.email));
+  });
+
   return (
     <div className="space-y-6">
       <Tabs defaultValue="list" className="w-full">
@@ -183,7 +200,7 @@ export function ResponsesTab({ instanceId }: ResponsesTabProps) {
             </Select>
           </div>
 
-          <ResponseGroup responses={filteredResponses} />
+          <ResponseGroup responses={filteredAndSortedResponses} />
         </TabsContent>
 
         <TabsContent value="analysis">
