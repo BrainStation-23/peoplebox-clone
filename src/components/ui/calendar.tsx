@@ -20,9 +20,9 @@ function Calendar({
       classNames={{
         months: "flex flex-col sm:flex-row space-y-4 sm:space-x-4 sm:space-y-0",
         month: "space-y-4",
-        caption: "flex justify-center pt-1 relative items-center",
-        caption_label: "text-sm font-medium",
-        caption_dropdowns: "flex gap-1",
+        caption: "flex justify-center items-center pt-1 relative",
+        caption_label: "hidden", // Hides the extra text-based month/year label
+        caption_dropdowns: "flex gap-1", // Keeps only the dropdowns for Month and Year
         nav: "space-x-1 flex items-center",
         nav_button: cn(
           buttonVariants({ variant: "outline" }),
@@ -60,7 +60,7 @@ function Calendar({
         IconLeft: ({ ..._props }) => <ChevronLeft className="h-4 w-4" />,
         IconRight: ({ ..._props }) => <ChevronRight className="h-4 w-4" />,
       }}
-      captionLayout="dropdown"
+      captionLayout="dropdown" // Ensures the dropdown is the only UI for Month/Year
       fromYear={2020}
       toYear={2030}
       {...props}
