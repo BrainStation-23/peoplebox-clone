@@ -5,6 +5,9 @@ import { CompletionRateCard } from "./CompletionRateCard";
 import { ResponseRateChart } from "./ResponseRateChart";
 import { StatusDistributionChart, type StatusData } from "./StatusDistributionChart";
 import { RecentActivityList } from "./RecentActivityList";
+import { SBUResponseRates } from "./SBUResponseRates";
+import { CompletionTrends } from "./CompletionTrends";
+import { PendingRespondents } from "./PendingRespondents";
 
 interface OverviewTabProps {
   campaignId: string;
@@ -170,8 +173,28 @@ export function OverviewTab({ campaignId, selectedInstanceId }: OverviewTabProps
       <div className="grid gap-4 md:grid-cols-2">
         <CompletionRateCard completionRate={instanceStats?.completionRate} />
       </div>
-      <ResponseRateChart data={responseData || []} />
-      <StatusDistributionChart data={statusData || []} />
+      
+      <div className="grid gap-6 md:grid-cols-2">
+        <SBUResponseRates 
+          campaignId={campaignId} 
+          instanceId={selectedInstanceId} 
+        />
+        <CompletionTrends 
+          campaignId={campaignId} 
+          instanceId={selectedInstanceId} 
+        />
+      </div>
+
+      <div className="grid gap-6 md:grid-cols-2">
+        <StatusDistributionChart data={statusData || []} />
+        <ResponseRateChart data={responseData || []} />
+      </div>
+
+      <PendingRespondents 
+        campaignId={campaignId} 
+        instanceId={selectedInstanceId} 
+      />
+      
       <RecentActivityList activities={recentActivity || []} />
     </div>
   );
