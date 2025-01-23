@@ -102,6 +102,40 @@ export default function UsersPage() {
     });
   };
 
+  const handleDelete = async (userId: string) => {
+    try {
+      const response = await fetch('/api/manage-users', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          method: 'DELETE',
+          action: { user_id: userId }
+        })
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to delete user');
+      }
+
+      toast({
+        title: "Success",
+        description: "User deleted successfully",
+      });
+      refetch();
+    } catch (error: any) {
+      console.error('Error deleting user:', error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: error.message || "Failed to delete user",
+      });
+    }
+  };
+
   return (
     <div className="container mx-auto py-6 space-y-4">
       <div className="flex justify-between items-center">
@@ -121,7 +155,7 @@ export default function UsersPage() {
         pageSize={10}
         total={users?.length || 0}
         onPageChange={() => {}}
-        onDelete={async () => {}}
+        onDelete={handleDelete}
       />
 
       <CreateUserDialog
