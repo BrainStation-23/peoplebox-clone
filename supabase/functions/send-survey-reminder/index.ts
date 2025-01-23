@@ -26,21 +26,32 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
-    const supabase = createClient(
-      SUPABASE_URL!,
-      SUPABASE_SERVICE_ROLE_KEY!,
-      { auth: { persistSession: false } }
-    );
+    console.log("Starting reminder process...");
+    
+    // Validate environment variables
+    if (!RESEND_API_KEY) {
+      console.error("RESEND_API_KEY is not set");
+      throw new Error("RESEND_API_KEY is not configured");
+    }
+
+    if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
+      console.error("Supabase credentials are not set");
+      throw new Error("Supabase credentials are not configured");
+    }
 
     const reminderRequest: ReminderRequest = await req.json();
-    const { assignmentId, surveyName, dueDate, recipientEmail, recipientName } = reminderRequest;
+    console.log("Reminder request:", JSON.stringify(reminderRequest));
+
+    const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
     // Check if a reminder was sent in the last 24 hours
     const { data: assignment } = await supabase
       .from('survey_assignments')
       .select('last_reminder_sent')
-      .eq('id', assignmentId)
+      .eq('id', reminderRequest.assignmentId)
       .single();
+
+    console.log("Assignment data:", JSON.stringify(assignment));
 
     if (assignment?.last_reminder_sent) {
       const lastSent = new Date(assignment.last_reminder_sent);
@@ -60,8 +71,9 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     // Send email using Resend
-    const dueDateText = dueDate 
-      ? `This survey is due by ${new Date(dueDate).toLocaleDateString()}.` 
+    console.log("Sending email via Resend...");
+    const dueDateText = reminderRequest.dueDate 
+      ? `This survey is due by ${new Date(reminderRequest.dueDate).toLocaleDateString()}.` 
       : "Please complete this survey at your earliest convenience.";
 
     const res = await fetch("https://api.resend.com/emails", {
@@ -72,12 +84,12 @@ const handler = async (req: Request): Promise<Response> => {
       },
       body: JSON.stringify({
         from: "Survey System <onboarding@resend.dev>",
-        to: [recipientEmail],
-        subject: `Reminder: ${surveyName} Survey Pending`,
+        to: [reminderRequest.recipientEmail],
+        subject: `Reminder: ${reminderRequest.surveyName} Survey Pending`,
         html: `
           <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
-            <h2>Hello ${recipientName},</h2>
-            <p>This is a friendly reminder that you have a pending survey to complete: <strong>${surveyName}</strong></p>
+            <h2>Hello ${reminderRequest.recipientName},</h2>
+            <p>This is a friendly reminder that you have a pending survey to complete: <strong>${reminderRequest.surveyName}</strong></p>
             <p>${dueDateText}</p>
             <p>Please log in to the survey system to complete your response.</p>
             <p>Thank you for your participation!</p>
@@ -86,17 +98,19 @@ const handler = async (req: Request): Promise<Response> => {
       }),
     });
 
+    console.log("Resend API response status:", res.status);
+    const resendResponse = await res.json();
+    console.log("Resend API response:", JSON.stringify(resendResponse));
+
     if (!res.ok) {
-      const error = await res.text();
-      console.error("Error sending email:", error);
-      throw new Error("Failed to send email reminder");
+      throw new Error(`Resend API error: ${JSON.stringify(resendResponse)}`);
     }
 
     // Update last_reminder_sent timestamp
     const { error: updateError } = await supabase
       .from('survey_assignments')
       .update({ last_reminder_sent: new Date().toISOString() })
-      .eq('id', assignmentId);
+      .eq('id', reminderRequest.assignmentId);
 
     if (updateError) {
       console.error("Error updating last_reminder_sent:", updateError);
@@ -114,7 +128,10 @@ const handler = async (req: Request): Promise<Response> => {
   } catch (error: any) {
     console.error("Error in send-survey-reminder function:", error);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ 
+        error: "Failed to send email reminder",
+        details: error.message 
+      }),
       { 
         status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" }
