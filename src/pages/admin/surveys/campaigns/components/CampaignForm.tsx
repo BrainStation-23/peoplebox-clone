@@ -65,17 +65,22 @@ export function CampaignForm({
   });
 
   const handleNext = async () => {
-    const isValid = await form.trigger();
-    if (isValid) {
-      onStepComplete(currentStep);
+    // Only validate for steps 1 and 2
+    if (currentStep < 3) {
+      const isValid = await form.trigger();
+      if (isValid) {
+        onStepComplete(currentStep);
+      }
     }
   };
 
   const handleSubmit = (e: React.FormEvent) => {
-    if (currentStep !== 3) {
+    // For steps 1 and 2, prevent form submission and handle step navigation
+    if (currentStep < 3) {
       e.preventDefault();
       handleNext();
     } else {
+      // For step 3, allow the form to submit normally
       form.handleSubmit(onSubmit)(e);
     }
   };
