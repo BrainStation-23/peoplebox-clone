@@ -28,7 +28,7 @@ export default function Dashboard() {
         .select(`
           *,
           level:levels(name),
-          user_sbus!inner(
+          user_sbus(
             is_primary,
             sbu:sbus(name)
           )
@@ -52,17 +52,17 @@ export default function Dashboard() {
 
       const { data: completed, error: completedError } = await supabase
         .from("survey_assignments")
-        .select("id")
+        .select("id, campaign:survey_campaigns!inner(status)")
         .eq("user_id", user.id)
         .eq("status", "completed")
-        .not("campaign.status", "eq", "draft");
+        .neq("campaign.status", "draft");
 
       const { data: dueSoon, error: dueSoonError } = await supabase
         .from("survey_assignments")
-        .select("id")
+        .select("id, campaign:survey_campaigns!inner(status)")
         .eq("user_id", user.id)
         .eq("status", "pending")
-        .not("campaign.status", "eq", "draft")
+        .neq("campaign.status", "draft")
         .or(`due_date.gte.${new Date().toISOString()},due_date.lte.${new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString()}`);
 
       if (completedError || dueSoonError) throw new Error("Failed to fetch survey stats");
@@ -116,7 +116,7 @@ export default function Dashboard() {
           status
         `)
         .eq("user_id", user.id)
-        .or(`status.eq.pending,status.eq.overdue`)
+        .eq("status", "pending")
         .order("due_date", { ascending: true })
         .limit(5);
 
