@@ -117,7 +117,13 @@ export function ResponsesTab({ instanceId }: ResponsesTabProps) {
         return (
           <div className="p-4">
             <h3 className="text-lg font-semibold mb-4">{analysis.question.title}</h3>
-            <NPSVisualizer data={analysis.summary} />
+            <NPSVisualizer 
+              promoters={analysis.summary.promoters || 0}
+              passives={analysis.summary.passives || 0}
+              detractors={analysis.summary.detractors || 0}
+              npsScore={analysis.summary.npsScore || 0}
+              title={analysis.question.title}
+            />
           </div>
         );
       case "radiogroup":
@@ -129,7 +135,10 @@ export function ResponsesTab({ instanceId }: ResponsesTabProps) {
         return (
           <div className="p-4">
             <h3 className="text-lg font-semibold mb-4">{analysis.question.title}</h3>
-            <SingleChoiceChart data={chartData} />
+            <SingleChoiceChart 
+              data={chartData}
+              title={analysis.question.title} 
+            />
           </div>
         );
       default:

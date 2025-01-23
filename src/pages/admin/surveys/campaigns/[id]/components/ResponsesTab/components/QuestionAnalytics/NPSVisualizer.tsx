@@ -1,6 +1,6 @@
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
-interface NPSVisualizerProps {
+export interface NPSVisualizerProps {
   promoters: number;
   passives: number;
   detractors: number;

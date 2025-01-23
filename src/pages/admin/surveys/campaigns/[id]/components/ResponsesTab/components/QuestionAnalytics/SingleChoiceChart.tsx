@@ -1,9 +1,13 @@
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from "recharts";
-import { ChartData } from "../../types/reports";
 
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8'];
 
-interface SingleChoiceChartProps {
+export interface ChartData {
+  name: string;
+  value: number;
+}
+
+export interface SingleChoiceChartProps {
   data: ChartData[];
   title: string;
 }
