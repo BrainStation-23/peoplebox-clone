@@ -2,11 +2,9 @@ import { Outlet, Link, useLocation } from "react-router-dom";
 import { Database, Mail, Layers } from "lucide-react";
 import {
   NavigationMenu,
-  NavigationMenuContent,
+  NavigationMenuList,
   NavigationMenuItem,
   NavigationMenuLink,
-  NavigationMenuList,
-  NavigationMenuTrigger,
   navigationMenuTriggerStyle,
 } from "@/components/ui/navigation-menu";
 
@@ -17,9 +15,9 @@ const navigationItems = [
     path: "/admin/config/sbus",
   },
   {
-    title: "SMTP",
+    title: "Email",
     icon: Mail,
-    path: "/admin/config/smtp",
+    path: "/admin/config/email",
   },
   {
     title: "Level",
