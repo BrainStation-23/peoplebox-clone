@@ -19,7 +19,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Mail, Server } from "lucide-react";
+import { Mail, Server, ExternalLink } from "lucide-react";
+import {
+  Alert,
+  AlertDescription,
+  AlertTitle,
+} from "@/components/ui/alert";
 
 export default function EmailConfig() {
   const [isTestingEmail, setIsTestingEmail] = useState(false);
@@ -101,6 +106,20 @@ export default function EmailConfig() {
     <div className="space-y-6">
       <h1 className="text-2xl font-bold">Email Configuration</h1>
 
+      <Alert>
+        <AlertTitle>Setting up Resend Email Provider</AlertTitle>
+        <AlertDescription className="mt-4 space-y-4">
+          <p>Follow these steps to configure email sending with Resend:</p>
+          <ol className="list-decimal list-inside space-y-2">
+            <li>Sign up for a Resend account at <a href="https://resend.com" target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">resend.com</a></li>
+            <li>Add and verify your domain at <a href="https://resend.com/domains" target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">resend.com/domains</a></li>
+            <li>Generate an API key at <a href="https://resend.com/api-keys" target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">resend.com/api-keys</a></li>
+            <li>Click the "Set API Key" button below to open Supabase settings</li>
+            <li>Add your API key with the name <code className="bg-muted px-1 py-0.5 rounded">RESEND_API_KEY</code></li>
+          </ol>
+        </AlertDescription>
+      </Alert>
+
       <Card>
         <CardHeader>
           <CardTitle>Email Settings</CardTitle>
@@ -112,26 +131,37 @@ export default function EmailConfig() {
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
               <Label>Email Provider</Label>
-              <Select defaultValue="resend" disabled={false}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select provider" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="resend">Resend</SelectItem>
-                  <SelectItem value="sendgrid" disabled>
-                    <div className="flex items-center">
-                      <Mail className="mr-2 h-4 w-4" />
-                      SendGrid (Coming Soon)
-                    </div>
-                  </SelectItem>
-                  <SelectItem value="smtp" disabled>
-                    <div className="flex items-center">
-                      <Server className="mr-2 h-4 w-4" />
-                      SMTP (Coming Soon)
-                    </div>
-                  </SelectItem>
-                </SelectContent>
-              </Select>
+              <div className="flex gap-4 items-start">
+                <Select defaultValue="resend" disabled={false} className="flex-1">
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select provider" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="resend">Resend</SelectItem>
+                    <SelectItem value="sendgrid" disabled>
+                      <div className="flex items-center">
+                        <Mail className="mr-2 h-4 w-4" />
+                        SendGrid (Coming Soon)
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="smtp" disabled>
+                      <div className="flex items-center">
+                        <Server className="mr-2 h-4 w-4" />
+                        SMTP (Coming Soon)
+                      </div>
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => window.open("https://supabase.com/dashboard/project/iqpgjxbqoeioqlfzosvu/settings/functions", "_blank")}
+                  className="whitespace-nowrap"
+                >
+                  Set API Key
+                  <ExternalLink className="ml-2 h-4 w-4" />
+                </Button>
+              </div>
             </div>
 
             <div className="grid gap-4">
