@@ -1,1 +1,8 @@
 project_id = "iqpgjxbqoeioqlfzosvu"
+
+[api]
+enabled = true
+url = "https://iqpgjxbqoeioqlfzosvu.supabase.co"
+
+[functions.send-survey-reminder]
+verify_jwt = true

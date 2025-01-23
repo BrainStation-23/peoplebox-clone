@@ -206,6 +206,7 @@ export type Database = {
           due_date: string | null
           id: string
           is_organization_wide: boolean | null
+          last_reminder_sent: string | null
           status: Database["public"]["Enums"]["assignment_status"] | null
           survey_id: string
           updated_at: string | null
@@ -218,6 +219,7 @@ export type Database = {
           due_date?: string | null
           id?: string
           is_organization_wide?: boolean | null
+          last_reminder_sent?: string | null
           status?: Database["public"]["Enums"]["assignment_status"] | null
           survey_id: string
           updated_at?: string | null
@@ -230,6 +232,7 @@ export type Database = {
           due_date?: string | null
           id?: string
           is_organization_wide?: boolean | null
+          last_reminder_sent?: string | null
           status?: Database["public"]["Enums"]["assignment_status"] | null
           survey_id?: string
           updated_at?: string | null
