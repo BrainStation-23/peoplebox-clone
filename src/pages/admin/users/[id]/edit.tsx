@@ -148,7 +148,7 @@ export default function EditUserPage() {
           <BasicInfoTab
             firstName={firstName}
             setFirstName={setFirstName}
-            lastName={lastName}
+            lastName={setLastName}
             setLastName={setLastName}
             profileImageUrl={profileImageUrl}
             setProfileImageUrl={setProfileImageUrl}
@@ -169,6 +169,8 @@ export default function EditUserPage() {
             setSelectedLocation={setSelectedLocation}
             selectedEmploymentType={selectedEmploymentType}
             setSelectedEmploymentType={setSelectedEmploymentType}
+            selectedLevel={selectedLevel}
+            setSelectedLevel={setSelectedLevel}
           />
         </TabsContent>
 
