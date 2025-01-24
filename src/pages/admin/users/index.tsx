@@ -112,7 +112,6 @@ export default function UsersPage() {
         })
       );
 
-      console.log("Users with complete data:", usersWithData);
       return {
         users: usersWithData as User[],
         total: count || 0
@@ -184,6 +183,7 @@ export default function UsersPage() {
         onDelete={handleDelete}
         searchTerm={searchTerm}
         setSearchTerm={setSearchTerm}
+        key="user-table" // Add a stable key to prevent re-mounting
       />
 
       <CreateUserDialog
