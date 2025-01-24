@@ -49,12 +49,7 @@ export default function UsersPage() {
 
       // Add search conditions if search term exists
       if (debouncedSearch) {
-        query = query.or(`
-          email.ilike.%${debouncedSearch}%,
-          first_name.ilike.%${debouncedSearch}%,
-          last_name.ilike.%${debouncedSearch}%,
-          org_id.ilike.%${debouncedSearch}%
-        `);
+        query = query.or(`email.ilike.%${debouncedSearch}%,first_name.ilike.%${debouncedSearch}%,last_name.ilike.%${debouncedSearch}%,org_id.ilike.%${debouncedSearch}%`);
       }
 
       // Add pagination
