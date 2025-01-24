@@ -99,15 +99,7 @@ export default function EditUserDialog({
           </TabsContent>
 
           <TabsContent value="sbus">
-            <SBUAssignmentTab
-              sbus={user?.user_sbus?.map(sbu => sbu.sbu)}
-              sbuSearch=""
-              setSbuSearch={() => {}}
-              selectedSBUs={new Set()}
-              handleSBUChange={() => {}}
-              primarySBU=""
-              handlePrimarySBUChange={() => {}}
-            />
+            {user && <SBUAssignmentTab user={user} />}
           </TabsContent>
 
           <TabsContent value="management">
