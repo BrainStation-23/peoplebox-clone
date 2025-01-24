@@ -3,12 +3,13 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Progress } from "@/components/ui/progress";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Upload, AlertCircle, Download, Pause, Play, XCircle } from "lucide-react";
+import { Upload, AlertCircle, Download, Pause, Play, XCircle, FileDown } from "lucide-react";
 import { processCSVFile, type ProcessingResult } from "../utils/csvProcessor";
 import { ImportError, ImportResult, downloadErrorReport } from "../utils/errorReporting";
 import { toast } from "@/hooks/use-toast";
 import { batchProcessor, type BatchProgress } from "../utils/batchProcessor";
 import { formatDistanceToNow } from "date-fns";
+import { CSV_GUIDELINES, generateTemplateCSV } from "../utils/csvTemplate";
 
 interface ImportDialogProps {
   open: boolean;
@@ -140,6 +141,17 @@ export function ImportDialog({ open, onOpenChange, onImportComplete }: ImportDia
     return formatDistanceToNow(Date.now() + ms, { includeSeconds: true });
   };
 
+  const downloadTemplate = () => {
+    const csvContent = generateTemplateCSV();
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.setAttribute("download", "users_import_template.csv");
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[600px]">
@@ -148,8 +160,28 @@ export function ImportDialog({ open, onOpenChange, onImportComplete }: ImportDia
         </DialogHeader>
 
         <div className="space-y-4">
-          {!importing && (
+          {!importing && !processingResult && (
             <div className="space-y-4">
+              <div className="flex justify-between items-center">
+                <Button
+                  variant="outline"
+                  onClick={downloadTemplate}
+                  className="flex items-center gap-2"
+                >
+                  <FileDown className="w-4 h-4" />
+                  Download Template
+                </Button>
+              </div>
+
+              <div className="bg-muted p-4 rounded-lg space-y-2">
+                <h3 className="font-medium">Import Guidelines</h3>
+                <ul className="list-disc list-inside space-y-1 text-sm text-muted-foreground">
+                  {CSV_GUIDELINES.map((guideline, index) => (
+                    <li key={index}>{guideline}</li>
+                  ))}
+                </ul>
+              </div>
+
               <div className="flex items-center justify-center w-full">
                 <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-lg cursor-pointer hover:bg-gray-50">
                   <div className="flex flex-col items-center justify-center pt-5 pb-6">
@@ -167,41 +199,6 @@ export function ImportDialog({ open, onOpenChange, onImportComplete }: ImportDia
                   />
                 </label>
               </div>
-
-              {processingResult && (
-                <div className="space-y-4">
-                  {processingResult.errors.length > 0 ? (
-                    <div className="space-y-2">
-                      <h3 className="font-medium">Validation Errors</h3>
-                      {processingResult.errors.map((error, index) => (
-                        <Alert key={index} variant="destructive">
-                          <AlertCircle className="h-4 w-4" />
-                          <AlertDescription>
-                            Row {error.row}: {error.errors.join(", ")}
-                          </AlertDescription>
-                        </Alert>
-                      ))}
-                    </div>
-                  ) : (
-                    <Alert>
-                      <AlertDescription>
-                        Ready to import {processingResult.newUsers.length} new users and update{" "}
-                        {processingResult.existingUsers.length} existing users
-                      </AlertDescription>
-                    </Alert>
-                  )}
-
-                  {processingResult.errors.length === 0 && (
-                    <Button
-                      onClick={handleImport}
-                      className="w-full"
-                      disabled={importing}
-                    >
-                      Import Users
-                    </Button>
-                  )}
-                </div>
-              )}
             </div>
           )}
 
