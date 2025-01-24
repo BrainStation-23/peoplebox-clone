@@ -33,7 +33,7 @@ export default function EditUserPage() {
             name,
             status
           ),
-          user_roles (
+          user_roles!inner (
             role
           ),
           user_sbus (
@@ -51,7 +51,7 @@ export default function EditUserPage() {
         .single();
 
       if (error) throw error;
-      return data as User;
+      return data as unknown as User;
     },
   });
 
@@ -93,14 +93,6 @@ export default function EditUserPage() {
     return <div>User not found</div>;
   }
 
-  const handleSave = () => {
-    updateProfileMutation.mutate(undefined, {
-      onSuccess: () => {
-        navigate("/admin/users");
-      },
-    });
-  };
-
   return (
     <div className="container mx-auto py-6 space-y-6">
       <div className="flex items-center justify-between">
@@ -118,7 +110,7 @@ export default function EditUserPage() {
           <Button variant="outline" onClick={() => navigate("/admin/users")}>
             Cancel
           </Button>
-          <Button onClick={handleSave} disabled={updateProfileMutation.isPending}>
+          <Button onClick={() => updateProfileMutation.mutate()} disabled={updateProfileMutation.isPending}>
             Save Changes
           </Button>
         </div>
@@ -136,7 +128,7 @@ export default function EditUserPage() {
           <BasicInfoTab
             firstName={firstName}
             setFirstName={setFirstName}
-            lastName={lastName}
+            lastName={setLastName}
             setLastName={setLastName}
             profileImageUrl={profileImageUrl}
             setProfileImageUrl={setProfileImageUrl}
@@ -161,15 +153,7 @@ export default function EditUserPage() {
         </TabsContent>
 
         <TabsContent value="sbus">
-          <SBUAssignmentTab
-            sbus={user?.user_sbus?.map(sbu => sbu.sbu)}
-            sbuSearch=""
-            setSbuSearch={() => {}}
-            selectedSBUs={new Set()}
-            handleSBUChange={() => {}}
-            primarySBU=""
-            handlePrimarySBUChange={() => {}}
-          />
+          <SBUAssignmentTab user={user} />
         </TabsContent>
 
         <TabsContent value="management">
