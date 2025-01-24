@@ -2,7 +2,7 @@ import { CSVRow } from "./csvProcessor";
 
 export type ImportError = {
   row: number;
-  type: 'validation' | 'creation' | 'update' | 'sbu' | 'level' | 'role';
+  type: 'validation' | 'creation' | 'update' | 'sbu' | 'level' | 'role' | 'location' | 'employment' | 'gender' | 'date';
   message: string;
   data?: Partial<CSVRow>;
 };
@@ -14,7 +14,7 @@ export type ImportResult = {
 };
 
 export function generateErrorReport(errors: ImportError[]): string {
-  // Group errors by type
+  // Group errors by type for better organization
   const groupedErrors = errors.reduce((acc, error) => {
     if (!acc[error.type]) {
       acc[error.type] = [];
@@ -23,11 +23,12 @@ export function generateErrorReport(errors: ImportError[]): string {
     return acc;
   }, {} as Record<string, ImportError[]>);
 
-  // Generate CSV content
+  // Generate CSV content with detailed error information
   let csvContent = "Row,Error Type,Message,Data\n";
   
   errors.forEach(error => {
-    csvContent += `${error.row},${error.type},"${error.message}","${
+    const errorType = error.type.charAt(0).toUpperCase() + error.type.slice(1);
+    csvContent += `${error.row},${errorType},"${error.message}","${
       error.data ? JSON.stringify(error.data).replace(/"/g, '""') : ''
     }"\n`;
   });

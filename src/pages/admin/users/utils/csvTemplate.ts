@@ -44,7 +44,6 @@ export const CSV_GUIDELINES = [
 ];
 
 export function generateTemplateCSV(): string {
-  const headers = CSV_HEADERS.join(",");
-  const exampleRow = CSV_TEMPLATE_ROW.join(",");
-  return `${headers}\n${exampleRow}`;
+  const csvContent = CSV_HEADERS.join(",") + "\n" + CSV_TEMPLATE_ROW.join(",");
+  return csvContent;
 }
