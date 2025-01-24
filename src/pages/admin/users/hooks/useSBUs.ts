@@ -10,11 +10,7 @@ export function useSBUs() {
         .select("id, name")
         .order("name");
       
-      if (error) {
-        console.error("Error fetching SBUs:", error);
-        throw error;
-      }
-      
+      if (error) throw error;
       return data;
     },
   });
