@@ -164,43 +164,72 @@ export type Database = {
       profiles: {
         Row: {
           created_at: string
+          date_of_birth: string | null
+          designation: string | null
           email: string
+          employment_type_id: string | null
           first_name: string | null
+          gender: Database["public"]["Enums"]["gender_type"] | null
           id: string
           last_name: string | null
           level_id: string | null
+          location_id: string | null
           org_id: string | null
           profile_image_url: string | null
           updated_at: string
         }
         Insert: {
           created_at?: string
+          date_of_birth?: string | null
+          designation?: string | null
           email: string
+          employment_type_id?: string | null
           first_name?: string | null
+          gender?: Database["public"]["Enums"]["gender_type"] | null
           id: string
           last_name?: string | null
           level_id?: string | null
+          location_id?: string | null
           org_id?: string | null
           profile_image_url?: string | null
           updated_at?: string
         }
         Update: {
           created_at?: string
+          date_of_birth?: string | null
+          designation?: string | null
           email?: string
+          employment_type_id?: string | null
           first_name?: string | null
+          gender?: Database["public"]["Enums"]["gender_type"] | null
           id?: string
           last_name?: string | null
           level_id?: string | null
+          location_id?: string | null
           org_id?: string | null
           profile_image_url?: string | null
           updated_at?: string
         }
         Relationships: [
           {
+            foreignKeyName: "profiles_employment_type_id_fkey"
+            columns: ["employment_type_id"]
+            isOneToOne: false
+            referencedRelation: "employment_types"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "profiles_level_id_fkey"
             columns: ["level_id"]
             isOneToOne: false
             referencedRelation: "levels"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "profiles_location_id_fkey"
+            columns: ["location_id"]
+            isOneToOne: false
+            referencedRelation: "locations"
             referencedColumns: ["id"]
           },
         ]
@@ -616,6 +645,7 @@ export type Database = {
       campaign_status: "draft" | "active" | "completed" | "archived"
       email_provider: "resend"
       employment_type_status: "active" | "inactive"
+      gender_type: "male" | "female" | "other"
       instance_status: "upcoming" | "active" | "completed"
       level_status: "active" | "inactive"
       recurring_frequency:
