@@ -5,7 +5,7 @@ import { Progress } from "@/components/ui/progress";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Upload, AlertCircle, Download, Pause, Play, X, Check, FileDown } from "lucide-react";
 import { processCSVFile, type ProcessingResult } from "../utils/csvProcessor";
-import { ImportError, ImportResult, downloadErrorReport } from "../utils/errorReporting";
+import { ImportError, ImportResult, downloadErrorReport, convertValidationErrorsToImportErrors } from "../utils/errorReporting";
 import { toast } from "@/hooks/use-toast";
 import { batchProcessor, type BatchProgress } from "../utils/batchProcessor";
 import { formatDistanceToNow } from "date-fns";
@@ -160,7 +160,10 @@ export function ImportDialog({ open, onOpenChange, onImportComplete }: ImportDia
     }
 
     try {
-      const errors = processingResult?.errors || importResult?.errors || [];
+      const errors: ImportError[] = processingResult?.errors 
+        ? convertValidationErrorsToImportErrors(processingResult.errors)
+        : importResult?.errors || [];
+      
       downloadErrorReport(errors);
       
       toast({
