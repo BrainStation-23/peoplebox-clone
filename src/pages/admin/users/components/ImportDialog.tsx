@@ -4,7 +4,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Progress } from "@/components/ui/progress";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Upload, AlertCircle, Download, Pause, Play, XCircle } from "lucide-react";
-import { processCSVFile } from "../utils/csvProcessor";
+import { processCSVFile, type ProcessingResult } from "../utils/csvProcessor";
 import { ImportError, ImportResult, downloadErrorReport } from "../utils/errorReporting";
 import { toast } from "@/hooks/use-toast";
 import { batchProcessor, type BatchProgress } from "../utils/batchProcessor";
