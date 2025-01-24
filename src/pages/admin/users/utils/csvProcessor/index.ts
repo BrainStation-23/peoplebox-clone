@@ -1,4 +1,4 @@
-import { CSVRow, ProcessingResult, ValidationError } from '../types';
+import { CSVRow, ProcessingResult, ValidationError, ImportError } from '../types';
 import { createProcessingLog } from './createProcessingLog';
 import { validateRow } from './validation';
 import { supabase } from "@/integrations/supabase/client";
