@@ -33,6 +33,57 @@ Deno.serve(async (req) => {
     const { method, action } = await req.json()
     console.log(`Received request with method: ${method}`)
 
+    if (method === 'CREATE') {
+      const payload = action as CreateUserPayload
+      console.log('Creating user with payload:', payload)
+
+      // Create the user in auth.users
+      const { data: authUser, error: createUserError } = await supabaseClient.auth.admin.createUser({
+        email: payload.email,
+        password: payload.password,
+        email_confirm: true
+      })
+
+      if (createUserError) {
+        console.error('Error creating user:', createUserError)
+        throw createUserError
+      }
+
+      console.log('User created successfully:', authUser)
+
+      // Update the profile with additional information
+      const { error: updateProfileError } = await supabaseClient
+        .from('profiles')
+        .update({
+          first_name: payload.first_name,
+          last_name: payload.last_name,
+        })
+        .eq('id', authUser.user.id)
+
+      if (updateProfileError) {
+        console.error('Error updating profile:', updateProfileError)
+        throw updateProfileError
+      }
+
+      // If user should be admin, update their role
+      if (payload.is_admin) {
+        const { error: updateRoleError } = await supabaseClient
+          .from('user_roles')
+          .update({ role: 'admin' })
+          .eq('user_id', authUser.user.id)
+
+        if (updateRoleError) {
+          console.error('Error updating role:', updateRoleError)
+          throw updateRoleError
+        }
+      }
+
+      return new Response(
+        JSON.stringify({ message: 'User created successfully', user: authUser.user }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
+
     if (method === 'DELETE') {
       const payload = action as DeleteUserPayload
       console.log('Attempting to delete user:', payload.user_id)
