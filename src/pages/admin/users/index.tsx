@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import UserTable from "./components/UserTable";
@@ -6,34 +6,31 @@ import CreateUserDialog from "./components/CreateUserDialog";
 import EditUserDialog from "./components/EditUserDialog"; 
 import { User } from "./types";
 import { useToast } from "@/hooks/use-toast";
+import { useDebounce } from "@/hooks/use-debounce";
 
 export default function UsersPage() {
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
+  const [searchTerm, setSearchTerm] = useState("");
+  const debouncedSearch = useDebounce(searchTerm, 300);
   const pageSize = 10;
   const { toast } = useToast();
 
+  // Reset to first page when search term changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [debouncedSearch]);
+
   const { data, isLoading, refetch } = useQuery({
-    queryKey: ["users", currentPage, pageSize],
+    queryKey: ["users", currentPage, pageSize, debouncedSearch],
     queryFn: async () => {
-      console.log("Fetching users for page:", currentPage);
+      console.log("Fetching users for page:", currentPage, "search:", debouncedSearch);
       const start = (currentPage - 1) * pageSize;
       const end = start + pageSize - 1;
 
-      // First get total count
-      const { count, error: countError } = await supabase
-        .from("profiles")
-        .select("*", { count: 'exact', head: true });
-
-      if (countError) {
-        console.error("Error fetching count:", countError);
-        throw countError;
-      }
-
-      // Then fetch paginated data
-      const { data: profiles, error: profilesError } = await supabase
+      let query = supabase
         .from("profiles")
         .select(`
           id,
@@ -48,8 +45,22 @@ export default function UsersPage() {
             name,
             status
           )
-        `)
-        .range(start, end);
+        `, { count: 'exact' });
+
+      // Add search conditions if search term exists
+      if (debouncedSearch) {
+        query = query.or(`
+          email.ilike.%${debouncedSearch}%,
+          first_name.ilike.%${debouncedSearch}%,
+          last_name.ilike.%${debouncedSearch}%,
+          org_id.ilike.%${debouncedSearch}%
+        `);
+      }
+
+      // Add pagination
+      query = query.range(start, end);
+
+      const { data: profiles, error: profilesError, count } = await query;
 
       if (profilesError) {
         console.error("Error fetching profiles:", profilesError);
@@ -176,6 +187,8 @@ export default function UsersPage() {
         total={data?.total || 0}
         onPageChange={handlePageChange}
         onDelete={handleDelete}
+        searchTerm={searchTerm}
+        setSearchTerm={setSearchTerm}
       />
 
       <CreateUserDialog
