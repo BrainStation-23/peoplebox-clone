@@ -1,12 +1,11 @@
 import { useState, useEffect } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { useDebounce } from "@/hooks/use-debounce";
+import { User } from "./types";
+import { useUsers } from "./hooks/useUsers";
+import { useUserActions } from "./hooks/useUserActions";
 import UserTable from "./components/UserTable";
 import CreateUserDialog from "./components/CreateUserDialog";
-import EditUserDialog from "./components/EditUserDialog"; 
-import { User } from "./types";
-import { useToast } from "@/hooks/use-toast";
-import { useDebounce } from "@/hooks/use-debounce";
+import EditUserDialog from "./components/EditUserDialog";
 
 export default function UsersPage() {
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
@@ -16,148 +15,20 @@ export default function UsersPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const debouncedSearch = useDebounce(searchTerm, 300);
   const pageSize = 10;
-  const { toast } = useToast();
 
-  // Reset to first page when search term changes
   useEffect(() => {
     setCurrentPage(1);
   }, [debouncedSearch]);
 
-  const { data, isLoading, refetch } = useQuery({
-    queryKey: ["users", currentPage, pageSize, debouncedSearch],
-    queryFn: async () => {
-      console.log("Fetching users for page:", currentPage, "search:", debouncedSearch);
-      const start = (currentPage - 1) * pageSize;
-      const end = start + pageSize - 1;
-
-      let query = supabase
-        .from("profiles")
-        .select(`
-          id,
-          email,
-          first_name,
-          last_name,
-          profile_image_url,
-          level_id,
-          org_id,
-          levels (
-            id,
-            name,
-            status
-          )
-        `, { count: 'exact' });
-
-      // Add search conditions if search term exists
-      if (debouncedSearch) {
-        query = query.or(`email.ilike.%${debouncedSearch}%,first_name.ilike.%${debouncedSearch}%,last_name.ilike.%${debouncedSearch}%,org_id.ilike.%${debouncedSearch}%`);
-      }
-
-      // Add pagination
-      query = query.range(start, end);
-
-      const { data: profiles, error: profilesError, count } = await query;
-
-      if (profilesError) {
-        console.error("Error fetching profiles:", profilesError);
-        throw profilesError;
-      }
-
-      // Fetch roles and SBUs for each user
-      const usersWithData = await Promise.all(
-        profiles.map(async (profile) => {
-          // Fetch role
-          const { data: roleData, error: roleError } = await supabase
-            .from("user_roles")
-            .select("role")
-            .eq("user_id", profile.id)
-            .single();
-
-          if (roleError) {
-            console.error("Error fetching role for user:", profile.id, roleError);
-            return {
-              ...profile,
-              user_roles: { role: "user" as const },
-            };
-          }
-
-          // Fetch SBUs
-          const { data: sbuData, error: sbuError } = await supabase
-            .from("user_sbus")
-            .select(`
-              id,
-              user_id,
-              sbu_id,
-              is_primary,
-              sbu:sbus (
-                id,
-                name
-              )
-            `)
-            .eq("user_id", profile.id);
-
-          if (sbuError) {
-            console.error("Error fetching SBUs for user:", profile.id, sbuError);
-            return {
-              ...profile,
-              user_roles: roleData,
-              user_sbus: [],
-            };
-          }
-
-          return {
-            ...profile,
-            user_roles: roleData,
-            user_sbus: sbuData,
-          };
-        })
-      );
-
-      return {
-        users: usersWithData as User[],
-        total: count || 0
-      };
-    },
+  const { data, isLoading, refetch } = useUsers({
+    currentPage,
+    pageSize,
+    searchTerm: debouncedSearch,
   });
 
-  const handleCreateSuccess = () => {
-    refetch();
-    setIsCreateDialogOpen(false);
-    toast({
-      title: "Success",
-      description: "User created successfully",
-    });
-  };
-
-  const handleDelete = async (userId: string) => {
-    try {
-      const { data, error } = await supabase.functions.invoke('manage-users', {
-        body: {
-          method: 'DELETE',
-          action: { user_id: userId }
-        }
-      });
-
-      if (error) {
-        throw error;
-      }
-
-      toast({
-        title: "Success",
-        description: "User deleted successfully",
-      });
-      refetch();
-    } catch (error: any) {
-      console.error('Error deleting user:', error);
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: error.message || "Failed to delete user",
-      });
-    }
-  };
+  const { handleCreateSuccess, handleDelete } = useUserActions(refetch);
 
   const handlePageChange = (page: number) => {
-    console.log("Changing to page:", page);
     setCurrentPage(page);
   };
 
@@ -183,7 +54,7 @@ export default function UsersPage() {
         onDelete={handleDelete}
         searchTerm={searchTerm}
         setSearchTerm={setSearchTerm}
-        key="user-table" // Add a stable key to prevent re-mounting
+        key="user-table"
       />
 
       <CreateUserDialog
