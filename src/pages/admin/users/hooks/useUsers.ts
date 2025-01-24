@@ -69,9 +69,9 @@ export function useUsers({ currentPage, pageSize, searchTerm }: UseUsersProps) {
       const usersWithData = profiles?.map((profile) => {
         const userData = {
           ...profile,
-          level: profile.level?.[0]?.name || null,
-          location: profile.location?.[0]?.name || null,
-          employment_type: profile.employment_type?.[0]?.name || null,
+          level: profile.level?.name || null,
+          location: profile.location?.name || null,
+          employment_type: profile.employment_type?.name || null,
           user_roles: userRoles?.find(r => r.user_id === profile.id) || { role: "user" as const },
           user_sbus: profile.user_sbus?.map(sbu => ({
             ...sbu,
