@@ -9,6 +9,7 @@ import CreateUserDialog from "./components/CreateUserDialog";
 import EditUserDialog from "./components/EditUserDialog";
 import { SearchFilters } from "./components/UserTable/SearchFilters";
 import { ImportDialog } from "./components/ImportDialog";
+import { ExportProgress } from "./components/UserTable/ExportProgress";
 import { exportUsers } from "./utils/exportUsers";
 
 export default function UsersPage() {
