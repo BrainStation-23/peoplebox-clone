@@ -4,8 +4,13 @@ export const CSV_HEADERS = [
   "Last Name",
   "Org ID",
   "Level",
-  "SBUs",
-  "Role"
+  "Role",
+  "Gender",
+  "Date of Birth",
+  "Designation",
+  "Location",
+  "Employment Type",
+  "SBUs"
 ];
 
 export const CSV_TEMPLATE_ROW = [
@@ -14,8 +19,13 @@ export const CSV_TEMPLATE_ROW = [
   "Doe",
   "ORG123",
   "Level 1",
-  "SBU1;SBU2",
-  "user"
+  "user",
+  "male",
+  "1990-01-01",
+  "Software Engineer",
+  "Head Office",
+  "Full Time",
+  "SBU1;SBU2"
 ];
 
 export const CSV_GUIDELINES = [
@@ -24,8 +34,13 @@ export const CSV_GUIDELINES = [
   "Last Name: Optional",
   "Org ID: Optional, organization identifier",
   "Level: Optional, must match an existing level name",
-  "SBUs: Optional, multiple SBUs should be separated by semicolons (;)",
-  "Role: Optional, must be either 'admin' or 'user' (defaults to 'user')"
+  "Role: Optional, must be either 'admin' or 'user' (defaults to 'user')",
+  "Gender: Optional, must be 'male', 'female', or 'other'",
+  "Date of Birth: Optional, must be in YYYY-MM-DD format",
+  "Designation: Optional, job title or position",
+  "Location: Optional, must match an existing location name",
+  "Employment Type: Optional, must match an existing employment type name",
+  "SBUs: Optional, multiple SBUs should be separated by semicolons (;)"
 ];
 
 export function generateTemplateCSV(): string {
