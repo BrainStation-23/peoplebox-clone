@@ -13,7 +13,7 @@ interface UserRowProps {
   onDelete: (userId: string) => void;
 }
 
-export function UserRow({ user, onEdit, onDelete }: UserRowProps) {
+export function UserRow({ user, onDelete }: UserRowProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -66,7 +66,6 @@ export function UserRow({ user, onEdit, onDelete }: UserRowProps) {
       <TableCell>
         <UserActions
           user={user}
-          onEdit={onEdit}
           onDelete={onDelete}
           onPasswordChange={(userId) =>
             console.log("Password change requested for user:", userId)

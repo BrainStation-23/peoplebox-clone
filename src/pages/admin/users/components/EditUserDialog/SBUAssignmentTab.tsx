@@ -1,37 +1,30 @@
-import { Search } from "lucide-react";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-
-interface SBU {
-  id: string;
-  name: string;
-}
+import { User } from "../../types";
+import { useSBUManagement } from "../../hooks/useSBUManagement";
 
 interface SBUAssignmentTabProps {
-  sbus?: SBU[];
-  sbuSearch: string;
-  setSbuSearch: (value: string) => void;
-  selectedSBUs: Set<string>;
-  handleSBUChange: (sbuId: string, checked: boolean) => void;
-  primarySBU: string;
-  handlePrimarySBUChange: (sbuId: string) => void;
+  user: User;
 }
 
-export function SBUAssignmentTab({
-  sbus,
-  sbuSearch,
-  setSbuSearch,
-  selectedSBUs,
-  handleSBUChange,
-  primarySBU,
-  handlePrimarySBUChange,
-}: SBUAssignmentTabProps) {
+export function SBUAssignmentTab({ user }: SBUAssignmentTabProps) {
+  const {
+    sbus,
+    sbuSearch,
+    setSbuSearch,
+    selectedSBUs,
+    primarySBU,
+    handleSBUChange,
+    handlePrimarySBUChange,
+  } = useSBUManagement(user);
+
   return (
-    <div className="space-y-4">
-      <div className="flex items-center space-x-2">
-        <Search className="w-4 h-4 text-muted-foreground" />
+    <div className="space-y-6">
+      <div className="space-y-2">
+        <Label>Search SBUs</Label>
         <Input
           placeholder="Search SBUs..."
           value={sbuSearch}
@@ -39,35 +32,42 @@ export function SBUAssignmentTab({
         />
       </div>
 
-      <div className="space-y-4">
-        {sbus?.map((sbu) => (
-          <div key={sbu.id} className="flex items-center justify-between p-2 border rounded">
-            <div className="flex items-center space-x-2">
+      <ScrollArea className="h-[300px] rounded-md border p-4">
+        <div className="space-y-4">
+          {sbus?.map((sbu) => (
+            <div key={sbu.id} className="flex items-center space-x-2">
               <Checkbox
-                id={`sbu-${sbu.id}`}
+                id={sbu.id}
                 checked={selectedSBUs.has(sbu.id)}
-                onCheckedChange={(checked) => handleSBUChange(sbu.id, checked as boolean)}
+                onCheckedChange={(checked) =>
+                  handleSBUChange(sbu.id, checked as boolean)
+                }
               />
-              <Label htmlFor={`sbu-${sbu.id}`}>{sbu.name}</Label>
+              <Label htmlFor={sbu.id}>{sbu.name}</Label>
             </div>
-            
-            {selectedSBUs.has(sbu.id) && (
-              <div className="flex items-center space-x-2">
-                <RadioGroup
-                  value={primarySBU}
-                  onValueChange={handlePrimarySBUChange}
-                  className="flex"
-                >
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value={sbu.id} id={`primary-${sbu.id}`} />
-                    <Label htmlFor={`primary-${sbu.id}`}>Primary</Label>
-                  </div>
-                </RadioGroup>
-              </div>
-            )}
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      </ScrollArea>
+
+      {selectedSBUs.size > 0 && (
+        <div className="space-y-2">
+          <Label>Primary SBU</Label>
+          <RadioGroup
+            value={primarySBU}
+            onValueChange={handlePrimarySBUChange}
+            className="space-y-2"
+          >
+            {sbus
+              ?.filter((sbu) => selectedSBUs.has(sbu.id))
+              .map((sbu) => (
+                <div key={sbu.id} className="flex items-center space-x-2">
+                  <RadioGroupItem value={sbu.id} id={`primary-${sbu.id}`} />
+                  <Label htmlFor={`primary-${sbu.id}`}>{sbu.name}</Label>
+                </div>
+              ))}
+          </RadioGroup>
+        </div>
+      )}
     </div>
   );
 }
