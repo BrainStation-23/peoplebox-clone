@@ -5,14 +5,12 @@ import { UserRow } from "./UserRow";
 
 interface TableContainerProps {
   users: User[];
-  onEdit: (user: User) => void;
   onDelete: (userId: string) => void;
   onPasswordChange: (userId: string) => void;
 }
 
 export function TableContainer({ 
   users, 
-  onEdit, 
   onDelete, 
   onPasswordChange 
 }: TableContainerProps) {
@@ -24,7 +22,6 @@ export function TableContainer({
           <UserRow
             key={user.id}
             user={user}
-            onEdit={onEdit}
             onDelete={onDelete}
             onPasswordChange={onPasswordChange}
           />
