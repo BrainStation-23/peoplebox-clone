@@ -1,42 +1,12 @@
 import { Database } from "@/integrations/supabase/types";
 
-export type CampaignStatus = "draft" | "active" | "completed" | "archived";
+export type CampaignStatus = Database["public"]["Enums"]["campaign_status"];
 export type CampaignType = "one_time" | "recurring";
-export type RecurringFrequency = "daily" | "weekly" | "monthly" | "quarterly" | "yearly";
+export type RecurringFrequency = Database["public"]["Enums"]["recurring_frequency"];
 export type InstanceStatus = Database["public"]["Enums"]["instance_status"];
 
-export interface Campaign {
-  id: string;
-  name: string;
-  description: string | null;
-  survey_id: string;
-  created_by: string;
-  status: CampaignStatus;
-  campaign_type: CampaignType;
-  is_recurring: boolean;
-  recurring_frequency: RecurringFrequency | null;
-  recurring_days: number[] | null;
-  recurring_ends_at: string | null;
-  created_at: string;
-  updated_at: string;
-  completion_rate: number | null;
-  starts_at: string;
-  ends_at: string | null;
-  instance_duration_days: number | null;
-  instance_end_time: string | null;
-}
-
-export interface CampaignInstance {
-  id: string;
-  campaign_id: string;
-  period_number: number;
-  starts_at: string;
-  ends_at: string;
-  status: InstanceStatus;
-  completion_rate: number | null;
-  created_at: string;
-  updated_at: string;
-}
+export type Campaign = Database["public"]["Tables"]["survey_campaigns"]["Row"];
+export type CampaignInstance = Database["public"]["Tables"]["campaign_instances"]["Row"];
 
 export interface CampaignFormData {
   name: string;
