@@ -3,6 +3,8 @@ import { User } from "../types";
 type ProgressCallback = (processed: number) => void;
 
 export const exportUsers = async (users: User[], onProgress?: ProgressCallback) => {
+  console.log("Starting export with users:", users);
+  
   const headers = [
     "Email",
     "First Name",
@@ -23,6 +25,7 @@ export const exportUsers = async (users: User[], onProgress?: ProgressCallback) 
     const rows = [];
     for (let i = 0; i < users.length; i++) {
       const user = users[i];
+      console.log("Processing user for export:", user);
       
       // Combine primary and additional SBUs into semicolon-separated list
       const allSbus = user.user_sbus
@@ -30,25 +33,26 @@ export const exportUsers = async (users: User[], onProgress?: ProgressCallback) 
         ?.map(sbu => sbu.sbu.name)
         ?.join(";") || "";
 
-      rows.push([
+      const row = [
         user.email,
         user.first_name || "",
         user.last_name || "",
         user.org_id || "",
-        user.level?.name || "",
+        user.level || "", // Now directly using the name string
         user.user_roles?.role || "user",
         user.gender || "",
         user.date_of_birth || "",
         user.designation || "",
-        user.location?.name || "",
-        user.employment_type?.name || "",
+        user.location || "", // Now directly using the name string
+        user.employment_type || "", // Now directly using the name string
         allSbus,
-        user.id // Include user ID for update operations
-      ]);
+        user.id
+      ];
+      console.log("Generated row for user:", row);
+      rows.push(row);
       
       if (onProgress) {
         onProgress(i + 1);
-        // Add a small delay to show progress
         await new Promise(resolve => setTimeout(resolve, 50));
       }
     }
@@ -59,6 +63,8 @@ export const exportUsers = async (users: User[], onProgress?: ProgressCallback) 
   const csvContent = [headers, ...rows]
     .map((row) => row.map((cell) => `"${cell}"`).join(","))
     .join("\n");
+
+  console.log("Generated CSV content:", csvContent);
 
   const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
   const link = document.createElement("a");

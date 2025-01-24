@@ -9,26 +9,13 @@ export interface User {
   first_name: string | null;
   last_name: string | null;
   profile_image_url?: string | null;
-  level_id?: string | null;
+  level?: string | null; // Changed to string
   org_id?: string | null;
   gender?: GenderType | null;
   date_of_birth?: string | null;
   designation?: string | null;
-  location_id?: string | null;
-  employment_type_id?: string | null;
-  level?: {
-    id: string;
-    name: string;
-    status: 'active' | 'inactive';
-  } | null;
-  location?: {
-    id: string;
-    name: string;
-  } | null;
-  employment_type?: {
-    id: string;
-    name: string;
-  } | null;
+  location?: string | null; // Changed to string
+  employment_type?: string | null; // Changed to string
   user_roles: {
     role: UserRole;
   };
