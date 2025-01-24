@@ -18,6 +18,8 @@ import { UserActions } from "./UserActions";
 import { TablePagination } from "./TablePagination";
 import { PasswordDialog } from "./PasswordDialog";
 import EditUserDialog from "../EditUserDialog";
+import { ExportProgress } from "./ExportProgress";
+import { exportUsers, downloadCSV } from "../../utils/exportUsers";
 
 interface UserTableProps {
   users: User[];
@@ -41,6 +43,13 @@ export default function UserTable({
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedSBU, setSelectedSBU] = useState("all");
   const [userToEdit, setUserToEdit] = useState<User | null>(null);
+  const [exportProgress, setExportProgress] = useState({
+    isOpen: false,
+    processed: 0,
+    total: 0,
+    error: "",
+    isComplete: false
+  });
   const [passwordDialog, setPasswordDialog] = useState<{
     isOpen: boolean;
     userId: string | null;
@@ -141,6 +150,45 @@ export default function UserTable({
     }
   };
 
+  const handleExport = async () => {
+    setExportProgress({
+      isOpen: true,
+      processed: 0,
+      total: 0,
+      error: "",
+      isComplete: false
+    });
+
+    try {
+      const rows: string[][] = [];
+      for await (const batch of exportUsers((progress) => {
+        setExportProgress(prev => ({
+          ...prev,
+          processed: progress.processed,
+          total: progress.total,
+          error: progress.error || ""
+        }));
+      })) {
+        rows.push(...batch);
+      }
+
+      if (rows.length > 0) {
+        downloadCSV(rows, `users-export-${new Date().toISOString()}.csv`);
+        setExportProgress(prev => ({ ...prev, isComplete: true }));
+      }
+    } catch (error: any) {
+      setExportProgress(prev => ({
+        ...prev,
+        error: error.message || "Export failed"
+      }));
+      toast({
+        variant: "destructive",
+        title: "Export failed",
+        description: error.message || "Failed to export users",
+      });
+    }
+  };
+
   if (isLoading) {
     return <div>Loading...</div>;
   }
@@ -152,6 +200,7 @@ export default function UserTable({
         setSearchTerm={setSearchTerm}
         selectedSBU={selectedSBU}
         setSelectedSBU={setSelectedSBU}
+        onExport={handleExport}
       />
 
       <Table>
@@ -207,6 +256,15 @@ export default function UserTable({
           ))}
         </TableBody>
       </Table>
+
+      <ExportProgress
+        open={exportProgress.isOpen}
+        onOpenChange={(open) => setExportProgress(prev => ({ ...prev, isOpen: open }))}
+        progress={exportProgress.processed}
+        total={exportProgress.total}
+        error={exportProgress.error}
+        isComplete={exportProgress.isComplete}
+      />
 
       <TablePagination
         page={page}

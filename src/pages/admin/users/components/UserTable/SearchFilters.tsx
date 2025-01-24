@@ -1,19 +1,14 @@
 import { Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { 
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { useSBUs } from "../../hooks/useSBUs";
+import { Button } from "@/components/ui/button";
+import { Download } from "lucide-react";
 
 interface SearchFiltersProps {
   searchTerm: string;
   setSearchTerm: (value: string) => void;
   selectedSBU: string;
   setSelectedSBU: (value: string) => void;
+  onExport: () => void;
 }
 
 export function SearchFilters({
@@ -21,33 +16,35 @@ export function SearchFilters({
   setSearchTerm,
   selectedSBU,
   setSelectedSBU,
+  onExport,
 }: SearchFiltersProps) {
-  const { data: sbus = [] } = useSBUs();
-
   return (
-    <div className="flex gap-4">
-      <div className="relative flex-1">
-        <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-        <Input
-          placeholder="Search by email or name..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="pl-8"
-        />
+    <div className="flex items-center justify-between mb-4">
+      <div className="flex items-center gap-4">
+        <div className="relative">
+          <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Search users..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="pl-8"
+          />
+        </div>
+        <div>
+          <select
+            value={selectedSBU}
+            onChange={(e) => setSelectedSBU(e.target.value)}
+            className="border rounded-md p-2"
+          >
+            <option value="all">All SBUs</option>
+            {/* Add options for SBUs here */}
+          </select>
+        </div>
       </div>
-      <Select value={selectedSBU} onValueChange={setSelectedSBU} defaultValue="all">
-        <SelectTrigger className="w-[200px]">
-          <SelectValue placeholder="Filter by Primary SBU" />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="all">All SBUs</SelectItem>
-          {sbus.map((sbu) => (
-            <SelectItem key={sbu.id} value={sbu.name}>
-              {sbu.name}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
+      <Button onClick={onExport} variant="outline" size="sm">
+        <Download className="mr-2 h-4 w-4" />
+        Export Users
+      </Button>
     </div>
   );
 }
