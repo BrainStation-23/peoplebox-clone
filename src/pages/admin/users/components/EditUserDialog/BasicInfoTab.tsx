@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { GenderType } from "../../types";
 
 interface BasicInfoTabProps {
   firstName: string;
@@ -23,8 +24,8 @@ interface BasicInfoTabProps {
   setProfileImageUrl: (value: string) => void;
   orgId: string;
   setOrgId: (value: string) => void;
-  gender: string;
-  setGender: (value: string) => void;
+  gender: GenderType;
+  setGender: (value: GenderType) => void;
   dateOfBirth: Date | undefined;
   setDateOfBirth: (value: Date | undefined) => void;
 }
@@ -95,7 +96,7 @@ export function BasicInfoTab({
         <Label>Gender</Label>
         <RadioGroup
           value={gender}
-          onValueChange={setGender}
+          onValueChange={(value: GenderType) => setGender(value)}
           className="flex gap-4"
         >
           <div className="flex items-center space-x-2">
