@@ -7,7 +7,10 @@ import { CampaignForm } from "./components/CampaignForm";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft } from "lucide-react";
 import { CampaignSteps } from "./components/CampaignSteps";
-import { Campaign, CampaignFormData } from "@/types/campaign";
+import { Campaign, CampaignFormData, RecurringFrequency } from "@/types/campaign";
+import { Database } from "@/integrations/supabase/types";
+
+type CampaignInsert = Database['public']['Tables']['survey_campaigns']['Insert'];
 
 export default function CampaignFormPage() {
   const { id } = useParams();
@@ -35,6 +38,7 @@ export default function CampaignFormPage() {
           starts_at: new Date(data.starts_at),
           recurring_ends_at: data.recurring_ends_at ? new Date(data.recurring_ends_at) : undefined,
           ends_at: data.ends_at ? new Date(data.ends_at) : undefined,
+          recurring_frequency: data.recurring_frequency as RecurringFrequency | undefined
         };
       }
       return null;
@@ -71,7 +75,7 @@ export default function CampaignFormPage() {
         return;
       }
 
-      const dataToSubmit: Partial<Campaign> = {
+      const dataToSubmit: CampaignInsert = {
         name: formData.name,
         description: formData.description,
         survey_id: formData.survey_id,
