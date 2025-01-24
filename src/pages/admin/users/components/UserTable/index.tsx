@@ -20,6 +20,7 @@ import { PasswordDialog } from "./PasswordDialog";
 import EditUserDialog from "../EditUserDialog";
 import { ExportProgress } from "./ExportProgress";
 import { exportUsers, downloadCSV } from "../../utils/exportUsers";
+import { ImportDialog } from "../ImportDialog";
 
 interface UserTableProps {
   users: User[];
@@ -43,6 +44,7 @@ export default function UserTable({
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedSBU, setSelectedSBU] = useState("all");
   const [userToEdit, setUserToEdit] = useState<User | null>(null);
+  const [isImportDialogOpen, setIsImportDialogOpen] = useState(false);
   const [exportProgress, setExportProgress] = useState({
     isOpen: false,
     processed: 0,
@@ -189,6 +191,14 @@ export default function UserTable({
     }
   };
 
+  const handleImport = () => {
+    setIsImportDialogOpen(true);
+  };
+
+  const handleImportComplete = () => {
+    queryClient.invalidateQueries({ queryKey: ["users"] });
+  };
+
   if (isLoading) {
     return <div>Loading...</div>;
   }
@@ -201,6 +211,7 @@ export default function UserTable({
         selectedSBU={selectedSBU}
         setSelectedSBU={setSelectedSBU}
         onExport={handleExport}
+        onImport={handleImport}
       />
 
       <Table>
@@ -256,6 +267,12 @@ export default function UserTable({
           ))}
         </TableBody>
       </Table>
+
+      <ImportDialog
+        open={isImportDialogOpen}
+        onOpenChange={setIsImportDialogOpen}
+        onImportComplete={handleImportComplete}
+      />
 
       <ExportProgress
         open={exportProgress.isOpen}
