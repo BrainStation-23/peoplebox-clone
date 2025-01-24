@@ -50,7 +50,7 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "survey_campaigns"
             referencedColumns: ["id"]
-          }
+          },
         ]
       }
       email_config: {
@@ -149,7 +149,7 @@ export type Database = {
           google_maps_url?: string | null
           id?: string
           name: string
-          updated_at: string
+          updated_at?: string
         }
         Update: {
           address?: string | null
@@ -192,7 +192,7 @@ export type Database = {
           location_id?: string | null
           org_id?: string | null
           profile_image_url?: string | null
-          updated_at: string
+          updated_at?: string
         }
         Update: {
           created_at?: string
@@ -231,7 +231,7 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "locations"
             referencedColumns: ["id"]
-          }
+          },
         ]
       }
       sbus: {
@@ -269,7 +269,7 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
-          }
+          },
         ]
       }
       survey_assignments: {
@@ -340,7 +340,7 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
-          }
+          },
         ]
       }
       survey_campaigns: {
@@ -418,7 +418,7 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "surveys"
             referencedColumns: ["id"]
-          }
+          },
         ]
       }
       survey_responses: {
@@ -476,7 +476,7 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
-          }
+          },
         ]
       }
       surveys: {
@@ -520,7 +520,7 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
-          }
+          },
         ]
       }
       user_roles: {
@@ -583,7 +583,7 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
-          }
+          },
         ]
       }
       user_supervisors: {
@@ -625,7 +625,7 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
-          }
+          },
         ]
       }
     }
@@ -673,7 +673,7 @@ export type Tables<
   TableName extends PublicTableNameOrOptions extends { schema: keyof Database }
     ? keyof (Database[PublicTableNameOrOptions["schema"]]["Tables"] &
         Database[PublicTableNameOrOptions["schema"]]["Views"])
-    : never,
+    : never = never,
 > = PublicTableNameOrOptions extends { schema: keyof Database }
   ? (Database[PublicTableNameOrOptions["schema"]]["Tables"] &
       Database[PublicTableNameOrOptions["schema"]]["Views"])[TableName] extends {
@@ -727,10 +727,10 @@ export type TablesUpdate<
     : never
   : PublicTableNameOrOptions extends keyof PublicSchema["Tables"]
     ? PublicSchema["Tables"][PublicTableNameOrOptions] extends {
-      Update: infer U
-    }
-    ? U
-    : never
+        Update: infer U
+      }
+      ? U
+      : never
     : never
 
 export type Enums<

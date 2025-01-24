@@ -8,7 +8,6 @@ import { ScheduleConfig } from "./ScheduleConfig";
 import { ReviewStep } from "./ReviewStep";
 import { ArrowLeft, ArrowRight, Send } from "lucide-react";
 import { useState } from "react";
-import { CampaignFormData } from "@/types/campaign";
 
 const campaignSchema = z.object({
   name: z.string().min(1, "Name is required"),
@@ -24,9 +23,9 @@ const campaignSchema = z.object({
   instance_end_time: z.string().optional(),
   ends_at: z.date().optional(),
   status: z.string().default("draft"),
-  recurring_days: z.array(z.number()).optional(),
-  completion_rate: z.number().optional(),
 });
+
+export type CampaignFormData = z.infer<typeof campaignSchema>;
 
 interface Survey {
   id: string;
@@ -144,5 +143,3 @@ export function CampaignForm({
     </Form>
   );
 }
-
-export type { CampaignFormData };

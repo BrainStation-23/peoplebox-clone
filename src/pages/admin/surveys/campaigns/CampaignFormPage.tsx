@@ -3,13 +3,13 @@ import { useNavigate, useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { CampaignForm } from "./components/CampaignForm";
+import { CampaignForm, CampaignFormData } from "./components/CampaignForm";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft } from "lucide-react";
 import { CampaignSteps } from "./components/CampaignSteps";
-import { Campaign, CampaignFormData, RecurringFrequency } from "@/types/campaign";
-import { Database } from "@/integrations/supabase/types";
+import type { Database } from "@/integrations/supabase/types";
 
+type Campaign = Database['public']['Tables']['survey_campaigns']['Row'];
 type CampaignInsert = Database['public']['Tables']['survey_campaigns']['Insert'];
 
 export default function CampaignFormPage() {
@@ -38,7 +38,6 @@ export default function CampaignFormPage() {
           starts_at: new Date(data.starts_at),
           recurring_ends_at: data.recurring_ends_at ? new Date(data.recurring_ends_at) : undefined,
           ends_at: data.ends_at ? new Date(data.ends_at) : undefined,
-          recurring_frequency: data.recurring_frequency as RecurringFrequency | undefined
         };
       }
       return null;
@@ -89,8 +88,6 @@ export default function CampaignFormPage() {
         campaign_type: formData.is_recurring ? 'recurring' : 'one_time',
         status: 'draft',
         created_by: session.user.id,
-        recurring_days: formData.recurring_days || [],
-        completion_rate: 0,
       };
 
       if (isEditMode) {
