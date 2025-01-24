@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { TableCell, TableRow } from "@/components/ui/table";
 import { User } from "../../types";
@@ -53,10 +52,7 @@ export function UserRow({ user, onEdit, onDelete }: UserRowProps) {
       </TableCell>
       <TableCell>{user.email}</TableCell>
       <TableCell>{user.org_id || "N/A"}</TableCell>
-      <TableCell className="space-x-2">
-        <Badge variant={user.user_roles.role === "admin" ? "default" : "secondary"}>
-          {user.user_roles.role}
-        </Badge>
+      <TableCell>
         <Switch
           checked={user.user_roles.role === "admin"}
           onCheckedChange={(checked) =>

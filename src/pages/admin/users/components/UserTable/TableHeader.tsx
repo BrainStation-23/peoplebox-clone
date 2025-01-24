@@ -11,7 +11,7 @@ export function UsersTableHeader() {
         <TableHead>Name</TableHead>
         <TableHead>Email</TableHead>
         <TableHead>Org ID</TableHead>
-        <TableHead>Role</TableHead>
+        <TableHead>Is Admin</TableHead>
         <TableHead>Primary SBU</TableHead>
         <TableHead className="w-[200px]">Actions</TableHead>
       </TableRow>
