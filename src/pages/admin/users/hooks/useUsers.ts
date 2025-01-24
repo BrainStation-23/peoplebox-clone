@@ -15,6 +15,7 @@ export function useUsers({ currentPage, pageSize, searchTerm }: UseUsersProps) {
       const start = (currentPage - 1) * pageSize;
       const end = start + pageSize - 1;
 
+      // First, get profiles with their related data
       let query = supabase
         .from("profiles")
         .select(`
@@ -27,11 +28,10 @@ export function useUsers({ currentPage, pageSize, searchTerm }: UseUsersProps) {
           gender,
           date_of_birth,
           designation,
-          level:levels(name),
-          location:locations(name),
-          employment_type:employment_types(name),
-          user_roles(role),
-          user_sbus!inner(
+          level:levels!left(name),
+          location:locations!left(name),
+          employment_type:employment_types!left(name),
+          user_sbus!left(
             is_primary,
             sbu:sbus(name)
           )
@@ -41,20 +41,30 @@ export function useUsers({ currentPage, pageSize, searchTerm }: UseUsersProps) {
         query = query.or(`email.ilike.%${searchTerm}%,first_name.ilike.%${searchTerm}%,last_name.ilike.%${searchTerm}%,org_id.ilike.%${searchTerm}%`);
       }
 
-      query = query.range(start, end);
-
-      const { data: profiles, error: profilesError, count } = await query;
+      const { data: profiles, error: profilesError, count } = await query
+        .range(start, end);
 
       if (profilesError) {
         throw profilesError;
       }
 
-      const usersWithData = profiles.map((profile) => ({
+      // Then, get user roles for these profiles
+      const { data: userRoles, error: rolesError } = await supabase
+        .from('user_roles')
+        .select('user_id, role')
+        .in('user_id', profiles?.map(p => p.id) || []);
+
+      if (rolesError) {
+        throw rolesError;
+      }
+
+      // Combine the data
+      const usersWithData = profiles?.map((profile) => ({
         ...profile,
         level: profile.level?.[0] || null,
         location: profile.location?.[0] || null,
         employment_type: profile.employment_type?.[0] || null,
-        user_roles: profile.user_roles?.[0] || { role: "user" as const },
+        user_roles: userRoles?.find(r => r.user_id === profile.id) || { role: "user" as const },
         user_sbus: profile.user_sbus?.map(sbu => ({
           ...sbu,
           sbu: sbu.sbu
