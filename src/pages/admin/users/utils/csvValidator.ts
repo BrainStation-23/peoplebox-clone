@@ -8,6 +8,18 @@ const csvRowSchema = z.object({
   lastName: z.string().optional(),
   orgId: z.string().optional(),
   level: z.string().optional(),
+  role: z.enum(["admin", "user"]).optional().default("user"),
+  gender: z.enum(["male", "female", "other"]).optional(),
+  dateOfBirth: z.string()
+    .refine(val => {
+      if (!val) return true; // Optional field
+      const date = new Date(val);
+      return !isNaN(date.getTime());
+    }, "Invalid date format. Use YYYY-MM-DD")
+    .optional(),
+  designation: z.string().optional(),
+  location: z.string().optional(),
+  employmentType: z.string().optional(),
   sbus: z.string().optional(),
 });
 
@@ -26,12 +38,18 @@ export async function validateCSV(file: File): Promise<ValidationResult> {
   const errors: CSVValidationError[] = [];
   const validRows: z.infer<typeof csvRowSchema>[] = [];
 
-  // Get existing SBUs and levels for validation
+  // Get existing data for validation
   const { data: sbus } = await supabase.from("sbus").select("name");
   const { data: levels } = await supabase.from("levels").select("name");
+  const { data: locations } = await supabase.from("locations").select("name");
+  const { data: employmentTypes } = await supabase.from("employment_types")
+    .select("name")
+    .eq("status", "active");
 
   const sbuNames = new Set(sbus?.map(sbu => sbu.name) || []);
   const levelNames = new Set(levels?.map(level => level.name) || []);
+  const locationNames = new Set(locations?.map(loc => loc.name) || []);
+  const employmentTypeNames = new Set(employmentTypes?.map(type => type.name) || []);
 
   try {
     const text = await file.text();
@@ -52,6 +70,12 @@ export async function validateCSV(file: File): Promise<ValidationResult> {
         lastName: row[headers.indexOf("Last Name")]?.trim(),
         orgId: row[headers.indexOf("Org ID")]?.trim(),
         level: row[headers.indexOf("Level")]?.trim(),
+        role: row[headers.indexOf("Role")]?.trim()?.toLowerCase(),
+        gender: row[headers.indexOf("Gender")]?.trim()?.toLowerCase(),
+        dateOfBirth: row[headers.indexOf("Date of Birth")]?.trim(),
+        designation: row[headers.indexOf("Designation")]?.trim(),
+        location: row[headers.indexOf("Location")]?.trim(),
+        employmentType: row[headers.indexOf("Employment Type")]?.trim(),
         sbus: row[headers.indexOf("SBUs")]?.trim(),
       };
 
@@ -67,6 +91,16 @@ export async function validateCSV(file: File): Promise<ValidationResult> {
       // Validate level exists
       if (rowData.level && !levelNames.has(rowData.level)) {
         rowErrors.push(`Level "${rowData.level}" does not exist`);
+      }
+
+      // Validate location exists
+      if (rowData.location && !locationNames.has(rowData.location)) {
+        rowErrors.push(`Location "${rowData.location}" does not exist`);
+      }
+
+      // Validate employment type exists
+      if (rowData.employmentType && !employmentTypeNames.has(rowData.employmentType)) {
+        rowErrors.push(`Employment Type "${rowData.employmentType}" does not exist`);
       }
 
       // Validate SBUs exist
