@@ -1,8 +1,8 @@
 import { z } from "zod";
 import { Level, User } from "../types";
 import { supabase } from "@/integrations/supabase/client";
+import { ImportError } from "./errorReporting";
 
-// Schema for CSV row validation
 const csvRowSchema = z.object({
   email: z.string().email("Invalid email format"),
   firstName: z.string().optional(),
@@ -77,7 +77,8 @@ export async function processCSVFile(file: File): Promise<ProcessingResult> {
 
 export async function importUsers(
   data: ProcessingResult,
-  onProgress: (current: number, total: number) => void
+  onProgress: (current: number, total: number) => void,
+  onError: (error: ImportError) => void
 ): Promise<void> {
   const total = data.newUsers.length + data.existingUsers.length;
   let processed = 0;
@@ -102,7 +103,15 @@ export async function importUsers(
         }
       );
 
-      if (authError) throw authError;
+      if (authError) {
+        onError({
+          row: processed + 1,
+          type: "creation",
+          message: authError.message,
+          data: user,
+        });
+        continue;
+      }
 
       // Update profile with additional info
       if (user.level || user.orgId) {
@@ -114,19 +123,41 @@ export async function importUsers(
           })
           .eq("email", user.email);
 
-        if (profileError) throw profileError;
+        if (profileError) {
+          onError({
+            row: processed + 1,
+            type: "update",
+            message: profileError.message,
+            data: user,
+          });
+        }
       }
 
       // Handle SBU assignments
       if (user.sbus) {
-        await assignSBUs(authUser.id, user.sbus);
+        try {
+          await assignSBUs(authUser.id, user.sbus);
+        } catch (error) {
+          onError({
+            row: processed + 1,
+            type: "sbu",
+            message: error instanceof Error ? error.message : "Failed to assign SBUs",
+            data: user,
+          });
+        }
       }
 
       processed++;
       onProgress(processed, total);
     } catch (error) {
-      console.error("Error creating user:", error);
-      throw error;
+      onError({
+        row: processed + 1,
+        type: "creation",
+        message: error instanceof Error ? error.message : "Unknown error occurred",
+        data: user,
+      });
+      processed++;
+      onProgress(processed, total);
     }
   }
 
@@ -144,7 +175,14 @@ export async function importUsers(
         })
         .eq("id", user.id);
 
-      if (profileError) throw profileError;
+      if (profileError) {
+        onError({
+          row: processed + 1,
+          type: "update",
+          message: profileError.message,
+          data: user,
+        });
+      }
 
       // Update role if needed
       if (user.role) {
@@ -153,24 +191,45 @@ export async function importUsers(
           .update({ role: user.role })
           .eq("user_id", user.id);
 
-        if (roleError) throw roleError;
+        if (roleError) {
+          onError({
+            row: processed + 1,
+            type: "role",
+            message: roleError.message,
+            data: user,
+          });
+        }
       }
 
       // Handle SBU assignments
       if (user.sbus) {
-        await assignSBUs(user.id, user.sbus);
+        try {
+          await assignSBUs(user.id, user.sbus);
+        } catch (error) {
+          onError({
+            row: processed + 1,
+            type: "sbu",
+            message: error instanceof Error ? error.message : "Failed to assign SBUs",
+            data: user,
+          });
+        }
       }
 
       processed++;
       onProgress(processed, total);
     } catch (error) {
-      console.error("Error updating user:", error);
-      throw error;
+      onError({
+        row: processed + 1,
+        type: "update",
+        message: error instanceof Error ? error.message : "Unknown error occurred",
+        data: user,
+      });
+      processed++;
+      onProgress(processed, total);
     }
   }
 }
 
-// Helper functions
 function generateTempPassword(): string {
   return Math.random().toString(36).slice(-8);
 }
