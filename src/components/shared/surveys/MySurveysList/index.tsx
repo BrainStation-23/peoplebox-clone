@@ -57,11 +57,10 @@ export default function MySurveysList() {
         .order("created_at", { ascending: false });
 
       if (error) throw error;
-      return data as Assignment[];
+      return data as SurveyAssignment[];
     },
   });
 
-  // Check for due dates and show notifications
   useEffect(() => {
     if (assignments) {
       const now = new Date();
