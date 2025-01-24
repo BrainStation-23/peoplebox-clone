@@ -1,12 +1,14 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Progress } from "@/components/ui/progress";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Upload, AlertCircle, Download } from "lucide-react";
-import { processCSVFile, importUsers, type ProcessingResult } from "../utils/csvProcessor";
+import { Upload, AlertCircle, Download, Pause, Play, XCircle } from "lucide-react";
+import { processCSVFile } from "../utils/csvProcessor";
 import { ImportError, ImportResult, downloadErrorReport } from "../utils/errorReporting";
 import { toast } from "@/hooks/use-toast";
+import { batchProcessor, type BatchProgress } from "../utils/batchProcessor";
+import { formatDistanceToNow } from "date-fns";
 
 interface ImportDialogProps {
   open: boolean;
@@ -18,8 +20,10 @@ export function ImportDialog({ open, onOpenChange, onImportComplete }: ImportDia
   const [file, setFile] = useState<File | null>(null);
   const [processingResult, setProcessingResult] = useState<ProcessingResult | null>(null);
   const [importing, setImporting] = useState(false);
-  const [progress, setProgress] = useState(0);
+  const [paused, setPaused] = useState(false);
+  const [progress, setProgress] = useState<BatchProgress | null>(null);
   const [importResult, setImportResult] = useState<ImportResult | null>(null);
+  const abortController = useRef<AbortController | null>(null);
 
   const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = event.target.files?.[0];
@@ -28,7 +32,7 @@ export function ImportDialog({ open, onOpenChange, onImportComplete }: ImportDia
       try {
         const result = await processCSVFile(selectedFile);
         setProcessingResult(result);
-        setImportResult(null); // Reset import result when new file is selected
+        setImportResult(null);
       } catch (error) {
         console.error("Processing error:", error);
         toast({
@@ -44,19 +48,35 @@ export function ImportDialog({ open, onOpenChange, onImportComplete }: ImportDia
     if (!processingResult) return;
     
     setImporting(true);
-    setProgress(0);
+    setProgress(null);
     const errors: ImportError[] = [];
+    abortController.current = new AbortController();
 
     try {
-      await importUsers(
-        processingResult,
-        (current, total) => {
-          setProgress((current / total) * 100);
+      const processor = batchProcessor(processingResult, {
+        onProgress: (batchProgress) => {
+          setProgress(batchProgress);
         },
-        (error) => {
+        onError: (error) => {
           errors.push(error);
+        },
+        signal: abortController.current.signal,
+      });
+
+      for await (const progress of processor) {
+        if (paused) {
+          await new Promise<void>(resolve => {
+            const checkPause = () => {
+              if (!paused) {
+                resolve();
+              } else {
+                setTimeout(checkPause, 100);
+              }
+            };
+            checkPause();
+          });
         }
-      );
+      }
 
       const result: ImportResult = {
         successful: processingResult.newUsers.length + processingResult.existingUsers.length - errors.length,
@@ -82,21 +102,42 @@ export function ImportDialog({ open, onOpenChange, onImportComplete }: ImportDia
         });
       }
     } catch (error) {
-      console.error("Import error:", error);
-      toast({
-        variant: "destructive",
-        title: "Import failed",
-        description: error instanceof Error ? error.message : "Unknown error occurred",
-      });
+      if (error instanceof Error && error.message === 'Operation cancelled') {
+        toast({
+          title: "Import cancelled",
+          description: "The import operation was cancelled.",
+        });
+      } else {
+        console.error("Import error:", error);
+        toast({
+          variant: "destructive",
+          title: "Import failed",
+          description: error instanceof Error ? error.message : "Unknown error occurred",
+        });
+      }
     } finally {
       setImporting(false);
+      setPaused(false);
+      abortController.current = null;
     }
+  };
+
+  const handleCancel = () => {
+    abortController.current?.abort();
+  };
+
+  const togglePause = () => {
+    setPaused(!paused);
   };
 
   const handleDownloadErrors = () => {
     if (importResult?.errors) {
       downloadErrorReport(importResult.errors);
     }
+  };
+
+  const formatEstimatedTime = (ms: number) => {
+    return formatDistanceToNow(Date.now() + ms, { includeSeconds: true });
   };
 
   return (
@@ -164,12 +205,38 @@ export function ImportDialog({ open, onOpenChange, onImportComplete }: ImportDia
             </div>
           )}
 
-          {importing && (
+          {importing && progress && (
             <div className="space-y-4">
-              <Progress value={progress} />
-              <p className="text-sm text-center text-gray-500">
-                Importing users... {Math.round(progress)}%
-              </p>
+              <Progress value={(progress.processed / progress.total) * 100} />
+              <div className="text-sm space-y-2">
+                <p className="text-center text-gray-500">
+                  Processing batch {progress.currentBatch} of {progress.totalBatches}
+                </p>
+                <p className="text-center text-gray-500">
+                  {progress.processed} of {progress.total} users processed
+                </p>
+                <p className="text-center text-gray-500">
+                  Estimated time remaining: {formatEstimatedTime(progress.estimatedTimeRemaining)}
+                </p>
+              </div>
+              <div className="flex justify-center space-x-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={togglePause}
+                >
+                  {paused ? <Play className="h-4 w-4" /> : <Pause className="h-4 w-4" />}
+                  {paused ? 'Resume' : 'Pause'}
+                </Button>
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  onClick={handleCancel}
+                >
+                  <XCircle className="h-4 w-4 mr-2" />
+                  Cancel
+                </Button>
+              </div>
             </div>
           )}
 
