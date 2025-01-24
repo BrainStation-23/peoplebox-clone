@@ -11,6 +11,11 @@ const csvRowSchema = z.object({
   level: z.string().optional(),
   sbus: z.string().optional(),
   role: z.enum(["admin", "user"]).optional().default("user"),
+  gender: z.enum(["male", "female", "other"]).optional(),
+  dateOfBirth: z.string().optional(),
+  designation: z.string().optional(),
+  location: z.string().optional(),
+  employmentType: z.string().optional(),
 });
 
 export type CSVRow = z.infer<typeof csvRowSchema>;
@@ -20,6 +25,67 @@ export type ProcessingResult = {
   existingUsers: (CSVRow & { id: string })[];
   errors: { row: number; errors: string[] }[];
 };
+
+async function getLevelId(levelName?: string): Promise<string | null> {
+  if (!levelName) return null;
+  
+  const { data } = await supabase
+    .from("levels")
+    .select("id")
+    .eq("name", levelName)
+    .maybeSingle();
+
+  return data?.id || null;
+}
+
+async function getLocationId(locationName?: string): Promise<string | null> {
+  if (!locationName) return null;
+
+  const { data } = await supabase
+    .from("locations")
+    .select("id")
+    .eq("name", locationName)
+    .maybeSingle();
+
+  return data?.id || null;
+}
+
+async function getEmploymentTypeId(typeName?: string): Promise<string | null> {
+  if (!typeName) return null;
+
+  const { data } = await supabase
+    .from("employment_types")
+    .select("id")
+    .eq("name", typeName)
+    .eq("status", "active")
+    .maybeSingle();
+
+  return data?.id || null;
+}
+
+async function assignSBUs(userId: string, sbuString: string): Promise<void> {
+  const sbuNames = sbuString.split(";").map(s => s.trim());
+  
+  const { data: sbus } = await supabase
+    .from("sbus")
+    .select("id, name")
+    .in("name", sbuNames);
+
+  if (!sbus?.length) return;
+
+  await supabase
+    .from("user_sbus")
+    .delete()
+    .eq("user_id", userId);
+
+  const assignments = sbus.map((sbu, index) => ({
+    user_id: userId,
+    sbu_id: sbu.id,
+    is_primary: index === 0,
+  }));
+
+  await supabase.from("user_sbus").insert(assignments);
+}
 
 export async function processCSVFile(file: File): Promise<ProcessingResult> {
   const text = await file.text();
@@ -32,10 +98,9 @@ export async function processCSVFile(file: File): Promise<ProcessingResult> {
     errors: [],
   };
 
-  // Process each row starting from index 1 (skip headers)
   for (let i = 1; i < rows.length; i++) {
     const row = rows[i];
-    if (row.length === 1 && !row[0]) continue; // Skip empty rows
+    if (row.length === 1 && !row[0]) continue;
 
     const rowData = {
       email: row[headers.indexOf("Email")]?.trim(),
@@ -45,12 +110,16 @@ export async function processCSVFile(file: File): Promise<ProcessingResult> {
       level: row[headers.indexOf("Level")]?.trim(),
       sbus: row[headers.indexOf("SBUs")]?.trim(),
       role: row[headers.indexOf("Role")]?.trim()?.toLowerCase() as "admin" | "user",
+      gender: row[headers.indexOf("Gender")]?.trim()?.toLowerCase() as "male" | "female" | "other",
+      dateOfBirth: row[headers.indexOf("Date of Birth")]?.trim(),
+      designation: row[headers.indexOf("Designation")]?.trim(),
+      location: row[headers.indexOf("Location")]?.trim(),
+      employmentType: row[headers.indexOf("Employment Type")]?.trim(),
     };
 
     try {
       const validatedRow = csvRowSchema.parse(rowData);
       
-      // Check if user exists
       const { data: existingUser } = await supabase
         .from("profiles")
         .select("id")
@@ -86,7 +155,6 @@ export async function importUsers(
   // Process new users
   for (const user of data.newUsers) {
     try {
-      // Create auth user and profile
       const { data: authUser, error: authError } = await supabase.functions.invoke(
         "manage-users",
         {
@@ -113,27 +181,36 @@ export async function importUsers(
         continue;
       }
 
-      // Update profile with additional info
-      if (user.level || user.orgId) {
-        const { error: profileError } = await supabase
-          .from("profiles")
-          .update({
-            org_id: user.orgId,
-            level_id: await getLevelId(user.level),
-          })
-          .eq("email", user.email);
+      // Get IDs for related entities
+      const [levelId, locationId, employmentTypeId] = await Promise.all([
+        getLevelId(user.level),
+        getLocationId(user.location),
+        getEmploymentTypeId(user.employmentType)
+      ]);
 
-        if (profileError) {
-          onError({
-            row: processed + 1,
-            type: "update",
-            message: profileError.message,
-            data: user,
-          });
-        }
+      // Update profile with additional info
+      const { error: profileError } = await supabase
+        .from("profiles")
+        .update({
+          org_id: user.orgId,
+          level_id: levelId,
+          location_id: locationId,
+          employment_type_id: employmentTypeId,
+          gender: user.gender,
+          date_of_birth: user.dateOfBirth,
+          designation: user.designation,
+        })
+        .eq("email", user.email);
+
+      if (profileError) {
+        onError({
+          row: processed + 1,
+          type: "update",
+          message: profileError.message,
+          data: user,
+        });
       }
 
-      // Handle SBU assignments
       if (user.sbus) {
         try {
           await assignSBUs(authUser.id, user.sbus);
@@ -164,6 +241,13 @@ export async function importUsers(
   // Process existing users
   for (const user of data.existingUsers) {
     try {
+      // Get IDs for related entities
+      const [levelId, locationId, employmentTypeId] = await Promise.all([
+        getLevelId(user.level),
+        getLocationId(user.location),
+        getEmploymentTypeId(user.employmentType)
+      ]);
+
       // Update profile
       const { error: profileError } = await supabase
         .from("profiles")
@@ -171,7 +255,12 @@ export async function importUsers(
           first_name: user.firstName,
           last_name: user.lastName,
           org_id: user.orgId,
-          level_id: await getLevelId(user.level),
+          level_id: levelId,
+          location_id: locationId,
+          employment_type_id: employmentTypeId,
+          gender: user.gender,
+          date_of_birth: user.dateOfBirth,
+          designation: user.designation,
         })
         .eq("id", user.id);
 
@@ -232,43 +321,4 @@ export async function importUsers(
 
 function generateTempPassword(): string {
   return Math.random().toString(36).slice(-8);
-}
-
-async function getLevelId(levelName?: string): Promise<string | null> {
-  if (!levelName) return null;
-  
-  const { data } = await supabase
-    .from("levels")
-    .select("id")
-    .eq("name", levelName)
-    .maybeSingle();
-
-  return data?.id || null;
-}
-
-async function assignSBUs(userId: string, sbuString: string): Promise<void> {
-  const sbuNames = sbuString.split(";").map(s => s.trim());
-  
-  // Get SBU IDs
-  const { data: sbus } = await supabase
-    .from("sbus")
-    .select("id, name")
-    .in("name", sbuNames);
-
-  if (!sbus?.length) return;
-
-  // Delete existing assignments
-  await supabase
-    .from("user_sbus")
-    .delete()
-    .eq("user_id", userId);
-
-  // Create new assignments
-  const assignments = sbus.map((sbu, index) => ({
-    user_id: userId,
-    sbu_id: sbu.id,
-    is_primary: index === 0, // First SBU in the list is primary
-  }));
-
-  await supabase.from("user_sbus").insert(assignments);
 }
