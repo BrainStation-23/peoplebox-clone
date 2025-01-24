@@ -20,6 +20,13 @@ export default function UsersPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedSBU, setSelectedSBU] = useState("all");
   const [pageSize, setPageSize] = useState(10);
+  const [exportProgress, setExportProgress] = useState({
+    isOpen: false,
+    processed: 0,
+    total: 0,
+    error: "",
+    isComplete: false,
+  });
   const debouncedSearch = useDebounce(searchTerm, 300);
 
   useEffect(() => {
@@ -33,8 +40,46 @@ export default function UsersPage() {
   });
 
   const { data: sbus = [] } = useSBUs();
-
   const { handleCreateSuccess, handleDelete } = useUserActions(refetch);
+
+  const handleExport = async () => {
+    if (!data?.users) return;
+    
+    setExportProgress({
+      isOpen: true,
+      processed: 0,
+      total: data.users.length,
+      error: "",
+      isComplete: false,
+    });
+
+    try {
+      await exportUsers(data.users, (processed) => {
+        setExportProgress(prev => ({
+          ...prev,
+          processed,
+        }));
+      });
+
+      setExportProgress(prev => ({
+        ...prev,
+        isComplete: true,
+      }));
+
+      // Auto close after 2 seconds on success
+      setTimeout(() => {
+        setExportProgress(prev => ({
+          ...prev,
+          isOpen: false,
+        }));
+      }, 2000);
+    } catch (error) {
+      setExportProgress(prev => ({
+        ...prev,
+        error: error instanceof Error ? error.message : "Failed to export users",
+      }));
+    }
+  };
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
@@ -67,7 +112,7 @@ export default function UsersPage() {
           setSearchTerm={setSearchTerm}
           selectedSBU={selectedSBU}
           setSelectedSBU={setSelectedSBU}
-          onExport={() => exportUsers(data?.users || [])}
+          onExport={handleExport}
           onImport={() => setIsImportDialogOpen(true)}
           sbus={sbus}
           totalResults={data?.total}
@@ -107,6 +152,17 @@ export default function UsersPage() {
         open={isImportDialogOpen}
         onOpenChange={setIsImportDialogOpen}
         onImportComplete={handleImportComplete}
+      />
+
+      <ExportProgress
+        open={exportProgress.isOpen}
+        onOpenChange={(open) =>
+          setExportProgress((prev) => ({ ...prev, isOpen: open }))
+        }
+        progress={exportProgress.processed}
+        total={exportProgress.total}
+        error={exportProgress.error}
+        isComplete={exportProgress.isComplete}
       />
     </div>
   );
