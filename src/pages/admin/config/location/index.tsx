@@ -63,7 +63,11 @@ export default function LocationConfig() {
 
   const createMutation = useMutation({
     mutationFn: async (values: LocationFormValues) => {
-      const { error } = await supabase.from("locations").insert(values);
+      const { error } = await supabase.from("locations").insert({
+        name: values.name,
+        google_maps_url: values.google_maps_url || null,
+        address: values.address || null,
+      });
       if (error) throw error;
     },
     onSuccess: () => {
@@ -81,7 +85,11 @@ export default function LocationConfig() {
     mutationFn: async ({ id, ...values }: { id: string } & LocationFormValues) => {
       const { error } = await supabase
         .from("locations")
-        .update(values)
+        .update({
+          name: values.name,
+          google_maps_url: values.google_maps_url || null,
+          address: values.address || null,
+        })
         .eq("id", id);
       if (error) throw error;
     },
