@@ -1,3 +1,6 @@
+import { Survey, SurveyAssignment, SurveyResponse } from "@/types/survey";
+import { Campaign, CampaignInstance } from "@/types/campaign";
+
 export type Json =
   | string
   | number
@@ -42,263 +45,48 @@ export interface Database {
         }
         Relationships: []
       }
-      employment_types: {
-        Row: {
-          created_at: string
-          id: string
-          name: string
-          status: Database["public"]["Enums"]["employment_type_status"]
-          updated_at: string
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          name: string
-          status?: Database["public"]["Enums"]["employment_type_status"]
-          updated_at?: string
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          name?: string
-          status?: Database["public"]["Enums"]["employment_type_status"]
-          updated_at?: string
-        }
-        Relationships: []
-      }
-      levels: {
-        Row: {
-          created_at: string
-          id: string
-          name: string
-          status: Database["public"]["Enums"]["level_status"] | null
-          updated_at: string
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          name: string
-          status?: Database["public"]["Enums"]["level_status"] | null
-          updated_at?: string
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          name?: string
-          status?: Database["public"]["Enums"]["level_status"] | null
-          updated_at?: string
-        }
-        Relationships: []
-      }
-      locations: {
-        Row: {
-          address: string | null
-          created_at: string
-          google_maps_url: string | null
-          id: string
-          name: string
-          updated_at: string
-        }
-        Insert: {
-          address?: string | null
-          created_at?: string
-          google_maps_url?: string | null
-          id?: string
-          name: string
-          updated_at?: string
-        }
-        Update: {
-          address?: string | null
-          created_at?: string
-          google_maps_url?: string | null
-          id?: string
-          name?: string
-          updated_at?: string
-        }
-        Relationships: []
-      }
-      profiles: {
-        Row: {
-          created_at: string
-          date_of_birth: string | null
-          designation: string | null
-          email: string
-          employment_type_id: string | null
-          first_name: string | null
-          gender: Database["public"]["Enums"]["gender"] | null
-          id: string
-          last_name: string | null
-          level_id: string | null
-          location_id: string | null
-          org_id: string | null
-          profile_image_url: string | null
-          updated_at: string
-        }
-        Insert: {
-          created_at?: string
-          date_of_birth?: string | null
-          designation?: string | null
-          email: string
-          employment_type_id?: string | null
-          first_name?: string | null
-          gender?: Database["public"]["Enums"]["gender"] | null
-          id: string
-          last_name?: string | null
-          level_id?: string | null
-          location_id?: string | null
-          org_id?: string | null
-          profile_image_url?: string | null
-          updated_at?: string
-        }
-        Update: {
-          created_at?: string
-          date_of_birth?: string | null
-          designation?: string | null
-          email?: string
-          employment_type_id?: string | null
-          first_name?: string | null
-          gender?: Database["public"]["Enums"]["gender"] | null
-          id?: string
-          last_name?: string | null
-          level_id?: string | null
-          location_id?: string | null
-          org_id?: string | null
-          profile_image_url?: string | null
-          updated_at?: string
-        }
+      surveys: {
+        Row: Survey
+        Insert: Omit<Survey, 'id' | 'created_at' | 'updated_at'>
+        Update: Partial<Survey>
         Relationships: [
           {
-            foreignKeyName: "profiles_employment_type_id_fkey"
-            columns: ["employment_type_id"]
-            isOneToOne: false
-            referencedRelation: "employment_types"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "profiles_id_fkey"
-            columns: ["id"]
-            isOneToOne: true
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "profiles_level_id_fkey"
-            columns: ["level_id"]
-            isOneToOne: false
-            referencedRelation: "levels"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "profiles_location_id_fkey"
-            columns: ["location_id"]
-            isOneToOne: false
-            referencedRelation: "locations"
-            referencedColumns: ["id"]
-          }
-        ]
-      }
-      sbus: {
-        Row: {
-          created_at: string
-          head_id: string | null
-          id: string
-          name: string
-          profile_image_url: string | null
-          updated_at: string
-          website: string | null
-        }
-        Insert: {
-          created_at?: string
-          head_id?: string | null
-          id?: string
-          name: string
-          profile_image_url?: string | null
-          updated_at?: string
-          website?: string | null
-        }
-        Update: {
-          created_at?: string
-          head_id?: string | null
-          id?: string
-          name?: string
-          profile_image_url?: string | null
-          updated_at?: string
-          website?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "sbus_head_id_fkey"
-            columns: ["head_id"]
+            foreignKeyName: "surveys_created_by_fkey"
+            columns: ["created_by"]
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           }
         ]
       }
-      user_roles: {
-        Row: {
-          created_at: string
-          id: string
-          role: Database["public"]["Enums"]["user_role"]
-          user_id: string
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          role?: Database["public"]["Enums"]["user_role"]
-          user_id: string
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          role?: Database["public"]["Enums"]["user_role"]
-          user_id?: string
-        }
+      survey_assignments: {
+        Row: SurveyAssignment
+        Insert: Omit<SurveyAssignment, 'id' | 'created_at' | 'updated_at'>
+        Update: Partial<SurveyAssignment>
         Relationships: [
           {
-            foreignKeyName: "user_roles_user_id_fkey"
-            columns: ["user_id"]
+            foreignKeyName: "survey_assignments_campaign_id_fkey"
+            columns: ["campaign_id"]
             isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          }
-        ]
-      }
-      user_sbus: {
-        Row: {
-          created_at: string
-          id: string
-          is_primary: boolean | null
-          sbu_id: string | null
-          updated_at: string
-          user_id: string | null
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          is_primary?: boolean | null
-          sbu_id?: string | null
-          updated_at?: string
-          user_id?: string | null
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          is_primary?: boolean | null
-          sbu_id?: string | null
-          updated_at?: string
-          user_id?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "user_sbus_sbu_id_fkey"
-            columns: ["sbu_id"]
-            isOneToOne: false
-            referencedRelation: "sbus"
+            referencedRelation: "survey_campaigns"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "user_sbus_user_id_fkey"
+            foreignKeyName: "survey_assignments_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "survey_assignments_survey_id_fkey"
+            columns: ["survey_id"]
+            isOneToOne: false
+            referencedRelation: "surveys"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "survey_assignments_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "profiles"
@@ -306,44 +94,65 @@ export interface Database {
           }
         ]
       }
-      user_supervisors: {
-        Row: {
-          created_at: string
-          id: string
-          is_primary: boolean | null
-          supervisor_id: string
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          is_primary?: boolean | null
-          supervisor_id: string
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          is_primary?: boolean | null
-          supervisor_id?: string
-          updated_at?: string
-          user_id?: string
-        }
+      survey_responses: {
+        Row: SurveyResponse
+        Insert: Omit<SurveyResponse, 'id' | 'created_at' | 'updated_at'>
+        Update: Partial<SurveyResponse>
         Relationships: [
           {
-            foreignKeyName: "user_supervisors_supervisor_id_fkey"
-            columns: ["supervisor_id"]
+            foreignKeyName: "survey_responses_assignment_id_fkey"
+            columns: ["assignment_id"]
+            isOneToOne: false
+            referencedRelation: "survey_assignments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "survey_responses_campaign_instance_id_fkey"
+            columns: ["campaign_instance_id"]
+            isOneToOne: false
+            referencedRelation: "campaign_instances"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "survey_responses_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      survey_campaigns: {
+        Row: Campaign
+        Insert: Omit<Campaign, 'id' | 'created_at' | 'updated_at'>
+        Update: Partial<Campaign>
+        Relationships: [
+          {
+            foreignKeyName: "survey_campaigns_created_by_fkey"
+            columns: ["created_by"]
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "user_supervisors_user_id_fkey"
-            columns: ["user_id"]
+            foreignKeyName: "survey_campaigns_survey_id_fkey"
+            columns: ["survey_id"]
             isOneToOne: false
-            referencedRelation: "profiles"
+            referencedRelation: "surveys"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      campaign_instances: {
+        Row: CampaignInstance
+        Insert: Omit<CampaignInstance, 'id' | 'created_at' | 'updated_at'>
+        Update: Partial<CampaignInstance>
+        Relationships: [
+          {
+            foreignKeyName: "campaign_instances_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "survey_campaigns"
             referencedColumns: ["id"]
           }
         ]
@@ -396,83 +205,3 @@ export interface Database {
     }
   }
 }
-
-export type Tables<
-  PublicTableNameOrOptions extends
-    | keyof (Database["public"]["Tables"] & Database["public"]["Views"])
-    | { schema: keyof Database },
-  TableName extends PublicTableNameOrOptions extends { schema: keyof Database }
-    ? keyof (Database[PublicTableNameOrOptions["schema"]]["Tables"] &
-        Database[PublicTableNameOrOptions["schema"]]["Views"])
-    : never = never
-> = PublicTableNameOrOptions extends { schema: keyof Database }
-  ? (Database[PublicTableNameOrOptions["schema"]]["Tables"] &
-      Database[PublicTableNameOrOptions["schema"]]["Views"])[TableName] extends {
-      Row: infer R
-    }
-    ? R
-    : never
-  : PublicTableNameOrOptions extends keyof (Database["public"]["Tables"] &
-      Database["public"]["Views"])
-  ? (Database["public"]["Tables"] &
-      Database["public"]["Views"])[PublicTableNameOrOptions] extends {
-      Row: infer R
-    }
-    ? R
-    : never
-  : never
-
-export type TablesInsert<
-  PublicTableNameOrOptions extends
-    | keyof Database["public"]["Tables"]
-    | { schema: keyof Database },
-  TableName extends PublicTableNameOrOptions extends { schema: keyof Database }
-    ? keyof Database[PublicTableNameOrOptions["schema"]]["Tables"]
-    : never = never
-> = PublicTableNameOrOptions extends { schema: keyof Database }
-  ? Database[PublicTableNameOrOptions["schema"]]["Tables"][TableName] extends {
-      Insert: infer I
-    }
-    ? I
-    : never
-  : PublicTableNameOrOptions extends keyof Database["public"]["Tables"]
-  ? Database["public"]["Tables"][PublicTableNameOrOptions] extends {
-      Insert: infer I
-    }
-    ? I
-    : never
-  : never
-
-export type TablesUpdate<
-  PublicTableNameOrOptions extends
-    | keyof Database["public"]["Tables"]
-    | { schema: keyof Database },
-  TableName extends PublicTableNameOrOptions extends { schema: keyof Database }
-    ? keyof Database[PublicTableNameOrOptions["schema"]]["Tables"]
-    : never = never
-> = PublicTableNameOrOptions extends { schema: keyof Database }
-  ? Database[PublicTableNameOrOptions["schema"]]["Tables"][TableName] extends {
-      Update: infer U
-    }
-    ? U
-    : never
-  : PublicTableNameOrOptions extends keyof Database["public"]["Tables"]
-  ? Database["public"]["Tables"][PublicTableNameOrOptions] extends {
-      Update: infer U
-    }
-    ? U
-    : never
-  : never
-
-export type Enums<
-  PublicEnumNameOrOptions extends
-    | keyof Database["public"]["Enums"]
-    | { schema: keyof Database },
-  EnumName extends PublicEnumNameOrOptions extends { schema: keyof Database }
-    ? keyof Database[PublicEnumNameOrOptions["schema"]]["Enums"]
-    : never = never
-> = PublicEnumNameOrOptions extends { schema: keyof Database }
-  ? Database[PublicEnumNameOrOptions["schema"]]["Enums"][EnumName]
-  : PublicEnumNameOrOptions extends keyof Database["public"]["Enums"]
-  ? Database["public"]["Enums"][PublicEnumNameOrOptions]
-  : never
