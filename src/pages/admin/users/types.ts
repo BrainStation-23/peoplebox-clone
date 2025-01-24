@@ -9,13 +9,13 @@ export interface User {
   first_name: string | null;
   last_name: string | null;
   profile_image_url?: string | null;
-  level?: string | null; // Changed to string
+  level?: string | null;
   org_id?: string | null;
   gender?: GenderType | null;
   date_of_birth?: string | null;
   designation?: string | null;
-  location?: string | null; // Changed to string
-  employment_type?: string | null; // Changed to string
+  location?: string | null;
+  employment_type?: string | null;
   user_roles: {
     role: UserRole;
   };

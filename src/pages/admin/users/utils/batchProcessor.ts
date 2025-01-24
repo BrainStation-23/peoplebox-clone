@@ -47,6 +47,7 @@ export async function* batchProcessor(
           method: 'BATCH_CREATE',
           action: {
             users: batchUsers.map(user => ({
+              id: user.id,
               email: user.email,
               first_name: user.firstName,
               last_name: user.lastName,
@@ -61,12 +62,11 @@ export async function* batchProcessor(
         throw error;
       }
 
-      // Handle individual errors from the batch operation
       if (data.errors) {
         data.errors.forEach(err => {
           onError({
             row: allUsers.findIndex(u => u.email === err.user.email) + 1,
-            type: 'creation',
+            type: err.user.id ? 'update' : 'creation',
             message: err.error,
             data: err.user,
           });
@@ -91,14 +91,13 @@ export async function* batchProcessor(
       onProgress(progress);
       yield progress;
 
-      // Small delay between batches to prevent overwhelming the server
       await sleep(100);
     } catch (error: any) {
       console.error('Error processing batch:', error);
       batchUsers.forEach((user, index) => {
         onError({
           row: start + index + 1,
-          type: 'creation',
+          type: user.id ? 'update' : 'creation',
           message: error.message || 'Failed to process user',
           data: user,
         });

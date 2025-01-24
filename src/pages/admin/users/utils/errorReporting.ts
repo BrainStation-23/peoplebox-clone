@@ -2,7 +2,7 @@ import { CSVRow } from "./csvProcessor";
 
 export type ImportError = {
   row: number;
-  type: 'validation' | 'creation' | 'update' | 'sbu' | 'level' | 'role' | 'location' | 'employment' | 'gender' | 'date';
+  type: 'validation' | 'creation' | 'update' | 'sbu' | 'level' | 'role' | 'location' | 'employment' | 'gender' | 'date' | 'id_mismatch' | 'id_not_found';
   message: string;
   data?: Partial<CSVRow>;
 };
@@ -24,16 +24,6 @@ export function convertValidationErrorsToImportErrors(validationErrors: { row: n
 }
 
 export function generateErrorReport(errors: ImportError[]): string {
-  // Group errors by type for better organization
-  const groupedErrors = errors.reduce((acc, error) => {
-    if (!acc[error.type]) {
-      acc[error.type] = [];
-    }
-    acc[error.type].push(error);
-    return acc;
-  }, {} as Record<string, ImportError[]>);
-
-  // Generate CSV content with detailed error information
   let csvContent = "Row,Error Type,Message,Data\n";
   
   errors.forEach(error => {

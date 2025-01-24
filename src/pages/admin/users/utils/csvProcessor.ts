@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { ImportError } from "./errorReporting";
 
 const csvRowSchema = z.object({
+  id: z.string().uuid().optional(),
   email: z.string().email("Invalid email format"),
   firstName: z.string().optional(),
   lastName: z.string().optional(),
@@ -22,7 +23,7 @@ export type CSVRow = z.infer<typeof csvRowSchema>;
 
 export type ProcessingResult = {
   newUsers: CSVRow[];
-  existingUsers: (CSVRow & { id: string })[];
+  existingUsers: CSVRow[];
   errors: { row: number; errors: string[] }[];
 };
 
@@ -87,6 +88,16 @@ async function assignSBUs(userId: string, sbuString: string): Promise<void> {
   await supabase.from("user_sbus").insert(assignments);
 }
 
+async function verifyExistingUser(id: string, email: string): Promise<boolean> {
+  const { data } = await supabase
+    .from("profiles")
+    .select("email")
+    .eq("id", id)
+    .single();
+
+  return data?.email === email;
+}
+
 export async function processCSVFile(file: File): Promise<ProcessingResult> {
   const text = await file.text();
   const rows = text.split("\n").map(row => row.split(","));
@@ -103,6 +114,7 @@ export async function processCSVFile(file: File): Promise<ProcessingResult> {
     if (row.length === 1 && !row[0]) continue;
 
     const rowData = {
+      id: row[headers.indexOf("ID")]?.trim(),
       email: row[headers.indexOf("Email")]?.trim(),
       firstName: row[headers.indexOf("First Name")]?.trim(),
       lastName: row[headers.indexOf("Last Name")]?.trim(),
@@ -120,14 +132,17 @@ export async function processCSVFile(file: File): Promise<ProcessingResult> {
     try {
       const validatedRow = csvRowSchema.parse(rowData);
       
-      const { data: existingUser } = await supabase
-        .from("profiles")
-        .select("id")
-        .eq("email", validatedRow.email)
-        .maybeSingle();
-
-      if (existingUser) {
-        result.existingUsers.push({ ...validatedRow, id: existingUser.id });
+      if (validatedRow.id) {
+        // Verify if ID exists and matches email
+        const isValid = await verifyExistingUser(validatedRow.id, validatedRow.email);
+        if (!isValid) {
+          result.errors.push({
+            row: i + 1,
+            errors: ["ID and email do not match or ID not found"],
+          });
+          continue;
+        }
+        result.existingUsers.push(validatedRow);
       } else {
         result.newUsers.push(validatedRow);
       }
