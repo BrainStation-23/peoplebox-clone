@@ -1,9 +1,15 @@
 import { z } from "zod";
-import { Level, User } from "../types";
 import { supabase } from "@/integrations/supabase/client";
-import { ImportError } from "./errorReporting";
+import { 
+  CSVRow, 
+  ProcessingResult, 
+  ProcessingLogEntry, 
+  ValidationError 
+} from "./types";
+import { toast } from "@/hooks/use-toast";
 
 const csvRowSchema = z.object({
+  id: z.string().uuid().optional(),
   email: z.string().email("Invalid email format"),
   firstName: z.string().optional(),
   lastName: z.string().optional(),
@@ -18,73 +24,26 @@ const csvRowSchema = z.object({
   employmentType: z.string().optional(),
 });
 
-export type CSVRow = z.infer<typeof csvRowSchema>;
-
-export type ProcessingResult = {
-  newUsers: CSVRow[];
-  existingUsers: (CSVRow & { id: string })[];
-  errors: { row: number; errors: string[] }[];
-};
-
-async function getLevelId(levelName?: string): Promise<string | null> {
-  if (!levelName) return null;
-  
-  const { data } = await supabase
-    .from("levels")
-    .select("id")
-    .eq("name", levelName)
-    .maybeSingle();
-
-  return data?.id || null;
-}
-
-async function getLocationId(locationName?: string): Promise<string | null> {
-  if (!locationName) return null;
-
-  const { data } = await supabase
-    .from("locations")
-    .select("id")
-    .eq("name", locationName)
-    .maybeSingle();
-
-  return data?.id || null;
-}
-
-async function getEmploymentTypeId(typeName?: string): Promise<string | null> {
-  if (!typeName) return null;
-
-  const { data } = await supabase
-    .from("employment_types")
-    .select("id")
-    .eq("name", typeName)
-    .eq("status", "active")
-    .maybeSingle();
-
-  return data?.id || null;
-}
-
-async function assignSBUs(userId: string, sbuString: string): Promise<void> {
-  const sbuNames = sbuString.split(";").map(s => s.trim());
-  
-  const { data: sbus } = await supabase
-    .from("sbus")
-    .select("id, name")
-    .in("name", sbuNames);
-
-  if (!sbus?.length) return;
-
-  await supabase
-    .from("user_sbus")
-    .delete()
-    .eq("user_id", userId);
-
-  const assignments = sbus.map((sbu, index) => ({
-    user_id: userId,
-    sbu_id: sbu.id,
-    is_primary: index === 0,
-  }));
-
-  await supabase.from("user_sbus").insert(assignments);
+function createProcessingLog(
+  row: number,
+  type: "new" | "update",
+  status: "success" | "error" | "skipped",
+  data: CSVRow,
+  error?: string,
+  changes?: any
+): ProcessingLogEntry {
+  return {
+    row,
+    type,
+    status,
+    email: data.email,
+    id: data.id,
+    error,
+    details: {
+      attemptedChanges: changes || data,
+      actualChanges: status === "success" ? changes : undefined,
+    },
+  };
 }
 
 export async function processCSVFile(file: File): Promise<ProcessingResult> {
@@ -96,13 +55,27 @@ export async function processCSVFile(file: File): Promise<ProcessingResult> {
     newUsers: [],
     existingUsers: [],
     errors: [],
+    logs: [],
+    stats: {
+      totalRows: 0,
+      newUsers: 0,
+      updates: 0,
+      skipped: 0,
+      failed: 0,
+    },
   };
 
   for (let i = 1; i < rows.length; i++) {
     const row = rows[i];
-    if (row.length === 1 && !row[0]) continue;
+    result.stats.totalRows++;
+    
+    if (row.length === 1 && !row[0]) {
+      result.stats.skipped++;
+      continue;
+    }
 
     const rowData = {
+      id: row[headers.indexOf("ID")]?.trim(),
       email: row[headers.indexOf("Email")]?.trim(),
       firstName: row[headers.indexOf("First Name")]?.trim(),
       lastName: row[headers.indexOf("Last Name")]?.trim(),
@@ -120,23 +93,82 @@ export async function processCSVFile(file: File): Promise<ProcessingResult> {
     try {
       const validatedRow = csvRowSchema.parse(rowData);
       
-      const { data: existingUser } = await supabase
-        .from("profiles")
-        .select("id")
-        .eq("email", validatedRow.email)
-        .maybeSingle();
+      if (validatedRow.id) {
+        // Check if user exists
+        const { data: existingUser } = await supabase
+          .from("profiles")
+          .select("id")
+          .eq("id", validatedRow.id)
+          .single();
 
-      if (existingUser) {
-        result.existingUsers.push({ ...validatedRow, id: existingUser.id });
+        if (existingUser) {
+          result.existingUsers.push({ ...validatedRow, id: existingUser.id });
+          result.stats.updates++;
+          result.logs.push(
+            createProcessingLog(i + 1, "update", "success", validatedRow)
+          );
+        } else {
+          result.errors.push({
+            row: i + 1,
+            errors: [`User with ID ${validatedRow.id} not found`],
+            type: "reference",
+            context: rowData,
+          });
+          result.stats.failed++;
+          result.logs.push(
+            createProcessingLog(
+              i + 1, 
+              "update", 
+              "error", 
+              validatedRow, 
+              `User with ID ${validatedRow.id} not found`
+            )
+          );
+        }
       } else {
         result.newUsers.push(validatedRow);
+        result.stats.newUsers++;
+        result.logs.push(
+          createProcessingLog(i + 1, "new", "success", validatedRow)
+        );
       }
     } catch (error) {
       if (error instanceof z.ZodError) {
-        result.errors.push({
+        const validationError: ValidationError = {
           row: i + 1,
           errors: error.errors.map(e => `${e.path.join(".")}: ${e.message}`),
-        });
+          type: "validation",
+          context: rowData,
+        };
+        result.errors.push(validationError);
+        result.stats.failed++;
+        result.logs.push(
+          createProcessingLog(
+            i + 1,
+            rowData.id ? "update" : "new",
+            "error",
+            rowData,
+            error.errors.map(e => `${e.path.join(".")}: ${e.message}`).join(", ")
+          )
+        );
+      } else {
+        const systemError: ValidationError = {
+          row: i + 1,
+          errors: [(error as Error).message],
+          type: "system",
+          context: rowData,
+        };
+        result.errors.push(systemError);
+        result.stats.failed++;
+        result.logs.push(
+          createProcessingLog(
+            i + 1,
+            rowData.id ? "update" : "new",
+            "error",
+            rowData,
+            (error as Error).message
+          )
+        );
       }
     }
   }
@@ -321,4 +353,65 @@ export async function importUsers(
 
 function generateTempPassword(): string {
   return Math.random().toString(36).slice(-8);
+}
+
+async function getLevelId(levelName?: string): Promise<string | null> {
+  if (!levelName) return null;
+  
+  const { data } = await supabase
+    .from("levels")
+    .select("id")
+    .eq("name", levelName)
+    .maybeSingle();
+
+  return data?.id || null;
+}
+
+async function getLocationId(locationName?: string): Promise<string | null> {
+  if (!locationName) return null;
+
+  const { data } = await supabase
+    .from("locations")
+    .select("id")
+    .eq("name", locationName)
+    .maybeSingle();
+
+  return data?.id || null;
+}
+
+async function getEmploymentTypeId(typeName?: string): Promise<string | null> {
+  if (!typeName) return null;
+
+  const { data } = await supabase
+    .from("employment_types")
+    .select("id")
+    .eq("name", typeName)
+    .eq("status", "active")
+    .maybeSingle();
+
+  return data?.id || null;
+}
+
+async function assignSBUs(userId: string, sbuString: string): Promise<void> {
+  const sbuNames = sbuString.split(";").map(s => s.trim());
+  
+  const { data: sbus } = await supabase
+    .from("sbus")
+    .select("id, name")
+    .in("name", sbuNames);
+
+  if (!sbus?.length) return;
+
+  await supabase
+    .from("user_sbus")
+    .delete()
+    .eq("user_id", userId);
+
+  const assignments = sbus.map((sbu, index) => ({
+    user_id: userId,
+    sbu_id: sbu.id,
+    is_primary: index === 0,
+  }));
+
+  await supabase.from("user_sbus").insert(assignments);
 }
