@@ -1,18 +1,16 @@
 import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { Table, TableBody } from "@/components/ui/table";
 import { User } from "../../types";
 import { SearchFilters } from "./SearchFilters";
-import { UsersTableHeader } from "./TableHeader";
-import { UserRow } from "./UserRow";
+import { TableContainer } from "./TableContainer";
 import { TablePagination } from "./TablePagination";
 import EditUserDialog from "../EditUserDialog";
 import { ExportProgress } from "./ExportProgress";
 import { ImportDialog } from "../ImportDialog";
-import { exportUsers, downloadCSV } from "../../utils/exportUsers";
 import { PasswordDialog } from "./PasswordDialog";
-import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
+import { exportUsers, downloadCSV } from "../../utils/exportUsers";
+import { usePasswordManagement } from "../../hooks/usePasswordManagement";
+import { useUserFilters } from "../../hooks/useUserFilters";
 import { useSBUs } from "../../hooks/useSBUs";
 
 interface UserTableProps {
@@ -34,16 +32,27 @@ export default function UserTable({
   onPageChange,
   onDelete,
 }: UserTableProps) {
-  const [searchTerm, setSearchTerm] = useState("");
-  const [selectedSBU, setSelectedSBU] = useState("all");
   const [userToEdit, setUserToEdit] = useState<User | null>(null);
   const [isImportDialogOpen, setIsImportDialogOpen] = useState(false);
-  const [isPasswordDialogOpen, setIsPasswordDialogOpen] = useState(false);
-  const [selectedUserId, setSelectedUserId] = useState<string>("");
-  const [newPassword, setNewPassword] = useState("");
-  const { toast } = useToast();
-  
   const { data: sbus = [] } = useSBUs();
+  const queryClient = useQueryClient();
+
+  const {
+    isPasswordDialogOpen,
+    setIsPasswordDialogOpen,
+    newPassword,
+    setNewPassword,
+    handlePasswordChange,
+    handlePasswordSave
+  } = usePasswordManagement();
+
+  const {
+    searchTerm,
+    setSearchTerm,
+    selectedSBU,
+    setSelectedSBU,
+    filteredUsers
+  } = useUserFilters(users);
 
   const [exportProgress, setExportProgress] = useState({
     isOpen: false,
@@ -51,60 +60,6 @@ export default function UserTable({
     total: 0,
     error: "",
     isComplete: false,
-  });
-
-  const queryClient = useQueryClient();
-  const totalPages = Math.ceil(total / pageSize);
-
-  const handlePasswordChange = async (userId: string) => {
-    setSelectedUserId(userId);
-    setIsPasswordDialogOpen(true);
-  };
-
-  const handlePasswordSave = async () => {
-    try {
-      const { error } = await supabase.functions.invoke('update-user-password', {
-        body: { 
-          user_id: selectedUserId,
-          new_password: newPassword
-        }
-      });
-
-      if (error) throw error;
-
-      toast({
-        title: "Success",
-        description: "Password updated successfully",
-      });
-      
-      setIsPasswordDialogOpen(false);
-      setNewPassword("");
-    } catch (error: any) {
-      console.error('Error updating password:', error);
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: error.message || "Failed to update password",
-      });
-    }
-  };
-
-  // Filter users based on search term and selected SBU
-  const filteredUsers = users.filter((user) => {
-    const matchesSearch =
-      searchTerm === "" ||
-      user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      `${user.first_name} ${user.last_name}`
-        .toLowerCase()
-        .includes(searchTerm.toLowerCase());
-
-    const matchesSBU =
-      selectedSBU === "all" ||
-      user.user_sbus?.some(
-        (sbu) => sbu.is_primary && sbu.sbu.id === selectedSBU
-      );
-
-    return matchesSearch && matchesSBU;
   });
 
   const handleExport = async () => {
@@ -153,6 +108,8 @@ export default function UserTable({
     return <div>Loading...</div>;
   }
 
+  const totalPages = Math.ceil(total / pageSize);
+
   return (
     <div className="space-y-4">
       <SearchFilters
@@ -165,20 +122,12 @@ export default function UserTable({
         sbus={sbus}
       />
 
-      <Table>
-        <UsersTableHeader />
-        <TableBody>
-          {filteredUsers.map((user) => (
-            <UserRow
-              key={user.id}
-              user={user}
-              onEdit={setUserToEdit}
-              onDelete={onDelete}
-              onPasswordChange={handlePasswordChange}
-            />
-          ))}
-        </TableBody>
-      </Table>
+      <TableContainer
+        users={filteredUsers}
+        onEdit={setUserToEdit}
+        onDelete={onDelete}
+        onPasswordChange={handlePasswordChange}
+      />
 
       <ImportDialog
         open={isImportDialogOpen}
