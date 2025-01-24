@@ -1,7 +1,6 @@
-import { Search } from "lucide-react";
+import { Search, Upload, Download } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Download } from "lucide-react";
 
 interface SearchFiltersProps {
   searchTerm: string;
@@ -9,6 +8,7 @@ interface SearchFiltersProps {
   selectedSBU: string;
   setSelectedSBU: (value: string) => void;
   onExport: () => void;
+  onImport: () => void;
 }
 
 export function SearchFilters({
@@ -17,6 +17,7 @@ export function SearchFilters({
   selectedSBU,
   setSelectedSBU,
   onExport,
+  onImport,
 }: SearchFiltersProps) {
   return (
     <div className="flex items-center justify-between mb-4">
@@ -37,14 +38,19 @@ export function SearchFilters({
             className="border rounded-md p-2"
           >
             <option value="all">All SBUs</option>
-            {/* Add options for SBUs here */}
           </select>
         </div>
       </div>
-      <Button onClick={onExport} variant="outline" size="sm">
-        <Download className="mr-2 h-4 w-4" />
-        Export Users
-      </Button>
+      <div className="flex gap-2">
+        <Button onClick={onImport} variant="outline" size="sm">
+          <Upload className="mr-2 h-4 w-4" />
+          Import Users
+        </Button>
+        <Button onClick={onExport} variant="outline" size="sm">
+          <Download className="mr-2 h-4 w-4" />
+          Export Users
+        </Button>
+      </div>
     </div>
   );
 }
