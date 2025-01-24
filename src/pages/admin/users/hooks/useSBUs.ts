@@ -5,10 +5,9 @@ export function useSBUs() {
   return useQuery({
     queryKey: ["sbus"],
     queryFn: async () => {
-      console.log("Fetching all SBUs");
       const { data, error } = await supabase
         .from("sbus")
-        .select("*")
+        .select("id, name")
         .order("name");
       
       if (error) {
@@ -16,7 +15,6 @@ export function useSBUs() {
         throw error;
       }
       
-      console.log("Fetched SBUs:", data);
       return data;
     },
   });

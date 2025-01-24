@@ -1,6 +1,7 @@
 import { Search, Upload, Download } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface SearchFiltersProps {
   searchTerm: string;
@@ -9,6 +10,7 @@ interface SearchFiltersProps {
   setSelectedSBU: (value: string) => void;
   onExport: () => void;
   onImport: () => void;
+  sbus: Array<{ id: string; name: string; }>;
 }
 
 export function SearchFilters({
@@ -18,6 +20,7 @@ export function SearchFilters({
   setSelectedSBU,
   onExport,
   onImport,
+  sbus,
 }: SearchFiltersProps) {
   return (
     <div className="flex items-center justify-between mb-4">
@@ -28,18 +31,22 @@ export function SearchFilters({
             placeholder="Search users..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-8"
+            className="pl-8 w-[300px]"
           />
         </div>
-        <div>
-          <select
-            value={selectedSBU}
-            onChange={(e) => setSelectedSBU(e.target.value)}
-            className="border rounded-md p-2"
-          >
-            <option value="all">All SBUs</option>
-          </select>
-        </div>
+        <Select value={selectedSBU} onValueChange={setSelectedSBU}>
+          <SelectTrigger className="w-[200px]">
+            <SelectValue placeholder="Filter by SBU" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All SBUs</SelectItem>
+            {sbus.map((sbu) => (
+              <SelectItem key={sbu.id} value={sbu.id}>
+                {sbu.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
       <div className="flex gap-2">
         <Button onClick={onImport} variant="outline" size="sm">

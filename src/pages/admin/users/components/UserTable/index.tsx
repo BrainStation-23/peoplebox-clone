@@ -10,6 +10,10 @@ import EditUserDialog from "../EditUserDialog";
 import { ExportProgress } from "./ExportProgress";
 import { ImportDialog } from "../ImportDialog";
 import { exportUsers, downloadCSV } from "../../utils/exportUsers";
+import { PasswordDialog } from "./PasswordDialog";
+import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
+import { useSBUs } from "../../hooks/useSBUs";
 
 interface UserTableProps {
   users: User[];
@@ -34,6 +38,13 @@ export default function UserTable({
   const [selectedSBU, setSelectedSBU] = useState("all");
   const [userToEdit, setUserToEdit] = useState<User | null>(null);
   const [isImportDialogOpen, setIsImportDialogOpen] = useState(false);
+  const [isPasswordDialogOpen, setIsPasswordDialogOpen] = useState(false);
+  const [selectedUserId, setSelectedUserId] = useState<string>("");
+  const [newPassword, setNewPassword] = useState("");
+  const { toast } = useToast();
+  
+  const { data: sbus = [] } = useSBUs();
+
   const [exportProgress, setExportProgress] = useState({
     isOpen: false,
     processed: 0,
@@ -44,6 +55,39 @@ export default function UserTable({
 
   const queryClient = useQueryClient();
   const totalPages = Math.ceil(total / pageSize);
+
+  const handlePasswordChange = async (userId: string) => {
+    setSelectedUserId(userId);
+    setIsPasswordDialogOpen(true);
+  };
+
+  const handlePasswordSave = async () => {
+    try {
+      const { error } = await supabase.functions.invoke('update-user-password', {
+        body: { 
+          user_id: selectedUserId,
+          new_password: newPassword
+        }
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: "Password updated successfully",
+      });
+      
+      setIsPasswordDialogOpen(false);
+      setNewPassword("");
+    } catch (error: any) {
+      console.error('Error updating password:', error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: error.message || "Failed to update password",
+      });
+    }
+  };
 
   // Filter users based on search term and selected SBU
   const filteredUsers = users.filter((user) => {
@@ -57,7 +101,7 @@ export default function UserTable({
     const matchesSBU =
       selectedSBU === "all" ||
       user.user_sbus?.some(
-        (sbu) => sbu.is_primary && sbu.sbu.name === selectedSBU
+        (sbu) => sbu.is_primary && sbu.sbu.id === selectedSBU
       );
 
     return matchesSearch && matchesSBU;
@@ -118,6 +162,7 @@ export default function UserTable({
         setSelectedSBU={setSelectedSBU}
         onExport={handleExport}
         onImport={handleImport}
+        sbus={sbus}
       />
 
       <Table>
@@ -129,6 +174,7 @@ export default function UserTable({
               user={user}
               onEdit={setUserToEdit}
               onDelete={onDelete}
+              onPasswordChange={handlePasswordChange}
             />
           ))}
         </TableBody>
@@ -138,6 +184,14 @@ export default function UserTable({
         open={isImportDialogOpen}
         onOpenChange={setIsImportDialogOpen}
         onImportComplete={handleImportComplete}
+      />
+
+      <PasswordDialog
+        isOpen={isPasswordDialogOpen}
+        onOpenChange={setIsPasswordDialogOpen}
+        newPassword={newPassword}
+        onPasswordChange={setNewPassword}
+        onSave={handlePasswordSave}
       />
 
       <ExportProgress
