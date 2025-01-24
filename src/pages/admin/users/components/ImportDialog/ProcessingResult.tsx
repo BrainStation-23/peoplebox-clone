@@ -1,8 +1,8 @@
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertCircle, Check, Download } from "lucide-react";
-import { ProcessingResult, ImportResult } from "../../utils/csvProcessor";
-import { convertValidationErrorsToImportErrors } from "../../utils/errorReporting";
+import { ProcessingResult } from "../../utils/csvProcessor";
+import { ImportError, ImportResult, convertValidationErrorsToImportErrors } from "../../utils/errorReporting";
 
 interface ProcessingResultViewProps {
   processingResult: ProcessingResult | null;
