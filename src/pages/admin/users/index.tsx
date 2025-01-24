@@ -3,11 +3,14 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import UserTable from "./components/UserTable";
 import CreateUserDialog from "./components/CreateUserDialog";
+import EditUserDialog from "./components/EditUserDialog"; 
 import { User } from "./types";
 import { useToast } from "@/hooks/use-toast";
 
 export default function UsersPage() {
+  const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const { toast } = useToast();
 
   const { data: users, isLoading, refetch } = useQuery({
@@ -155,6 +158,12 @@ export default function UsersPage() {
         onOpenChange={setIsCreateDialogOpen}
         onSuccess={handleCreateSuccess}
       />
+
+      <EditUserDialog
+        user={selectedUser}
+        open={isEditDialogOpen}
+        onOpenChange={setIsEditDialogOpen}
+      />
     </div>
   );
-}
+};

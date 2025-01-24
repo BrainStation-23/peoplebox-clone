@@ -2,25 +2,20 @@ import { Table, TableBody } from "@/components/ui/table";
 import { User } from "../../types";
 import { UsersTableHeader } from "./TableHeader";
 import { UserRow } from "./UserRow";
-import { useNavigate } from "react-router-dom";
 
 interface TableContainerProps {
   users: User[];
+  onEdit: (user: User) => void;
   onDelete: (userId: string) => void;
   onPasswordChange: (userId: string) => void;
 }
 
 export function TableContainer({ 
   users, 
+  onEdit, 
   onDelete, 
   onPasswordChange 
 }: TableContainerProps) {
-  const navigate = useNavigate();
-
-  const handleEdit = (user: User) => {
-    navigate(`/admin/users/${user.id}/edit`);
-  };
-
   return (
     <Table>
       <UsersTableHeader />
@@ -29,7 +24,7 @@ export function TableContainer({
           <UserRow
             key={user.id}
             user={user}
-            onEdit={handleEdit}
+            onEdit={onEdit}
             onDelete={onDelete}
             onPasswordChange={onPasswordChange}
           />
