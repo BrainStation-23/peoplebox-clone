@@ -24,6 +24,7 @@ export async function* exportUsers(
     const BATCH_SIZE = 100;
     // Process in batches
     for (let offset = 0; offset < count; offset += BATCH_SIZE) {
+      // First get profiles with their related data
       const { data: profiles, error: profilesError } = await supabase
         .from("profiles")
         .select(`
@@ -34,9 +35,6 @@ export async function* exportUsers(
           org_id,
           levels (
             name
-          ),
-          user_roles (
-            role
           ),
           user_sbus (
             is_primary,
@@ -55,24 +53,35 @@ export async function* exportUsers(
         continue;
       }
 
-      // Transform data to CSV format
-      const csvRows = profiles.map((profile) => [
-        profile.id,
-        profile.email,
-        profile.first_name || "",
-        profile.last_name || "",
-        profile.org_id || "",
-        profile.levels?.name || "",
-        profile.user_roles?.[0]?.role || "user",
-        profile.user_sbus
-          ?.filter((sbu) => sbu.is_primary)
-          .map((sbu) => sbu.sbu.name)
-          .join(", ") || "",
-        profile.user_sbus
-          ?.filter((sbu) => !sbu.is_primary)
-          .map((sbu) => sbu.sbu.name)
-          .join(", ") || "",
-      ]);
+      // For each profile, get their role
+      const csvRows = await Promise.all(
+        profiles.map(async (profile) => {
+          // Get user role
+          const { data: userRoles } = await supabase
+            .from("user_roles")
+            .select("role")
+            .eq("user_id", profile.id)
+            .single();
+
+          return [
+            profile.id,
+            profile.email,
+            profile.first_name || "",
+            profile.last_name || "",
+            profile.org_id || "",
+            profile.levels?.name || "",
+            userRoles?.role || "user",
+            profile.user_sbus
+              ?.filter((sbu) => sbu.is_primary)
+              .map((sbu) => sbu.sbu.name)
+              .join(", ") || "",
+            profile.user_sbus
+              ?.filter((sbu) => !sbu.is_primary)
+              .map((sbu) => sbu.sbu.name)
+              .join(", ") || "",
+          ];
+        })
+      );
 
       onProgress({ processed: offset + profiles.length, total: count });
       yield csvRows;
@@ -99,10 +108,7 @@ export function downloadCSV(rows: string[][], filename: string) {
     "Additional SBUs",
   ];
 
-  const csvContent = [
-    headers,
-    ...rows
-  ]
+  const csvContent = [headers, ...rows]
     .map((row) => row.map((cell) => `"${cell}"`).join(","))
     .join("\n");
 
