@@ -13,27 +13,8 @@ import AdminDashboard from "./pages/admin/Dashboard";
 import AdminConfig from "./pages/admin/Config";
 import AdminProfile from "./pages/admin/Profile";
 import Users from "./pages/admin/users";
+import EditUserPage from "./pages/admin/users/[id]/edit";
 import PlatformConfigLayout from "./components/layouts/PlatformConfigLayout";
-import SBUsConfig from "./pages/admin/config/sbus";
-import SBUDetails from "./pages/admin/config/sbus/[id]";
-import EmailConfig from "./pages/admin/config/email";
-import LevelConfig from "./pages/admin/config/level";
-import LocationConfig from "./pages/admin/config/location";
-import EmploymentTypeConfig from "./pages/admin/config/employment-type";
-import SurveysPage from "./pages/admin/surveys";
-import SurveyFormPage from "./pages/admin/surveys/SurveyFormPage";
-import PreviewSurveyPage from "./pages/admin/surveys/[id]/preview";
-import CampaignsPage from "./pages/admin/surveys/campaigns";
-import CampaignFormPage from "./pages/admin/surveys/campaigns/CampaignFormPage";
-import CampaignDetailsPage from "./pages/admin/surveys/campaigns/[id]";
-import MySurveysPage from "./pages/admin/my-surveys";
-import SurveyResponsePage from "./pages/admin/my-surveys/[id]";
-
-// User pages
-import UserDashboard from "./pages/user/Dashboard";
-import UserProfile from "./pages/user/Profile";
-import UserMySurveys from "./pages/user/my-surveys";
-import UserSurveyResponse from "./pages/user/my-surveys/[id]";
 
 const queryClient = new QueryClient();
 
@@ -59,9 +40,10 @@ const App = () => (
           <Route path="/admin" element={<AdminLayout />}>
             <Route index element={<Navigate to="/admin/dashboard" replace />} />
             <Route path="dashboard" element={<AdminDashboard />} />
+            <Route path="users" element={<Users />} />
+            <Route path="users/:id/edit" element={<EditUserPage />} />
             <Route path="my-surveys" element={<MySurveysPage />} />
             <Route path="my-surveys/:id" element={<SurveyResponsePage />} />
-            <Route path="users" element={<Users />} />
             <Route path="surveys" element={<SurveysPage />} />
             <Route path="surveys/create" element={<SurveyFormPage />} />
             <Route path="surveys/:id/edit" element={<SurveyFormPage />} />
