@@ -19,6 +19,7 @@ import SBUDetails from "./pages/admin/config/sbus/[id]";
 import EmailConfig from "./pages/admin/config/email";
 import LevelConfig from "./pages/admin/config/level";
 import LocationConfig from "./pages/admin/config/location";
+import EmploymentTypeConfig from "./pages/admin/config/employment-type";
 import SurveysPage from "./pages/admin/surveys";
 import SurveyFormPage from "./pages/admin/surveys/SurveyFormPage";
 import PreviewSurveyPage from "./pages/admin/surveys/[id]/preview";
@@ -76,6 +77,7 @@ const App = () => (
               <Route path="email" element={<EmailConfig />} />
               <Route path="level" element={<LevelConfig />} />
               <Route path="location" element={<LocationConfig />} />
+              <Route path="employment-type" element={<EmploymentTypeConfig />} />
             </Route>
             <Route path="profile" element={<AdminProfile />} />
           </Route>

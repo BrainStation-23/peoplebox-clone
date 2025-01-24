@@ -1,5 +1,5 @@
 import { Outlet, Link, useLocation } from "react-router-dom";
-import { Database, Mail, Layers, MapPin } from "lucide-react";
+import { Database, Mail, Layers, MapPin, Briefcase } from "lucide-react";
 import {
   NavigationMenu,
   NavigationMenuList,
@@ -28,6 +28,11 @@ const navigationItems = [
     title: "Location",
     icon: MapPin,
     path: "/admin/config/location",
+  },
+  {
+    title: "Employment Type",
+    icon: Briefcase,
+    path: "/admin/config/employment-type",
   },
 ];
 

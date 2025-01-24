@@ -86,6 +86,30 @@ export type Database = {
         }
         Relationships: []
       }
+      employment_types: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          status: Database["public"]["Enums"]["employment_type_status"]
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          status?: Database["public"]["Enums"]["employment_type_status"]
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          status?: Database["public"]["Enums"]["employment_type_status"]
+          updated_at?: string
+        }
+        Relationships: []
+      }
       levels: {
         Row: {
           created_at: string
@@ -591,6 +615,7 @@ export type Database = {
       assignment_status: "pending" | "completed" | "expired"
       campaign_status: "draft" | "active" | "completed" | "archived"
       email_provider: "resend"
+      employment_type_status: "active" | "inactive"
       instance_status: "upcoming" | "active" | "completed"
       level_status: "active" | "inactive"
       recurring_frequency:
