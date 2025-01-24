@@ -28,9 +28,9 @@ export function useUsers({ currentPage, pageSize, searchTerm }: UseUsersProps) {
           gender,
           date_of_birth,
           designation,
-          level:levels!left(name),
-          location:locations!left(name),
-          employment_type:employment_types!left(name),
+          level:levels!left(id, name),
+          location:locations!left(id, name),
+          employment_type:employment_types!left(id, name),
           user_sbus!left(
             is_primary,
             sbu:sbus(name)
@@ -61,9 +61,19 @@ export function useUsers({ currentPage, pageSize, searchTerm }: UseUsersProps) {
       // Combine the data
       const usersWithData = profiles?.map((profile) => ({
         ...profile,
-        level: profile.level?.[0] || null,
-        location: profile.location?.[0] || null,
-        employment_type: profile.employment_type?.[0] || null,
+        level: profile.level?.[0] ? {
+          id: profile.level[0].id,
+          name: profile.level[0].name,
+          status: 'active'
+        } : null,
+        location: profile.location?.[0] ? {
+          id: profile.location[0].id,
+          name: profile.location[0].name
+        } : null,
+        employment_type: profile.employment_type?.[0] ? {
+          id: profile.employment_type[0].id,
+          name: profile.employment_type[0].name
+        } : null,
         user_roles: userRoles?.find(r => r.user_id === profile.id) || { role: "user" as const },
         user_sbus: profile.user_sbus?.map(sbu => ({
           ...sbu,
