@@ -1,7 +1,8 @@
 import { Upload } from "lucide-react";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { toast } from "@/hooks/use-toast";
-import { processCSVFile, type ProcessingResult } from "../../utils/csvProcessor";
+import { processCSVFile } from "../../utils/csvProcessor";
+import type { ProcessingResult } from "../../utils/types";
 
 interface UploadAreaProps {
   isProcessing: boolean;
