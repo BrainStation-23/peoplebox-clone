@@ -4,7 +4,6 @@ import { User } from "../../types";
 import { SearchFilters } from "./SearchFilters";
 import { TableContainer } from "./TableContainer";
 import { TablePagination } from "./TablePagination";
-import EditUserDialog from "../EditUserDialog";
 import { ExportProgress } from "./ExportProgress";
 import { ImportDialog } from "../ImportDialog";
 import { PasswordDialog } from "./PasswordDialog";
@@ -32,7 +31,6 @@ export default function UserTable({
   onPageChange,
   onDelete,
 }: UserTableProps) {
-  const [userToEdit, setUserToEdit] = useState<User | null>(null);
   const [isImportDialogOpen, setIsImportDialogOpen] = useState(false);
   const { data: sbus = [] } = useSBUs();
   const queryClient = useQueryClient();
@@ -124,7 +122,6 @@ export default function UserTable({
 
       <TableContainer
         users={filteredUsers}
-        onEdit={setUserToEdit}
         onDelete={onDelete}
         onPasswordChange={handlePasswordChange}
       />
@@ -158,12 +155,6 @@ export default function UserTable({
         page={page}
         totalPages={totalPages}
         onPageChange={onPageChange}
-      />
-
-      <EditUserDialog
-        user={userToEdit}
-        open={!!userToEdit}
-        onOpenChange={(open) => !open && setUserToEdit(null)}
       />
     </div>
   );
