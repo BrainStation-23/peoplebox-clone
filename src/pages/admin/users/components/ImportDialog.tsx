@@ -150,8 +150,30 @@ export function ImportDialog({ open, onOpenChange, onImportComplete }: ImportDia
   };
 
   const handleDownloadErrors = () => {
-    if (importResult?.errors) {
-      downloadErrorReport(importResult.errors);
+    if (!processingResult?.errors && !importResult?.errors) {
+      toast({
+        variant: "destructive",
+        title: "No errors to download",
+        description: "There are no validation errors to report.",
+      });
+      return;
+    }
+
+    try {
+      const errors = processingResult?.errors || importResult?.errors || [];
+      downloadErrorReport(errors);
+      
+      toast({
+        title: "Error report downloaded",
+        description: "The error report has been downloaded successfully.",
+      });
+    } catch (error) {
+      console.error("Error downloading report:", error);
+      toast({
+        variant: "destructive",
+        title: "Download failed",
+        description: "Failed to download the error report. Please try again.",
+      });
     }
   };
 
