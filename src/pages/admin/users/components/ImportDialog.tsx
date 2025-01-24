@@ -1,15 +1,16 @@
 import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Progress } from "@/components/ui/progress";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Upload, AlertCircle, Download, Pause, Play, XCircle, FileDown } from "lucide-react";
+import { Upload, AlertCircle, Download, Pause, Play, X, Check, FileDown } from "lucide-react";
 import { processCSVFile, type ProcessingResult } from "../utils/csvProcessor";
 import { ImportError, ImportResult, downloadErrorReport } from "../utils/errorReporting";
 import { toast } from "@/hooks/use-toast";
 import { batchProcessor, type BatchProgress } from "../utils/batchProcessor";
 import { formatDistanceToNow } from "date-fns";
 import { CSV_GUIDELINES, generateTemplateCSV } from "../utils/csvTemplate";
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
 
 interface ImportDialogProps {
   open: boolean;
@@ -24,16 +25,31 @@ export function ImportDialog({ open, onOpenChange, onImportComplete }: ImportDia
   const [paused, setPaused] = useState(false);
   const [progress, setProgress] = useState<BatchProgress | null>(null);
   const [importResult, setImportResult] = useState<ImportResult | null>(null);
+  const [isProcessing, setIsProcessing] = useState(false);
   const abortController = useRef<AbortController | null>(null);
 
   const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = event.target.files?.[0];
     if (selectedFile) {
       setFile(selectedFile);
+      setIsProcessing(true);
       try {
         const result = await processCSVFile(selectedFile);
         setProcessingResult(result);
         setImportResult(null);
+        
+        if (result.errors.length > 0) {
+          toast({
+            variant: "destructive",
+            title: "Validation Errors",
+            description: `Found ${result.errors.length} errors in the CSV file. Please check the error report.`,
+          });
+        } else {
+          toast({
+            title: "File Processed Successfully",
+            description: `Found ${result.newUsers.length} new users and ${result.existingUsers.length} existing users.`,
+          });
+        }
       } catch (error) {
         console.error("Processing error:", error);
         toast({
@@ -41,6 +57,8 @@ export function ImportDialog({ open, onOpenChange, onImportComplete }: ImportDia
           title: "Error processing file",
           description: error instanceof Error ? error.message : "Unknown error occurred",
         });
+      } finally {
+        setIsProcessing(false);
       }
     }
   };
@@ -157,6 +175,9 @@ export function ImportDialog({ open, onOpenChange, onImportComplete }: ImportDia
       <DialogContent className="sm:max-w-[600px]">
         <DialogHeader>
           <DialogTitle>Import Users</DialogTitle>
+          <DialogDescription>
+            Upload a CSV file to import users in bulk. Download the template to get started.
+          </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4">
@@ -183,19 +204,29 @@ export function ImportDialog({ open, onOpenChange, onImportComplete }: ImportDia
               </div>
 
               <div className="flex items-center justify-center w-full">
-                <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-lg cursor-pointer hover:bg-gray-50">
+                <label className={`flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-lg cursor-pointer hover:bg-gray-50 ${isProcessing ? 'opacity-50 cursor-not-allowed' : ''}`}>
                   <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                    <Upload className="w-8 h-8 mb-2 text-gray-500" />
-                    <p className="mb-2 text-sm text-gray-500">
-                      <span className="font-semibold">Click to upload</span> or drag and drop
-                    </p>
-                    <p className="text-xs text-gray-500">CSV file only</p>
+                    {isProcessing ? (
+                      <div className="flex flex-col items-center gap-2">
+                        <LoadingSpinner />
+                        <p className="text-sm text-gray-500">Processing file...</p>
+                      </div>
+                    ) : (
+                      <>
+                        <Upload className="w-8 h-8 mb-2 text-gray-500" />
+                        <p className="mb-2 text-sm text-gray-500">
+                          <span className="font-semibold">Click to upload</span> or drag and drop
+                        </p>
+                        <p className="text-xs text-gray-500">CSV file only</p>
+                      </>
+                    )}
                   </div>
                   <input
                     type="file"
                     className="hidden"
                     accept=".csv"
                     onChange={handleFileChange}
+                    disabled={isProcessing}
                   />
                 </label>
               </div>
@@ -221,6 +252,7 @@ export function ImportDialog({ open, onOpenChange, onImportComplete }: ImportDia
                   variant="outline"
                   size="sm"
                   onClick={togglePause}
+                  className="flex items-center gap-2"
                 >
                   {paused ? <Play className="h-4 w-4" /> : <Pause className="h-4 w-4" />}
                   {paused ? 'Resume' : 'Pause'}
@@ -229,18 +261,68 @@ export function ImportDialog({ open, onOpenChange, onImportComplete }: ImportDia
                   variant="destructive"
                   size="sm"
                   onClick={handleCancel}
+                  className="flex items-center gap-2"
                 >
-                  <XCircle className="h-4 w-4 mr-2" />
+                  <X className="h-4 w-4" />
                   Cancel
                 </Button>
               </div>
             </div>
           )}
 
+          {processingResult && !importing && (
+            <div className="space-y-4">
+              <Alert variant={processingResult.errors.length > 0 ? "destructive" : "default"}>
+                <AlertDescription className="flex items-center gap-2">
+                  {processingResult.errors.length > 0 ? (
+                    <>
+                      <AlertCircle className="h-4 w-4" />
+                      Found {processingResult.errors.length} validation errors
+                    </>
+                  ) : (
+                    <>
+                      <Check className="h-4 w-4" />
+                      File validated successfully
+                    </>
+                  )}
+                </AlertDescription>
+              </Alert>
+
+              <div className="space-y-2">
+                <p className="text-sm text-muted-foreground">
+                  New users to create: {processingResult.newUsers.length}
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  Existing users to update: {processingResult.existingUsers.length}
+                </p>
+              </div>
+
+              {processingResult.errors.length > 0 ? (
+                <Button
+                  onClick={handleDownloadErrors}
+                  className="w-full"
+                  variant="outline"
+                >
+                  <Download className="w-4 h-4 mr-2" />
+                  Download Error Report
+                </Button>
+              ) : (
+                <Button
+                  onClick={handleImport}
+                  className="w-full"
+                  disabled={importing}
+                >
+                  Start Import
+                </Button>
+              )}
+            </div>
+          )}
+
           {importResult && (
             <div className="space-y-4">
               <Alert>
-                <AlertDescription>
+                <AlertDescription className="flex items-center gap-2">
+                  <Check className="h-4 w-4" />
                   Import completed: {importResult.successful} successful, {importResult.failed} failed
                 </AlertDescription>
               </Alert>
