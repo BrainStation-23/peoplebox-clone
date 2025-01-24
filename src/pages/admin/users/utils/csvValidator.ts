@@ -3,7 +3,6 @@ import { supabase } from "@/integrations/supabase/client";
 
 // CSV row validation schema
 const csvRowSchema = z.object({
-  id: z.string().uuid().optional(),
   email: z.string().email(),
   firstName: z.string().optional(),
   lastName: z.string().optional(),
@@ -27,132 +26,45 @@ const csvRowSchema = z.object({
 export type CSVValidationError = {
   row: number;
   errors: string[];
-  type: 'validation' | 'reference' | 'system';
-  context?: Record<string, any>;
 };
 
 export type ValidationResult = {
   isValid: boolean;
   errors: CSVValidationError[];
   validRows: z.infer<typeof csvRowSchema>[];
-  stats: {
-    totalRows: number;
-    newUsers: number;
-    updates: number;
-    skipped: number;
-  };
 };
-
-async function validateReferencedEntities(row: z.infer<typeof csvRowSchema>): Promise<string[]> {
-  const errors: string[] = [];
-
-  // Validate level exists if provided
-  if (row.level) {
-    const { data: level } = await supabase
-      .from("levels")
-      .select("id")
-      .eq("name", row.level)
-      .maybeSingle();
-    
-    if (!level) {
-      errors.push(`Level "${row.level}" does not exist`);
-    }
-  }
-
-  // Validate location exists if provided
-  if (row.location) {
-    const { data: location } = await supabase
-      .from("locations")
-      .select("id")
-      .eq("name", row.location)
-      .maybeSingle();
-    
-    if (!location) {
-      errors.push(`Location "${row.location}" does not exist`);
-    }
-  }
-
-  // Validate employment type exists if provided
-  if (row.employmentType) {
-    const { data: employmentType } = await supabase
-      .from("employment_types")
-      .select("id")
-      .eq("name", row.employmentType)
-      .eq("status", "active")
-      .maybeSingle();
-    
-    if (!employmentType) {
-      errors.push(`Employment Type "${row.employmentType}" does not exist or is not active`);
-    }
-  }
-
-  // Validate SBUs exist if provided
-  if (row.sbus) {
-    const sbuList = row.sbus.split(";").map(s => s.trim());
-    const { data: existingSbus } = await supabase
-      .from("sbus")
-      .select("name")
-      .in("name", sbuList);
-    
-    const existingSbuNames = new Set(existingSbus?.map(sbu => sbu.name) || []);
-    sbuList.forEach(sbu => {
-      if (!existingSbuNames.has(sbu)) {
-        errors.push(`SBU "${sbu}" does not exist`);
-      }
-    });
-  }
-
-  // If ID is provided, validate it exists in profiles
-  if (row.id) {
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("id")
-      .eq("id", row.id)
-      .maybeSingle();
-    
-    if (!profile) {
-      errors.push(`User with ID "${row.id}" does not exist`);
-    }
-  }
-
-  return errors;
-}
 
 export async function validateCSV(file: File): Promise<ValidationResult> {
   const errors: CSVValidationError[] = [];
   const validRows: z.infer<typeof csvRowSchema>[] = [];
-  const stats = {
-    totalRows: 0,
-    newUsers: 0,
-    updates: 0,
-    skipped: 0,
-  };
+
+  // Get existing data for validation
+  const { data: sbus } = await supabase.from("sbus").select("name");
+  const { data: levels } = await supabase.from("levels").select("name");
+  const { data: locations } = await supabase.from("locations").select("name");
+  const { data: employmentTypes } = await supabase.from("employment_types")
+    .select("name")
+    .eq("status", "active");
+
+  const sbuNames = new Set(sbus?.map(sbu => sbu.name) || []);
+  const levelNames = new Set(levels?.map(level => level.name) || []);
+  const locationNames = new Set(locations?.map(loc => loc.name) || []);
+  const employmentTypeNames = new Set(employmentTypes?.map(type => type.name) || []);
 
   try {
     const text = await file.text();
     const rows = text.split("\n").map(row => row.split(","));
     const headers = rows[0].map(h => h.trim());
-    
-    // Validate headers
-    const requiredHeaders = ["Email"];
-    const missingHeaders = requiredHeaders.filter(h => !headers.includes(h));
-    if (missingHeaders.length > 0) {
-      throw new Error(`Missing required headers: ${missingHeaders.join(", ")}`);
-    }
 
-    // Process each row
+    // Validate each row starting from index 1 (skip headers)
     for (let i = 1; i < rows.length; i++) {
+      const rowErrors: string[] = [];
       const row = rows[i];
-      stats.totalRows++;
       
       // Skip empty rows
-      if (row.length === 1 && !row[0]) {
-        stats.skipped++;
-        continue;
-      }
+      if (row.length === 1 && !row[0]) continue;
 
       const rowData = {
-        id: row[headers.indexOf("ID")]?.trim(),
         email: row[headers.indexOf("Email")]?.trim(),
         firstName: row[headers.indexOf("First Name")]?.trim(),
         lastName: row[headers.indexOf("Last Name")]?.trim(),
@@ -167,44 +79,44 @@ export async function validateCSV(file: File): Promise<ValidationResult> {
         sbus: row[headers.indexOf("SBUs")]?.trim(),
       };
 
-      try {
-        // Validate schema
-        const validatedRow = csvRowSchema.parse(rowData);
-        
-        // Validate referenced entities
-        const referenceErrors = await validateReferencedEntities(validatedRow);
-        
-        if (referenceErrors.length > 0) {
-          errors.push({
-            row: i + 1,
-            errors: referenceErrors,
-            type: 'reference',
-            context: rowData
-          });
-        } else {
-          validRows.push(validatedRow);
-          if (validatedRow.id) {
-            stats.updates++;
-          } else {
-            stats.newUsers++;
+      // Validate against schema
+      const result = csvRowSchema.safeParse(rowData);
+      
+      if (!result.success) {
+        result.error.errors.forEach(err => {
+          rowErrors.push(`${err.path.join(".")}: ${err.message}`);
+        });
+      }
+
+      // Validate level exists
+      if (rowData.level && !levelNames.has(rowData.level)) {
+        rowErrors.push(`Level "${rowData.level}" does not exist`);
+      }
+
+      // Validate location exists
+      if (rowData.location && !locationNames.has(rowData.location)) {
+        rowErrors.push(`Location "${rowData.location}" does not exist`);
+      }
+
+      // Validate employment type exists
+      if (rowData.employmentType && !employmentTypeNames.has(rowData.employmentType)) {
+        rowErrors.push(`Employment Type "${rowData.employmentType}" does not exist`);
+      }
+
+      // Validate SBUs exist
+      if (rowData.sbus) {
+        const sbuList = rowData.sbus.split(";").map(s => s.trim());
+        sbuList.forEach(sbu => {
+          if (!sbuNames.has(sbu)) {
+            rowErrors.push(`SBU "${sbu}" does not exist`);
           }
-        }
-      } catch (error) {
-        if (error instanceof z.ZodError) {
-          errors.push({
-            row: i + 1,
-            errors: error.errors.map(e => `${e.path.join(".")}: ${e.message}`),
-            type: 'validation',
-            context: rowData
-          });
-        } else {
-          errors.push({
-            row: i + 1,
-            errors: [(error as Error).message],
-            type: 'system',
-            context: rowData
-          });
-        }
+        });
+      }
+
+      if (rowErrors.length > 0) {
+        errors.push({ row: i + 1, errors: rowErrors });
+      } else {
+        validRows.push(rowData);
       }
     }
 
@@ -212,9 +124,8 @@ export async function validateCSV(file: File): Promise<ValidationResult> {
       isValid: errors.length === 0,
       errors,
       validRows,
-      stats
     };
   } catch (error) {
-    throw new Error(`Failed to parse CSV file: ${(error as Error).message}`);
+    throw new Error("Failed to parse CSV file");
   }
 }

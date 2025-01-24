@@ -1,8 +1,8 @@
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertCircle, Check, Download } from "lucide-react";
-import type { ProcessingResult } from "../../utils/types";
-import type { ImportResult, ImportError } from "../../utils/types";
+import { ProcessingResult } from "../../utils/csvProcessor";
+import { ImportError, ImportResult, convertValidationErrorsToImportErrors } from "../../utils/errorReporting";
 
 interface ProcessingResultViewProps {
   processingResult: ProcessingResult | null;
@@ -18,6 +18,14 @@ export function ProcessingResultView({
   onStartImport,
 }: ProcessingResultViewProps) {
   if (!processingResult && !importResult) return null;
+
+  const handleDownloadErrors = () => {
+    if (processingResult?.errors) {
+      onDownloadErrors(convertValidationErrorsToImportErrors(processingResult.errors));
+    } else if (importResult?.errors) {
+      onDownloadErrors(importResult.errors);
+    }
+  };
 
   return (
     <div className="space-y-4">
@@ -50,7 +58,7 @@ export function ProcessingResultView({
 
           {processingResult.errors.length > 0 ? (
             <Button
-              onClick={() => onDownloadErrors([])}
+              onClick={handleDownloadErrors}
               className="w-full"
               variant="outline"
             >
@@ -61,6 +69,7 @@ export function ProcessingResultView({
             <Button
               onClick={onStartImport}
               className="w-full"
+              disabled={false}
             >
               Start Import
             </Button>
@@ -79,7 +88,7 @@ export function ProcessingResultView({
 
           {importResult.failed > 0 && (
             <Button
-              onClick={() => onDownloadErrors(importResult.errors)}
+              onClick={handleDownloadErrors}
               className="w-full"
               variant="outline"
             >

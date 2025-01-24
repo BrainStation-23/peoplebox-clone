@@ -1,12 +1,11 @@
 import { useState, useRef } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { toast } from "@/hooks/use-toast";
-import { processCSVFile } from "../../utils/csvProcessor";
-import type { ImportError, ImportResult, ProcessingResult, BatchProgress } from "../../utils/types";
-import { downloadErrorReport } from "../../utils/errorReporting";
-import { batchProcessor } from "../../utils/batchProcessor";
-import { ImportGuidelines } from "./ImportGuidelines";
+import { processCSVFile, type ProcessingResult } from "../../utils/csvProcessor";
+import { ImportError, ImportResult, downloadErrorReport, convertValidationErrorsToImportErrors } from "../../utils/errorReporting";
+import { batchProcessor, type BatchProgress } from "../../utils/batchProcessor";
 import { UploadArea } from "./UploadArea";
+import { ImportGuidelines } from "./ImportGuidelines";
 import { ImportProgress } from "./ImportProgress";
 import { ProcessingResultView } from "./ProcessingResult";
 
@@ -29,6 +28,19 @@ export function ImportDialog({ open, onOpenChange, onImportComplete }: ImportDia
     setProcessingResult(result);
     setImportResult(null);
     setIsProcessing(false);
+
+    if (result.errors.length > 0) {
+      toast({
+        variant: "destructive",
+        title: "Validation Errors",
+        description: `Found ${result.errors.length} errors in the CSV file. Please check the error report.`,
+      });
+    } else {
+      toast({
+        title: "File Processed Successfully",
+        description: `Found ${result.newUsers.length} new users and ${result.existingUsers.length} existing users.`,
+      });
+    }
   };
 
   const handleImport = async () => {
@@ -89,27 +101,23 @@ export function ImportDialog({ open, onOpenChange, onImportComplete }: ImportDia
         });
       }
     } catch (error) {
-      handleImportError(error);
+      if (error instanceof Error && error.message === 'Operation cancelled') {
+        toast({
+          title: "Import cancelled",
+          description: "The import operation was cancelled.",
+        });
+      } else {
+        console.error("Import error:", error);
+        toast({
+          variant: "destructive",
+          title: "Import failed",
+          description: error instanceof Error ? error.message : "Unknown error occurred",
+        });
+      }
     } finally {
       setImporting(false);
       setPaused(false);
       abortController.current = null;
-    }
-  };
-
-  const handleImportError = (error: unknown) => {
-    if (error instanceof Error && error.message === 'Operation cancelled') {
-      toast({
-        title: "Import cancelled",
-        description: "The import operation was cancelled.",
-      });
-    } else {
-      console.error("Import error:", error);
-      toast({
-        variant: "destructive",
-        title: "Import failed",
-        description: error instanceof Error ? error.message : "Unknown error occurred",
-      });
     }
   };
 
@@ -128,7 +136,10 @@ export function ImportDialog({ open, onOpenChange, onImportComplete }: ImportDia
     }
 
     try {
-      const errors = importResult?.errors || [];
+      const errors = processingResult?.errors 
+        ? convertValidationErrorsToImportErrors(processingResult.errors)
+        : importResult?.errors || [];
+      
       downloadErrorReport(errors);
       
       toast({
