@@ -35,7 +35,7 @@ export async function* exportUsers(
           levels (
             name
           ),
-          user_roles!inner (
+          user_roles (
             role
           ),
           user_sbus (
@@ -63,7 +63,7 @@ export async function* exportUsers(
         profile.last_name || "",
         profile.org_id || "",
         profile.levels?.name || "",
-        profile.user_roles?.role || "user",
+        profile.user_roles?.[0]?.role || "user",
         profile.user_sbus
           ?.filter((sbu) => sbu.is_primary)
           .map((sbu) => sbu.sbu.name)
