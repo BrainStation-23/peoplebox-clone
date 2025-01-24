@@ -21,6 +21,8 @@ interface UserTableProps {
   total: number;
   onPageChange: (page: number) => void;
   onDelete: (userId: string) => void;
+  searchTerm: string;
+  setSearchTerm: (value: string) => void;
 }
 
 export default function UserTable({
@@ -31,6 +33,8 @@ export default function UserTable({
   total,
   onPageChange,
   onDelete,
+  searchTerm,
+  setSearchTerm,
 }: UserTableProps) {
   const [userToEdit, setUserToEdit] = useState<User | null>(null);
   const [isImportDialogOpen, setIsImportDialogOpen] = useState(false);
@@ -47,8 +51,6 @@ export default function UserTable({
   } = usePasswordManagement();
 
   const {
-    searchTerm,
-    setSearchTerm,
     selectedSBU,
     setSelectedSBU,
     filteredUsers
