@@ -3,7 +3,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { Table, TableBody } from "@/components/ui/table";
 import { User } from "../../types";
 import { SearchFilters } from "./SearchFilters";
-import { TableHeader } from "./TableHeader";
+import { UsersTableHeader } from "./TableHeader";
 import { UserRow } from "./UserRow";
 import { TablePagination } from "./TablePagination";
 import EditUserDialog from "../EditUserDialog";
@@ -121,7 +121,7 @@ export default function UserTable({
       />
 
       <Table>
-        <TableHeader />
+        <UsersTableHeader />
         <TableBody>
           {filteredUsers.map((user) => (
             <UserRow

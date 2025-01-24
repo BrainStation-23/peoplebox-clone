@@ -1,12 +1,12 @@
 import {
   TableHead,
-  TableHeader,
+  TableHeader as ShadcnTableHeader,
   TableRow,
 } from "@/components/ui/table";
 
-export function TableHeader() {
+export function UsersTableHeader() {
   return (
-    <TableHeader>
+    <ShadcnTableHeader>
       <TableRow>
         <TableHead>Name</TableHead>
         <TableHead>Email</TableHead>
@@ -15,6 +15,6 @@ export function TableHeader() {
         <TableHead>Primary SBU</TableHead>
         <TableHead className="w-[200px]">Actions</TableHead>
       </TableRow>
-    </TableHeader>
+    </ShadcnTableHeader>
   );
 }
