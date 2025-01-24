@@ -7,6 +7,7 @@ import { SBUAssignmentTab } from "./SBUAssignmentTab";
 import { ManagementTab } from "./ManagementTab";
 import { EmploymentDetailsTab } from "./EmploymentDetailsTab";
 import { useProfileManagement } from "../../hooks/useProfileManagement";
+import { useSupervisorManagement } from "../../hooks/useSupervisorManagement";
 
 interface EditUserDialogProps {
   user: User | null;
@@ -43,6 +44,12 @@ export default function EditUserDialog({
     profileError,
     updateProfileMutation,
   } = useProfileManagement(user);
+
+  const {
+    supervisors,
+    handleSupervisorChange,
+    handlePrimarySupervisorChange,
+  } = useSupervisorManagement(user);
 
   const handleSave = () => {
     updateProfileMutation.mutate();
@@ -92,11 +99,26 @@ export default function EditUserDialog({
           </TabsContent>
 
           <TabsContent value="sbus">
-            <SBUAssignmentTab user={user} />
+            <SBUAssignmentTab
+              sbus={user?.user_sbus?.map(sbu => sbu.sbu)}
+              sbuSearch=""
+              setSbuSearch={() => {}}
+              selectedSBUs={new Set()}
+              handleSBUChange={() => {}}
+              primarySBU=""
+              handlePrimarySBUChange={() => {}}
+            />
           </TabsContent>
 
           <TabsContent value="management">
-            {user && <ManagementTab user={user} />}
+            {user && (
+              <ManagementTab
+                user={user}
+                supervisors={supervisors}
+                onSupervisorChange={handleSupervisorChange}
+                onPrimarySupervisorChange={handlePrimarySupervisorChange}
+              />
+            )}
           </TabsContent>
         </Tabs>
 
