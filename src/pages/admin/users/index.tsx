@@ -11,12 +11,28 @@ export default function UsersPage() {
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageSize = 10;
   const { toast } = useToast();
 
-  const { data: users, isLoading, refetch } = useQuery({
-    queryKey: ["users"],
+  const { data, isLoading, refetch } = useQuery({
+    queryKey: ["users", currentPage, pageSize],
     queryFn: async () => {
-      console.log("Fetching users...");
+      console.log("Fetching users for page:", currentPage);
+      const start = (currentPage - 1) * pageSize;
+      const end = start + pageSize - 1;
+
+      // First get total count
+      const { count, error: countError } = await supabase
+        .from("profiles")
+        .select("*", { count: 'exact', head: true });
+
+      if (countError) {
+        console.error("Error fetching count:", countError);
+        throw countError;
+      }
+
+      // Then fetch paginated data
       const { data: profiles, error: profilesError } = await supabase
         .from("profiles")
         .select(`
@@ -32,7 +48,8 @@ export default function UsersPage() {
             name,
             status
           )
-        `);
+        `)
+        .range(start, end);
 
       if (profilesError) {
         console.error("Error fetching profiles:", profilesError);
@@ -90,7 +107,10 @@ export default function UsersPage() {
       );
 
       console.log("Users with complete data:", usersWithData);
-      return usersWithData as User[];
+      return {
+        users: usersWithData as User[],
+        total: count || 0
+      };
     },
   });
 
@@ -131,6 +151,11 @@ export default function UsersPage() {
     }
   };
 
+  const handlePageChange = (page: number) => {
+    console.log("Changing to page:", page);
+    setCurrentPage(page);
+  };
+
   return (
     <div className="container mx-auto py-6 space-y-4">
       <div className="flex justify-between items-center">
@@ -144,12 +169,12 @@ export default function UsersPage() {
       </div>
 
       <UserTable
-        users={users || []}
+        users={data?.users || []}
         isLoading={isLoading}
-        page={1}
-        pageSize={10}
-        total={users?.length || 0}
-        onPageChange={() => {}}
+        page={currentPage}
+        pageSize={pageSize}
+        total={data?.total || 0}
+        onPageChange={handlePageChange}
         onDelete={handleDelete}
       />
 
@@ -166,4 +191,4 @@ export default function UsersPage() {
       />
     </div>
   );
-};
+}
