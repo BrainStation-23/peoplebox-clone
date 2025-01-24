@@ -4,7 +4,8 @@ import {
   CSVRow, 
   ProcessingResult, 
   ProcessingLogEntry, 
-  ValidationError 
+  ValidationError,
+  ImportError 
 } from "./types";
 import { toast } from "@/hooks/use-toast";
 

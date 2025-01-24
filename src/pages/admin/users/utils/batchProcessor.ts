@@ -1,5 +1,5 @@
-import { CSVRow, ProcessingResult } from "./csvProcessor";
-import { ImportError } from "./errorReporting";
+import { CSVRow, ProcessingResult, ImportError } from "./types";
+
 import { supabase } from "@/integrations/supabase/client";
 
 const BATCH_SIZE = 50;

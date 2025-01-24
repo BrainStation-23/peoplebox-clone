@@ -67,3 +67,10 @@ export interface ImportResult {
   failed: number;
   logs: ProcessingLogEntry[];
 }
+
+export interface ImportError {
+  row: number;
+  type: 'validation' | 'creation' | 'update' | 'sbu' | 'level' | 'role' | 'location' | 'employment' | 'gender' | 'date';
+  message: string;
+  data?: Partial<CSVRow>;
+}

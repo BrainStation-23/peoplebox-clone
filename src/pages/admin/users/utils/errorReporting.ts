@@ -1,11 +1,4 @@
-import { CSVRow } from "./csvProcessor";
-
-export type ImportError = {
-  row: number;
-  type: 'validation' | 'creation' | 'update' | 'sbu' | 'level' | 'role' | 'location' | 'employment' | 'gender' | 'date';
-  message: string;
-  data?: Partial<CSVRow>;
-};
+import { CSVRow, ImportError } from "./types";
 
 export type ImportResult = {
   successful: number;
