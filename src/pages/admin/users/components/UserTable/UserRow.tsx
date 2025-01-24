@@ -67,7 +67,7 @@ export function UserRow({ user, onEdit, onDelete, onPasswordChange }: UserRowPro
       <TableCell>
         <UserActions
           user={user}
-          onEdit={() => onEdit(user)}
+          onEdit={onEdit}
           onDelete={onDelete}
           onPasswordChange={onPasswordChange}
         />

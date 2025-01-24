@@ -10,7 +10,7 @@ export interface User {
   last_name: string | null;
   profile_image_url?: string | null;
   level_id?: string | null;
-  org_id?: string | null;
+  org_id: string | null;  // Making this explicit
   level?: {
     id: string;
     name: string;

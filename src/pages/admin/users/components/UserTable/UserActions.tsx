@@ -11,11 +11,12 @@ import { User } from "../../types";
 
 export interface UserActionsProps {
   user: User;
+  onEdit: (user: User) => void;
   onDelete: (userId: string) => void;
   onPasswordChange: (userId: string) => void;
 }
 
-const UserActions = ({ user, onDelete, onPasswordChange }: UserActionsProps) => {
+const UserActions = ({ user, onEdit, onDelete, onPasswordChange }: UserActionsProps) => {
   const navigate = useNavigate();
 
   return (
@@ -27,7 +28,7 @@ const UserActions = ({ user, onDelete, onPasswordChange }: UserActionsProps) => 
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
-        <DropdownMenuItem onClick={() => navigate(`/admin/users/${user.id}/edit`)}>
+        <DropdownMenuItem onClick={() => onEdit(user)}>
           Edit
         </DropdownMenuItem>
         <DropdownMenuItem onClick={() => onPasswordChange(user.id)}>
