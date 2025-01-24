@@ -2,7 +2,7 @@ import { useState, useRef } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { toast } from "@/hooks/use-toast";
 import { processCSVFile, type ProcessingResult } from "../../utils/csvProcessor";
-import { ImportError, ImportResult, downloadErrorReport } from "../../utils/errorReporting";
+import { ImportError, ImportResult, downloadErrorReport, convertValidationErrorsToImportErrors } from "../../utils/errorReporting";
 import { batchProcessor, type BatchProgress } from "../../utils/batchProcessor";
 import { UploadArea } from "./UploadArea";
 import { ImportGuidelines } from "./ImportGuidelines";
@@ -28,6 +28,19 @@ export function ImportDialog({ open, onOpenChange, onImportComplete }: ImportDia
     setProcessingResult(result);
     setImportResult(null);
     setIsProcessing(false);
+
+    if (result.errors.length > 0) {
+      toast({
+        variant: "destructive",
+        title: "Validation Errors",
+        description: `Found ${result.errors.length} errors in the CSV file. Please check the error report.`,
+      });
+    } else {
+      toast({
+        title: "File Processed Successfully",
+        description: `Found ${result.newUsers.length} new users and ${result.existingUsers.length} existing users.`,
+      });
+    }
   };
 
   const handleImport = async () => {
@@ -123,7 +136,10 @@ export function ImportDialog({ open, onOpenChange, onImportComplete }: ImportDia
     }
 
     try {
-      const errors = processingResult?.errors || importResult?.errors || [];
+      const errors = processingResult?.errors 
+        ? convertValidationErrorsToImportErrors(processingResult.errors)
+        : importResult?.errors || [];
+      
       downloadErrorReport(errors);
       
       toast({

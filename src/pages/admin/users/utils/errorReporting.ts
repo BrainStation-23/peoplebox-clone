@@ -13,6 +13,16 @@ export type ImportResult = {
   errors: ImportError[];
 };
 
+export function convertValidationErrorsToImportErrors(validationErrors: { row: number; errors: string[] }[]): ImportError[] {
+  return validationErrors.flatMap(error => 
+    error.errors.map(message => ({
+      row: error.row,
+      type: 'validation',
+      message,
+    }))
+  );
+}
+
 export function generateErrorReport(errors: ImportError[]): string {
   // Group errors by type for better organization
   const groupedErrors = errors.reduce((acc, error) => {

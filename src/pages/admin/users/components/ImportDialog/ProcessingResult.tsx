@@ -1,27 +1,35 @@
-import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertCircle, Check, Download } from "lucide-react";
-import type { ProcessingResult } from "../../utils/csvProcessor";
-import type { ImportResult } from "../../utils/errorReporting";
+import { ProcessingResult, ImportResult } from "../../utils/csvProcessor";
+import { convertValidationErrorsToImportErrors } from "../../utils/errorReporting";
 
-interface ProcessingResultProps {
+interface ProcessingResultViewProps {
   processingResult: ProcessingResult | null;
   importResult: ImportResult | null;
-  onDownloadErrors: () => void;
+  onDownloadErrors: (errors: ImportError[]) => void;
   onStartImport: () => void;
 }
 
-export function ProcessingResultView({ 
-  processingResult, 
-  importResult, 
-  onDownloadErrors, 
-  onStartImport 
-}: ProcessingResultProps) {
+export function ProcessingResultView({
+  processingResult,
+  importResult,
+  onDownloadErrors,
+  onStartImport,
+}: ProcessingResultViewProps) {
   if (!processingResult && !importResult) return null;
+
+  const handleDownloadErrors = () => {
+    if (processingResult?.errors) {
+      onDownloadErrors(convertValidationErrorsToImportErrors(processingResult.errors));
+    } else if (importResult?.errors) {
+      onDownloadErrors(importResult.errors);
+    }
+  };
 
   return (
     <div className="space-y-4">
-      {processingResult && (
+      {processingResult && !importResult && (
         <>
           <Alert variant={processingResult.errors.length > 0 ? "destructive" : "default"}>
             <AlertDescription className="flex items-center gap-2">
@@ -50,7 +58,7 @@ export function ProcessingResultView({
 
           {processingResult.errors.length > 0 ? (
             <Button
-              onClick={onDownloadErrors}
+              onClick={handleDownloadErrors}
               className="w-full"
               variant="outline"
             >
@@ -61,6 +69,7 @@ export function ProcessingResultView({
             <Button
               onClick={onStartImport}
               className="w-full"
+              disabled={false}
             >
               Start Import
             </Button>
@@ -69,7 +78,7 @@ export function ProcessingResultView({
       )}
 
       {importResult && (
-        <>
+        <div className="space-y-4">
           <Alert>
             <AlertDescription className="flex items-center gap-2">
               <Check className="h-4 w-4" />
@@ -79,7 +88,7 @@ export function ProcessingResultView({
 
           {importResult.failed > 0 && (
             <Button
-              onClick={onDownloadErrors}
+              onClick={handleDownloadErrors}
               className="w-full"
               variant="outline"
             >
@@ -87,7 +96,7 @@ export function ProcessingResultView({
               Download Error Report
             </Button>
           )}
-        </>
+        </div>
       )}
     </div>
   );
