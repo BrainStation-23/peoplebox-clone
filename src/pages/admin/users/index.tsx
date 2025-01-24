@@ -26,6 +26,7 @@ export default function UsersPage() {
           last_name,
           profile_image_url,
           level_id,
+          org_id,
           levels (
             id,
             name,
