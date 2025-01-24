@@ -27,6 +27,7 @@ export function useProfileManagement(user: User | null) {
         .maybeSingle();
       
       if (error) throw error;
+      console.log('Fetched profile data:', data);
       return data;
     },
     enabled: !!user?.id,
@@ -34,6 +35,7 @@ export function useProfileManagement(user: User | null) {
 
   useEffect(() => {
     if (profileData) {
+      console.log('Setting initial form values:', profileData);
       setFirstName(profileData.first_name || '');
       setLastName(profileData.last_name || '');
       setProfileImageUrl(profileData.profile_image_url || '');
@@ -51,26 +53,57 @@ export function useProfileManagement(user: User | null) {
     mutationFn: async () => {
       if (!user) return;
 
+      const updateData = {
+        first_name: firstName,
+        last_name: lastName,
+        profile_image_url: profileImageUrl,
+        level_id: selectedLevel || null,
+        org_id: orgId || null,
+        gender: gender || null,
+        date_of_birth: dateOfBirth?.toISOString().split('T')[0] || null,
+        designation: designation || null,
+        location_id: selectedLocation || null,
+        employment_type_id: selectedEmploymentType || null,
+      };
+
+      console.log('Updating profile with data:', {
+        userId: user.id,
+        updateData,
+        currentFormState: {
+          selectedLevel,
+          orgId,
+          designation,
+          selectedLocation,
+          selectedEmploymentType
+        }
+      });
+
       const { error: profileError } = await supabase
         .from("profiles")
-        .update({
-          first_name: firstName,
-          last_name: lastName,
-          profile_image_url: profileImageUrl,
-          level_id: selectedLevel || null,
-          org_id: orgId || null,
-          gender: gender || null,
-          date_of_birth: dateOfBirth?.toISOString().split('T')[0] || null,
-          designation: designation || null,
-          location_id: selectedLocation || null,
-          employment_type_id: selectedEmploymentType || null,
-        })
+        .update(updateData)
         .eq("id", user.id);
 
-      if (profileError) throw profileError;
+      if (profileError) {
+        console.error('Profile update error:', profileError);
+        throw profileError;
+      }
+
+      // Log the result of the update
+      const { data: updatedProfile, error: fetchError } = await supabase
+        .from("profiles")
+        .select('*')
+        .eq("id", user.id)
+        .single();
+
+      if (fetchError) {
+        console.error('Error fetching updated profile:', fetchError);
+      } else {
+        console.log('Profile after update:', updatedProfile);
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["users"] });
+      queryClient.invalidateQueries({ queryKey: ["profile", user?.id] });
       toast.success("Profile updated successfully");
     },
     onError: (error) => {
