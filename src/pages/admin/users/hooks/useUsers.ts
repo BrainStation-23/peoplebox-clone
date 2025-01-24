@@ -23,12 +23,17 @@ export function useUsers({ currentPage, pageSize, searchTerm }: UseUsersProps) {
           first_name,
           last_name,
           profile_image_url,
-          level_id,
           org_id,
-          levels (
-            id,
-            name,
-            status
+          gender,
+          date_of_birth,
+          designation,
+          level:levels(name),
+          location:locations(name),
+          employment_type:employment_types(name),
+          user_roles(role),
+          user_sbus!inner(
+            is_primary,
+            sbu:sbus(name)
           )
         `, { count: 'exact' });
 
@@ -44,50 +49,17 @@ export function useUsers({ currentPage, pageSize, searchTerm }: UseUsersProps) {
         throw profilesError;
       }
 
-      const usersWithData = await Promise.all(
-        profiles.map(async (profile) => {
-          const { data: roleData, error: roleError } = await supabase
-            .from("user_roles")
-            .select("role")
-            .eq("user_id", profile.id)
-            .single();
-
-          if (roleError) {
-            return {
-              ...profile,
-              user_roles: { role: "user" as const },
-            };
-          }
-
-          const { data: sbuData, error: sbuError } = await supabase
-            .from("user_sbus")
-            .select(`
-              id,
-              user_id,
-              sbu_id,
-              is_primary,
-              sbu:sbus (
-                id,
-                name
-              )
-            `)
-            .eq("user_id", profile.id);
-
-          if (sbuError) {
-            return {
-              ...profile,
-              user_roles: roleData,
-              user_sbus: [],
-            };
-          }
-
-          return {
-            ...profile,
-            user_roles: roleData,
-            user_sbus: sbuData,
-          };
-        })
-      );
+      const usersWithData = profiles.map((profile) => ({
+        ...profile,
+        level: profile.level?.[0] || null,
+        location: profile.location?.[0] || null,
+        employment_type: profile.employment_type?.[0] || null,
+        user_roles: profile.user_roles?.[0] || { role: "user" as const },
+        user_sbus: profile.user_sbus?.map(sbu => ({
+          ...sbu,
+          sbu: sbu.sbu
+        }))
+      }));
 
       return {
         users: usersWithData as User[],
