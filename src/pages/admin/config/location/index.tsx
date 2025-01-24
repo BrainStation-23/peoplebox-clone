@@ -1,18 +1,10 @@
 import { useState } from "react";
-import { ArrowLeft, ExternalLink, MapPin, Plus } from "lucide-react";
+import { ArrowLeft, Plus } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import {
   Dialog,
   DialogContent,
@@ -21,26 +13,9 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
-import { LocationForm, LocationFormValues } from "./components/LocationForm";
-
-type Location = {
-  id: string;
-  name: string;
-  google_maps_url: string | null;
-  address: string | null;
-  created_at: string;
-};
+import { LocationForm } from "./components/LocationForm";
+import { LocationTable } from "./components/LocationTable";
+import type { Location, LocationFormValues } from "./types";
 
 export default function LocationConfig() {
   const navigate = useNavigate();
@@ -153,117 +128,37 @@ export default function LocationConfig() {
       </div>
 
       <div className="rounded-md border">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Name</TableHead>
-              <TableHead>Address</TableHead>
-              <TableHead>Google Maps</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {isLoading ? (
-              <TableRow>
-                <TableCell colSpan={4} className="text-center">
-                  Loading...
-                </TableCell>
-              </TableRow>
-            ) : locations?.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={4} className="text-center">
-                  No locations found
-                </TableCell>
-              </TableRow>
-            ) : (
-              locations?.map((location) => (
-                <TableRow key={location.id}>
-                  <TableCell className="font-medium">
-                    <div className="flex items-center">
-                      <MapPin className="h-4 w-4 mr-2 text-muted-foreground" />
-                      {location.name}
-                    </div>
-                  </TableCell>
-                  <TableCell>{location.address || "—"}</TableCell>
-                  <TableCell>
-                    {location.google_maps_url ? (
-                      <a
-                        href={location.google_maps_url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex items-center text-blue-500 hover:text-blue-700"
-                      >
-                        View on Maps
-                        <ExternalLink className="h-4 w-4 ml-1" />
-                      </a>
-                    ) : (
-                      "—"
-                    )}
-                  </TableCell>
-                  <TableCell className="text-right space-x-2">
-                    <Dialog
-                      open={editingLocation?.id === location.id}
-                      onOpenChange={(open) => !open && setEditingLocation(null)}
-                    >
-                      <DialogTrigger asChild>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => setEditingLocation(location)}
-                        >
-                          Edit
-                        </Button>
-                      </DialogTrigger>
-                      <DialogContent>
-                        <DialogHeader>
-                          <DialogTitle>Edit Location</DialogTitle>
-                          <DialogDescription>
-                            Update the location details.
-                          </DialogDescription>
-                        </DialogHeader>
-                        <LocationForm
-                          initialValues={{
-                            name: location.name,
-                            google_maps_url: location.google_maps_url || "",
-                            address: location.address || "",
-                          }}
-                          onSubmit={(values) =>
-                            updateMutation.mutate({ id: location.id, ...values })
-                          }
-                          submitLabel="Save Changes"
-                        />
-                      </DialogContent>
-                    </Dialog>
-                    <AlertDialog>
-                      <AlertDialogTrigger asChild>
-                        <Button variant="destructive" size="sm">
-                          Delete
-                        </Button>
-                      </AlertDialogTrigger>
-                      <AlertDialogContent>
-                        <AlertDialogHeader>
-                          <AlertDialogTitle>Delete Location</AlertDialogTitle>
-                          <AlertDialogDescription>
-                            Are you sure you want to delete {location.name}? This action cannot be undone.
-                          </AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                          <AlertDialogCancel>Cancel</AlertDialogCancel>
-                          <AlertDialogAction
-                            onClick={() => deleteMutation.mutate(location.id)}
-                          >
-                            Delete
-                          </AlertDialogAction>
-                        </AlertDialogFooter>
-                      </AlertDialogContent>
-                    </AlertDialog>
-                  </TableCell>
-                </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
+        <LocationTable
+          locations={locations}
+          isLoading={isLoading}
+          onEdit={setEditingLocation}
+          onDelete={(id) => deleteMutation.mutate(id)}
+        />
       </div>
+
+      <Dialog open={!!editingLocation} onOpenChange={(open) => !open && setEditingLocation(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit Location</DialogTitle>
+            <DialogDescription>
+              Update the location details.
+            </DialogDescription>
+          </DialogHeader>
+          {editingLocation && (
+            <LocationForm
+              initialValues={{
+                name: editingLocation.name,
+                google_maps_url: editingLocation.google_maps_url || "",
+                address: editingLocation.address || "",
+              }}
+              onSubmit={(values) =>
+                updateMutation.mutate({ id: editingLocation.id, ...values })
+              }
+              submitLabel="Save Changes"
+            />
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
