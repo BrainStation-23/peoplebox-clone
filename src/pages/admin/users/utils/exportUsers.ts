@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { format } from "date-fns";
 
 export interface ExportProgress {
   processed: number;
@@ -24,7 +25,7 @@ export async function* exportUsers(
     const BATCH_SIZE = 100;
     // Process in batches
     for (let offset = 0; offset < count; offset += BATCH_SIZE) {
-      // First get profiles with their related data
+      // Get profiles with their related data
       const { data: profiles, error: profilesError } = await supabase
         .from("profiles")
         .select(`
@@ -33,7 +34,17 @@ export async function* exportUsers(
           first_name,
           last_name,
           org_id,
+          gender,
+          date_of_birth,
+          designation,
           levels (
+            name
+          ),
+          locations (
+            name,
+            address
+          ),
+          employment_types (
             name
           ),
           user_sbus (
@@ -53,7 +64,7 @@ export async function* exportUsers(
         continue;
       }
 
-      // For each profile, get their role
+      // For each profile, get their role and format data
       const csvRows = await Promise.all(
         profiles.map(async (profile) => {
           // Get user role
@@ -62,6 +73,16 @@ export async function* exportUsers(
             .select("role")
             .eq("user_id", profile.id)
             .single();
+
+          // Format gender to be human readable
+          const formattedGender = profile.gender
+            ? profile.gender.charAt(0).toUpperCase() + profile.gender.slice(1)
+            : "";
+
+          // Format date of birth
+          const formattedDOB = profile.date_of_birth
+            ? format(new Date(profile.date_of_birth), "dd MMM yyyy")
+            : "";
 
           return [
             profile.id,
@@ -79,6 +100,12 @@ export async function* exportUsers(
               ?.filter((sbu) => !sbu.is_primary)
               .map((sbu) => sbu.sbu.name)
               .join(", ") || "",
+            formattedGender,
+            formattedDOB,
+            profile.designation || "",
+            profile.locations?.name || "",
+            profile.locations?.address || "",
+            profile.employment_types?.name || "",
           ];
         })
       );
@@ -106,6 +133,12 @@ export function downloadCSV(rows: string[][], filename: string) {
     "Role",
     "Primary SBU",
     "Additional SBUs",
+    "Gender",
+    "Date of Birth",
+    "Designation",
+    "Location",
+    "Address",
+    "Employment Type",
   ];
 
   const csvContent = [headers, ...rows]
