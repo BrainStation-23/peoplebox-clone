@@ -104,21 +104,15 @@ export default function UsersPage() {
 
   const handleDelete = async (userId: string) => {
     try {
-      const response = await fetch('/api/manage-users', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
+      const { data, error } = await supabase.functions.invoke('manage-users', {
+        body: {
           method: 'DELETE',
           action: { user_id: userId }
-        })
+        }
       });
 
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || 'Failed to delete user');
+      if (error) {
+        throw error;
       }
 
       toast({
