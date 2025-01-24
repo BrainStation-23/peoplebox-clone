@@ -24,6 +24,8 @@ const campaignSchema = z.object({
   instance_end_time: z.string().optional(),
   ends_at: z.date().optional(),
   status: z.string().default("draft"),
+  recurring_days: z.array(z.number()).optional(),
+  completion_rate: z.number().optional(),
 });
 
 interface Survey {
@@ -143,3 +145,4 @@ export function CampaignForm({
   );
 }
 
+export type { CampaignFormData };

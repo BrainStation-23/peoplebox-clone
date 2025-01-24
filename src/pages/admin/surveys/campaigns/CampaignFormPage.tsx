@@ -3,14 +3,11 @@ import { useNavigate, useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { CampaignForm, CampaignFormData } from "./components/CampaignForm";
+import { CampaignForm } from "./components/CampaignForm";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft } from "lucide-react";
 import { CampaignSteps } from "./components/CampaignSteps";
-import type { Database } from "@/integrations/supabase/types";
-
-type Campaign = Database['public']['Tables']['survey_campaigns']['Row'];
-type CampaignInsert = Database['public']['Tables']['survey_campaigns']['Insert'];
+import { Campaign, CampaignFormData } from "@/types/campaign";
 
 export default function CampaignFormPage() {
   const { id } = useParams();
@@ -74,7 +71,7 @@ export default function CampaignFormPage() {
         return;
       }
 
-      const dataToSubmit: CampaignInsert = {
+      const dataToSubmit: Partial<Campaign> = {
         name: formData.name,
         description: formData.description,
         survey_id: formData.survey_id,
@@ -88,6 +85,8 @@ export default function CampaignFormPage() {
         campaign_type: formData.is_recurring ? 'recurring' : 'one_time',
         status: 'draft',
         created_by: session.user.id,
+        recurring_days: formData.recurring_days || [],
+        completion_rate: 0,
       };
 
       if (isEditMode) {

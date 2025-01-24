@@ -1,7 +1,7 @@
 import { Database } from "@/integrations/supabase/types";
 
 export type UserRole = Database["public"]["Enums"]["user_role"];
-export type GenderType = Database["public"]["Enums"]["gender_type"];
+export type GenderType = "male" | "female" | "other";
 
 export interface Level {
   id: string;
