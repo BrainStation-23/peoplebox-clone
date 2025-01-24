@@ -2,6 +2,7 @@ import { Table, TableBody } from "@/components/ui/table";
 import { User } from "../../types";
 import { UsersTableHeader } from "./TableHeader";
 import { UserRow } from "./UserRow";
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
 
 interface TableContainerProps {
   users: User[];
@@ -18,7 +19,15 @@ export function TableContainer({
   onPasswordChange,
   isLoading
 }: TableContainerProps) {
-  if (users.length === 0 && !isLoading) {
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <LoadingSpinner size={32} />
+      </div>
+    );
+  }
+
+  if (users.length === 0) {
     return (
       <div className="text-center py-8 text-muted-foreground">
         No users found. Try adjusting your search criteria.

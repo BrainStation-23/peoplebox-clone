@@ -6,6 +6,7 @@ import { useUserActions } from "./hooks/useUserActions";
 import UserTable from "./components/UserTable";
 import CreateUserDialog from "./components/CreateUserDialog";
 import EditUserDialog from "./components/EditUserDialog";
+import { SearchFilters } from "./components/UserTable/SearchFilters";
 
 export default function UsersPage() {
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
@@ -44,18 +45,31 @@ export default function UsersPage() {
         </button>
       </div>
 
-      <UserTable
-        users={data?.users || []}
-        isLoading={isLoading}
-        page={currentPage}
-        pageSize={pageSize}
-        total={data?.total || 0}
-        onPageChange={handlePageChange}
-        onDelete={handleDelete}
-        searchTerm={searchTerm}
-        setSearchTerm={setSearchTerm}
-        key="user-table"
-      />
+      <div className="space-y-4">
+        <SearchFilters
+          searchTerm={searchTerm}
+          setSearchTerm={setSearchTerm}
+          onExport={() => {}} // Implement these handlers
+          onImport={() => {}} // in the parent component
+          sbus={[]} // Pass actual SBUs
+          totalResults={data?.total}
+          isSearching={isLoading}
+        />
+
+        <div className="relative">
+          <UserTable
+            users={data?.users || []}
+            isLoading={isLoading}
+            page={currentPage}
+            pageSize={pageSize}
+            total={data?.total || 0}
+            onPageChange={handlePageChange}
+            onDelete={handleDelete}
+            searchTerm={searchTerm}
+            setSearchTerm={setSearchTerm}
+          />
+        </div>
+      </div>
 
       <CreateUserDialog
         open={isCreateDialogOpen}

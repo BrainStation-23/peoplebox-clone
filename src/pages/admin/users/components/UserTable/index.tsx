@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { User } from "../../types";
-import { SearchFilters } from "./SearchFilters";
 import { TableContainer } from "./TableContainer";
 import { TablePagination } from "./TablePagination";
 import EditUserDialog from "../EditUserDialog";
@@ -11,7 +10,6 @@ import { PasswordDialog } from "./PasswordDialog";
 import { exportUsers, downloadCSV } from "../../utils/exportUsers";
 import { usePasswordManagement } from "../../hooks/usePasswordManagement";
 import { useUserFilters } from "../../hooks/useUserFilters";
-import { useSBUs } from "../../hooks/useSBUs";
 
 interface UserTableProps {
   users: User[];
@@ -38,7 +36,6 @@ export default function UserTable({
 }: UserTableProps) {
   const [userToEdit, setUserToEdit] = useState<User | null>(null);
   const [isImportDialogOpen, setIsImportDialogOpen] = useState(false);
-  const { data: sbus = [] } = useSBUs();
   const queryClient = useQueryClient();
 
   const {
@@ -64,72 +61,23 @@ export default function UserTable({
     isComplete: false,
   });
 
-  const handleExport = async () => {
-    setExportProgress({
-      isOpen: true,
-      processed: 0,
-      total: 0,
-      error: "",
-      isComplete: false,
-    });
-
-    try {
-      const allRows: string[][] = [];
-      for await (const batch of exportUsers((progress) => {
-        setExportProgress((prev) => ({
-          ...prev,
-          processed: progress.processed,
-          total: progress.total,
-          error: progress.error || "",
-        }));
-      })) {
-        allRows.push(...batch);
-      }
-
-      if (allRows.length > 0) {
-        downloadCSV(allRows, `users-export-${new Date().toISOString()}.csv`);
-        setExportProgress((prev) => ({ ...prev, isComplete: true }));
-      }
-    } catch (error: any) {
-      setExportProgress((prev) => ({
-        ...prev,
-        error: error.message || "Export failed",
-      }));
-    }
-  };
-
-  const handleImport = () => {
-    setIsImportDialogOpen(true);
-  };
-
   const handleImportComplete = () => {
     queryClient.invalidateQueries({ queryKey: ["users"] });
   };
-
-  if (isLoading) {
-    return <div>Loading...</div>;
-  }
 
   const totalPages = Math.ceil(total / pageSize);
 
   return (
     <div className="space-y-4">
-      <SearchFilters
-        searchTerm={searchTerm}
-        setSearchTerm={setSearchTerm}
-        selectedSBU={selectedSBU}
-        setSelectedSBU={setSelectedSBU}
-        onExport={handleExport}
-        onImport={handleImport}
-        sbus={sbus}
-      />
-
-      <TableContainer
-        users={filteredUsers}
-        onEdit={setUserToEdit}
-        onDelete={onDelete}
-        onPasswordChange={handlePasswordChange}
-      />
+      <div className="relative min-h-[400px]">
+        <TableContainer
+          users={filteredUsers}
+          onEdit={setUserToEdit}
+          onDelete={onDelete}
+          onPasswordChange={handlePasswordChange}
+          isLoading={isLoading}
+        />
+      </div>
 
       <ImportDialog
         open={isImportDialogOpen}
