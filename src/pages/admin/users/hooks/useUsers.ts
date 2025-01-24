@@ -6,16 +6,37 @@ interface UseUsersProps {
   currentPage: number;
   pageSize: number;
   searchTerm: string;
-  selectedSBU?: string;
 }
 
-export function useUsers({ currentPage, pageSize, searchTerm, selectedSBU }: UseUsersProps) {
+export function useUsers({ currentPage, pageSize, searchTerm }: UseUsersProps) {
   return useQuery({
-    queryKey: ["users", currentPage, pageSize, searchTerm, selectedSBU],
+    queryKey: ["users", currentPage, pageSize, searchTerm],
     queryFn: async () => {
-      console.log("Fetching users with params:", { currentPage, pageSize, searchTerm, selectedSBU });
+      console.log("Fetching users with params:", { currentPage, pageSize, searchTerm });
       
-      let baseQuery = supabase
+      // First, get the total count
+      const countQuery = supabase
+        .from("profiles")
+        .select('*', { count: 'exact', head: true });
+
+      if (searchTerm) {
+        countQuery.or(`email.ilike.%${searchTerm}%,first_name.ilike.%${searchTerm}%,last_name.ilike.%${searchTerm}%,org_id.ilike.%${searchTerm}%`);
+      }
+
+      const { count, error: countError } = await countQuery;
+
+      if (countError) {
+        console.error("Error fetching count:", countError);
+        throw countError;
+      }
+
+      const total = count || 0;
+      const totalPages = Math.ceil(total / pageSize);
+      const safePage = Math.min(currentPage, totalPages);
+      const start = (safePage - 1) * pageSize;
+
+      // Then, get profiles with their related data
+      let query = supabase
         .from("profiles")
         .select(`
           id,
@@ -36,48 +57,11 @@ export function useUsers({ currentPage, pageSize, searchTerm, selectedSBU }: Use
           )
         `);
 
-      // Apply search filter if provided
       if (searchTerm) {
-        baseQuery = baseQuery.or(`email.ilike.%${searchTerm}%,first_name.ilike.%${searchTerm}%,last_name.ilike.%${searchTerm}%,org_id.ilike.%${searchTerm}%`);
+        query = query.or(`email.ilike.%${searchTerm}%,first_name.ilike.%${searchTerm}%,last_name.ilike.%${searchTerm}%,org_id.ilike.%${searchTerm}%`);
       }
 
-      // Apply SBU filter if selected and not "all"
-      if (selectedSBU && selectedSBU !== "all") {
-        // First get the user_ids for the selected SBU
-        const { data: sbuUsers } = await supabase
-          .from('user_sbus')
-          .select('user_id')
-          .eq('sbu_id', selectedSBU);
-        
-        const userIds = sbuUsers?.map(item => item.user_id) || [];
-        
-        // Then filter profiles by these user_ids
-        if (userIds.length > 0) {
-          baseQuery = baseQuery.in('id', userIds);
-        } else {
-          // If no users found for SBU, return empty result
-          return { users: [], total: 0 };
-        }
-      }
-
-      // Get the total count with filters applied
-      const { data: countData, error: countError } = await baseQuery
-        .select('id', { count: 'exact', head: true });
-
-      if (countError) {
-        console.error("Error fetching count:", countError);
-        throw countError;
-      }
-
-      const total = countData?.length || 0;
-
-      // Calculate pagination
-      const totalPages = Math.ceil(total / pageSize);
-      const safePage = Math.min(currentPage, totalPages || 1);
-      const start = (safePage - 1) * pageSize;
-
-      // Get profiles with pagination
-      const { data: profiles, error: profilesError } = await baseQuery
+      const { data: profiles, error: profilesError } = await query
         .range(start, start + pageSize - 1);
 
       console.log("Fetched profiles:", profiles);
@@ -87,7 +71,7 @@ export function useUsers({ currentPage, pageSize, searchTerm, selectedSBU }: Use
         throw profilesError;
       }
 
-      // Get user roles for these profiles
+      // Then, get user roles for these profiles
       const { data: userRoles, error: rolesError } = await supabase
         .from('user_roles')
         .select('user_id, role')
@@ -100,7 +84,7 @@ export function useUsers({ currentPage, pageSize, searchTerm, selectedSBU }: Use
         throw rolesError;
       }
 
-      // Combine the data
+      // Combine the data with simplified level, location, and employment_type
       const usersWithData = profiles?.map((profile) => {
         const userData = {
           ...profile,

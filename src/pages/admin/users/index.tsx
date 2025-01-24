@@ -32,13 +32,12 @@ export default function UsersPage() {
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [debouncedSearch, pageSize, selectedSBU]);
+  }, [debouncedSearch, pageSize]);
 
   const { data, isLoading, refetch } = useUsers({
     currentPage,
     pageSize,
     searchTerm: debouncedSearch,
-    selectedSBU,
   });
 
   const { data: sbus = [] } = useSBUs();
