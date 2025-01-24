@@ -10,52 +10,46 @@ export function useProfileManagement(user: User | null) {
   const [profileImageUrl, setProfileImageUrl] = useState("");
   const [selectedLevel, setSelectedLevel] = useState<string>("");
   const [orgId, setOrgId] = useState("");
+  const [gender, setGender] = useState("");
+  const [dateOfBirth, setDateOfBirth] = useState<Date>();
+  const [designation, setDesignation] = useState("");
+  const [selectedLocation, setSelectedLocation] = useState("");
+  const [selectedEmploymentType, setSelectedEmploymentType] = useState("");
   const queryClient = useQueryClient();
 
-  // Fetch complete profile data
   const { data: profileData, error: profileError } = useQuery({
     queryKey: ['profile', user?.id],
     queryFn: async () => {
-      console.log("Fetching profile data for user:", user?.id);
       const { data, error } = await supabase
         .from('profiles')
         .select('*, levels(*)')
         .eq('id', user?.id)
         .maybeSingle();
       
-      if (error) {
-        console.error("Error fetching profile:", error);
-        throw error;
-      }
-      console.log("Fetched profile data:", data);
+      if (error) throw error;
       return data;
     },
     enabled: !!user?.id,
   });
 
-  // Update form state when profile data changes
   useEffect(() => {
-    console.log("Profile data changed:", profileData);
     if (profileData) {
       setFirstName(profileData.first_name || '');
       setLastName(profileData.last_name || '');
       setProfileImageUrl(profileData.profile_image_url || '');
       setSelectedLevel(profileData.level_id || '');
       setOrgId(profileData.org_id || '');
+      setGender(profileData.gender || '');
+      setDateOfBirth(profileData.date_of_birth ? new Date(profileData.date_of_birth) : undefined);
+      setDesignation(profileData.designation || '');
+      setSelectedLocation(profileData.location_id || '');
+      setSelectedEmploymentType(profileData.employment_type_id || '');
     }
   }, [profileData]);
 
-  // Update profile mutation
   const updateProfileMutation = useMutation({
     mutationFn: async () => {
       if (!user) return;
-      console.log("Updating profile with data:", {
-        first_name: firstName,
-        last_name: lastName,
-        profile_image_url: profileImageUrl,
-        level_id: selectedLevel,
-        org_id: orgId,
-      });
 
       const { error: profileError } = await supabase
         .from("profiles")
@@ -65,16 +59,17 @@ export function useProfileManagement(user: User | null) {
           profile_image_url: profileImageUrl,
           level_id: selectedLevel || null,
           org_id: orgId || null,
+          gender: gender || null,
+          date_of_birth: dateOfBirth?.toISOString().split('T')[0] || null,
+          designation: designation || null,
+          location_id: selectedLocation || null,
+          employment_type_id: selectedEmploymentType || null,
         })
         .eq("id", user.id);
 
-      if (profileError) {
-        console.error("Error updating profile:", profileError);
-        throw profileError;
-      }
+      if (profileError) throw profileError;
     },
     onSuccess: () => {
-      console.log("Profile update successful");
       queryClient.invalidateQueries({ queryKey: ["users"] });
       toast.success("Profile updated successfully");
     },
@@ -95,6 +90,16 @@ export function useProfileManagement(user: User | null) {
     setSelectedLevel,
     orgId,
     setOrgId,
+    gender,
+    setGender,
+    dateOfBirth,
+    setDateOfBirth,
+    designation,
+    setDesignation,
+    selectedLocation,
+    setSelectedLocation,
+    selectedEmploymentType,
+    setSelectedEmploymentType,
     profileData,
     profileError,
     updateProfileMutation,
