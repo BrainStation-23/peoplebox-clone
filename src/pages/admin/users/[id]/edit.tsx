@@ -19,7 +19,8 @@ export default function EditUserPage() {
   const { data: user, isLoading } = useQuery({
     queryKey: ["user", id],
     queryFn: async () => {
-      const { data, error } = await supabase
+      // First get the profile data
+      const { data: profileData, error: profileError } = await supabase
         .from("profiles")
         .select(`
           id,
@@ -32,9 +33,6 @@ export default function EditUserPage() {
             id,
             name,
             status
-          ),
-          user_roles!inner (
-            role
           ),
           user_sbus (
             id,
@@ -50,8 +48,22 @@ export default function EditUserPage() {
         .eq("id", id)
         .single();
 
-      if (error) throw error;
-      return data as unknown as User;
+      if (profileError) throw profileError;
+
+      // Then get the user role separately
+      const { data: roleData, error: roleError } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", id)
+        .single();
+
+      if (roleError) throw roleError;
+
+      // Combine the data
+      return {
+        ...profileData,
+        user_roles: roleData
+      } as User;
     },
   });
 
@@ -153,16 +165,18 @@ export default function EditUserPage() {
         </TabsContent>
 
         <TabsContent value="sbus">
-          <SBUAssignmentTab user={user} />
+          {user && <SBUAssignmentTab user={user} />}
         </TabsContent>
 
         <TabsContent value="management">
-          <ManagementTab
-            user={user}
-            supervisors={supervisors}
-            onSupervisorChange={handleSupervisorChange}
-            onPrimarySupervisorChange={handlePrimarySupervisorChange}
-          />
+          {user && (
+            <ManagementTab
+              user={user}
+              supervisors={supervisors}
+              onSupervisorChange={handleSupervisorChange}
+              onPrimarySupervisorChange={handlePrimarySupervisorChange}
+            />
+          )}
         </TabsContent>
       </Tabs>
     </div>
