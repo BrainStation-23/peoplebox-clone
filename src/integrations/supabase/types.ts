@@ -6,53 +6,9 @@ export type Json =
   | { [key: string]: Json | undefined }
   | Json[]
 
-export type Database = {
+export interface Database {
   public: {
     Tables: {
-      campaign_instances: {
-        Row: {
-          campaign_id: string
-          completion_rate: number | null
-          created_at: string
-          ends_at: string
-          id: string
-          period_number: number
-          starts_at: string
-          status: Database["public"]["Enums"]["instance_status"]
-          updated_at: string
-        }
-        Insert: {
-          campaign_id: string
-          completion_rate?: number | null
-          created_at?: string
-          ends_at: string
-          id?: string
-          period_number: number
-          starts_at: string
-          status?: Database["public"]["Enums"]["instance_status"]
-          updated_at?: string
-        }
-        Update: {
-          campaign_id?: string
-          completion_rate?: number | null
-          created_at?: string
-          ends_at?: string
-          id?: string
-          period_number?: number
-          starts_at?: string
-          status?: Database["public"]["Enums"]["instance_status"]
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "campaign_instances_campaign_id_fkey"
-            columns: ["campaign_id"]
-            isOneToOne: false
-            referencedRelation: "survey_campaigns"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       email_config: {
         Row: {
           created_at: string
@@ -70,8 +26,8 @@ export type Database = {
           from_name: string
           id?: string
           is_singleton?: boolean | null
-          provider?: Database["public"]["Enums"]["email_provider"]
-          provider_settings?: Json
+          provider: Database["public"]["Enums"]["email_provider"]
+          provider_settings: Json
           updated_at?: string
         }
         Update: {
@@ -169,7 +125,7 @@ export type Database = {
           email: string
           employment_type_id: string | null
           first_name: string | null
-          gender: Database["public"]["Enums"]["gender_type"] | null
+          gender: Database["public"]["Enums"]["gender"] | null
           id: string
           last_name: string | null
           level_id: string | null
@@ -185,7 +141,7 @@ export type Database = {
           email: string
           employment_type_id?: string | null
           first_name?: string | null
-          gender?: Database["public"]["Enums"]["gender_type"] | null
+          gender?: Database["public"]["Enums"]["gender"] | null
           id: string
           last_name?: string | null
           level_id?: string | null
@@ -201,7 +157,7 @@ export type Database = {
           email?: string
           employment_type_id?: string | null
           first_name?: string | null
-          gender?: Database["public"]["Enums"]["gender_type"] | null
+          gender?: Database["public"]["Enums"]["gender"] | null
           id?: string
           last_name?: string | null
           level_id?: string | null
@@ -219,6 +175,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "profiles_id_fkey"
+            columns: ["id"]
+            isOneToOne: true
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "profiles_level_id_fkey"
             columns: ["level_id"]
             isOneToOne: false
@@ -231,7 +194,7 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "locations"
             referencedColumns: ["id"]
-          },
+          }
         ]
       }
       sbus: {
@@ -269,258 +232,7 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
-          },
-        ]
-      }
-      survey_assignments: {
-        Row: {
-          campaign_id: string | null
-          created_at: string | null
-          created_by: string
-          due_date: string | null
-          id: string
-          is_organization_wide: boolean | null
-          last_reminder_sent: string | null
-          status: Database["public"]["Enums"]["assignment_status"] | null
-          survey_id: string
-          updated_at: string | null
-          user_id: string
-        }
-        Insert: {
-          campaign_id?: string | null
-          created_at?: string | null
-          created_by: string
-          due_date?: string | null
-          id?: string
-          is_organization_wide?: boolean | null
-          last_reminder_sent?: string | null
-          status?: Database["public"]["Enums"]["assignment_status"] | null
-          survey_id: string
-          updated_at?: string | null
-          user_id: string
-        }
-        Update: {
-          campaign_id?: string | null
-          created_at?: string | null
-          created_by?: string
-          due_date?: string | null
-          id?: string
-          is_organization_wide?: boolean | null
-          last_reminder_sent?: string | null
-          status?: Database["public"]["Enums"]["assignment_status"] | null
-          survey_id?: string
-          updated_at?: string | null
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "survey_assignments_campaign_id_fkey"
-            columns: ["campaign_id"]
-            isOneToOne: false
-            referencedRelation: "survey_campaigns"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "survey_assignments_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "survey_assignments_survey_id_fkey"
-            columns: ["survey_id"]
-            isOneToOne: false
-            referencedRelation: "surveys"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "survey_assignments_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      survey_campaigns: {
-        Row: {
-          campaign_type: string
-          completion_rate: number | null
-          created_at: string
-          created_by: string
-          description: string | null
-          ends_at: string | null
-          id: string
-          instance_duration_days: number | null
-          instance_end_time: string | null
-          is_recurring: boolean | null
-          name: string
-          recurring_days: number[] | null
-          recurring_ends_at: string | null
-          recurring_frequency: string | null
-          starts_at: string
-          status: string
-          survey_id: string
-          updated_at: string
-        }
-        Insert: {
-          campaign_type?: string
-          completion_rate?: number | null
-          created_at?: string
-          created_by: string
-          description?: string | null
-          ends_at?: string | null
-          id?: string
-          instance_duration_days?: number | null
-          instance_end_time?: string | null
-          is_recurring?: boolean | null
-          name: string
-          recurring_days?: number[] | null
-          recurring_ends_at?: string | null
-          recurring_frequency?: string | null
-          starts_at: string
-          status?: string
-          survey_id: string
-          updated_at?: string
-        }
-        Update: {
-          campaign_type?: string
-          completion_rate?: number | null
-          created_at?: string
-          created_by?: string
-          description?: string | null
-          ends_at?: string | null
-          id?: string
-          instance_duration_days?: number | null
-          instance_end_time?: string | null
-          is_recurring?: boolean | null
-          name?: string
-          recurring_days?: number[] | null
-          recurring_ends_at?: string | null
-          recurring_frequency?: string | null
-          starts_at?: string
-          status?: string
-          survey_id?: string
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "survey_campaigns_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "survey_campaigns_survey_id_fkey"
-            columns: ["survey_id"]
-            isOneToOne: false
-            referencedRelation: "surveys"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      survey_responses: {
-        Row: {
-          assignment_id: string
-          campaign_instance_id: string | null
-          created_at: string | null
-          id: string
-          response_data: Json
-          state_data: Json | null
-          submitted_at: string | null
-          updated_at: string | null
-          user_id: string
-        }
-        Insert: {
-          assignment_id: string
-          campaign_instance_id?: string | null
-          created_at?: string | null
-          id?: string
-          response_data: Json
-          state_data?: Json | null
-          submitted_at?: string | null
-          updated_at?: string | null
-          user_id: string
-        }
-        Update: {
-          assignment_id?: string
-          campaign_instance_id?: string | null
-          created_at?: string | null
-          id?: string
-          response_data?: Json
-          state_data?: Json | null
-          submitted_at?: string | null
-          updated_at?: string | null
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "survey_responses_assignment_id_fkey"
-            columns: ["assignment_id"]
-            isOneToOne: false
-            referencedRelation: "survey_assignments"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "survey_responses_campaign_instance_id_fkey"
-            columns: ["campaign_instance_id"]
-            isOneToOne: false
-            referencedRelation: "campaign_instances"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "survey_responses_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      surveys: {
-        Row: {
-          created_at: string
-          created_by: string
-          description: string | null
-          id: string
-          json_data: Json
-          name: string
-          status: Database["public"]["Enums"]["survey_status"] | null
-          tags: string[] | null
-          updated_at: string
-        }
-        Insert: {
-          created_at?: string
-          created_by: string
-          description?: string | null
-          id?: string
-          json_data: Json
-          name: string
-          status?: Database["public"]["Enums"]["survey_status"] | null
-          tags?: string[] | null
-          updated_at?: string
-        }
-        Update: {
-          created_at?: string
-          created_by?: string
-          description?: string | null
-          id?: string
-          json_data?: Json
-          name?: string
-          status?: Database["public"]["Enums"]["survey_status"] | null
-          tags?: string[] | null
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "surveys_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
+          }
         ]
       }
       user_roles: {
@@ -542,7 +254,15 @@ export type Database = {
           role?: Database["public"]["Enums"]["user_role"]
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "user_roles_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          }
+        ]
       }
       user_sbus: {
         Row: {
@@ -583,7 +303,7 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
-          },
+          }
         ]
       }
       user_supervisors: {
@@ -625,7 +345,7 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
-          },
+          }
         ]
       }
     }
@@ -633,47 +353,58 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      delete_campaign_cascade: {
+        Args: Record<PropertyKey, never>
+        Returns: unknown
+      }
+      generate_initial_instances: {
+        Args: Record<PropertyKey, never>
+        Returns: unknown
+      }
+      handle_new_user: {
+        Args: Record<PropertyKey, never>
+        Returns: unknown
+      }
       is_admin: {
         Args: {
           user_uid: string
         }
         Returns: boolean
       }
+      update_campaign_completion_rate: {
+        Args: Record<PropertyKey, never>
+        Returns: unknown
+      }
+      update_updated_at_column: {
+        Args: Record<PropertyKey, never>
+        Returns: unknown
+      }
+      validate_campaign_dates: {
+        Args: Record<PropertyKey, never>
+        Returns: unknown
+      }
     }
     Enums: {
       assignment_status: "pending" | "completed" | "expired"
-      campaign_status: "draft" | "active" | "completed" | "archived"
       email_provider: "resend"
       employment_type_status: "active" | "inactive"
-      gender_type: "male" | "female" | "other"
+      gender: "male" | "female" | "other"
       instance_status: "upcoming" | "active" | "completed"
       level_status: "active" | "inactive"
-      recurring_frequency:
-        | "one_time"
-        | "daily"
-        | "weekly"
-        | "monthly"
-        | "quarterly"
-        | "yearly"
       survey_status: "draft" | "published" | "archived"
       user_role: "admin" | "user"
-    }
-    CompositeTypes: {
-      [_ in never]: never
     }
   }
 }
 
-type PublicSchema = Database[Extract<keyof Database, "public">]
-
 export type Tables<
   PublicTableNameOrOptions extends
-    | keyof (PublicSchema["Tables"] & PublicSchema["Views"])
+    | keyof (Database["public"]["Tables"] & Database["public"]["Views"])
     | { schema: keyof Database },
   TableName extends PublicTableNameOrOptions extends { schema: keyof Database }
     ? keyof (Database[PublicTableNameOrOptions["schema"]]["Tables"] &
         Database[PublicTableNameOrOptions["schema"]]["Views"])
-    : never = never,
+    : never = never
 > = PublicTableNameOrOptions extends { schema: keyof Database }
   ? (Database[PublicTableNameOrOptions["schema"]]["Tables"] &
       Database[PublicTableNameOrOptions["schema"]]["Views"])[TableName] extends {
@@ -681,82 +412,67 @@ export type Tables<
     }
     ? R
     : never
-  : PublicTableNameOrOptions extends keyof (PublicSchema["Tables"] &
-        PublicSchema["Views"])
-    ? (PublicSchema["Tables"] &
-        PublicSchema["Views"])[PublicTableNameOrOptions] extends {
-        Row: infer R
-      }
-      ? R
-      : never
+  : PublicTableNameOrOptions extends keyof (Database["public"]["Tables"] &
+      Database["public"]["Views"])
+  ? (Database["public"]["Tables"] &
+      Database["public"]["Views"])[PublicTableNameOrOptions] extends {
+      Row: infer R
+    }
+    ? R
     : never
+  : never
 
 export type TablesInsert<
   PublicTableNameOrOptions extends
-    | keyof PublicSchema["Tables"]
+    | keyof Database["public"]["Tables"]
     | { schema: keyof Database },
   TableName extends PublicTableNameOrOptions extends { schema: keyof Database }
     ? keyof Database[PublicTableNameOrOptions["schema"]]["Tables"]
-    : never = never,
+    : never = never
 > = PublicTableNameOrOptions extends { schema: keyof Database }
   ? Database[PublicTableNameOrOptions["schema"]]["Tables"][TableName] extends {
       Insert: infer I
     }
     ? I
     : never
-  : PublicTableNameOrOptions extends keyof PublicSchema["Tables"]
-    ? PublicSchema["Tables"][PublicTableNameOrOptions] extends {
-        Insert: infer I
-      }
-      ? I
-      : never
+  : PublicTableNameOrOptions extends keyof Database["public"]["Tables"]
+  ? Database["public"]["Tables"][PublicTableNameOrOptions] extends {
+      Insert: infer I
+    }
+    ? I
     : never
+  : never
 
 export type TablesUpdate<
   PublicTableNameOrOptions extends
-    | keyof PublicSchema["Tables"]
+    | keyof Database["public"]["Tables"]
     | { schema: keyof Database },
   TableName extends PublicTableNameOrOptions extends { schema: keyof Database }
     ? keyof Database[PublicTableNameOrOptions["schema"]]["Tables"]
-    : never = never,
+    : never = never
 > = PublicTableNameOrOptions extends { schema: keyof Database }
   ? Database[PublicTableNameOrOptions["schema"]]["Tables"][TableName] extends {
       Update: infer U
     }
     ? U
     : never
-  : PublicTableNameOrOptions extends keyof PublicSchema["Tables"]
-    ? PublicSchema["Tables"][PublicTableNameOrOptions] extends {
-        Update: infer U
-      }
-      ? U
-      : never
+  : PublicTableNameOrOptions extends keyof Database["public"]["Tables"]
+  ? Database["public"]["Tables"][PublicTableNameOrOptions] extends {
+      Update: infer U
+    }
+    ? U
     : never
+  : never
 
 export type Enums<
   PublicEnumNameOrOptions extends
-    | keyof PublicSchema["Enums"]
+    | keyof Database["public"]["Enums"]
     | { schema: keyof Database },
   EnumName extends PublicEnumNameOrOptions extends { schema: keyof Database }
     ? keyof Database[PublicEnumNameOrOptions["schema"]]["Enums"]
-    : never = never,
+    : never = never
 > = PublicEnumNameOrOptions extends { schema: keyof Database }
   ? Database[PublicEnumNameOrOptions["schema"]]["Enums"][EnumName]
-  : PublicEnumNameOrOptions extends keyof PublicSchema["Enums"]
-    ? PublicSchema["Enums"][PublicEnumNameOrOptions]
-    : never
-
-export type CompositeTypes<
-  PublicCompositeTypeNameOrOptions extends
-    | keyof PublicSchema["CompositeTypes"]
-    | { schema: keyof Database },
-  CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
-    schema: keyof Database
-  }
-    ? keyof Database[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
-    : never = never,
-> = PublicCompositeTypeNameOrOptions extends { schema: keyof Database }
-  ? Database[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
-  : PublicCompositeTypeNameOrOptions extends keyof PublicSchema["CompositeTypes"]
-    ? PublicSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
-    : never
+  : PublicEnumNameOrOptions extends keyof Database["public"]["Enums"]
+  ? Database["public"]["Enums"][PublicEnumNameOrOptions]
+  : never
