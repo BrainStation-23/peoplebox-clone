@@ -1,7 +1,4 @@
 import { supabase } from "@/integrations/supabase/client";
-import { User } from "../types";
-
-const BATCH_SIZE = 100;
 
 export interface ExportProgress {
   processed: number;
@@ -11,7 +8,7 @@ export interface ExportProgress {
 
 export async function* exportUsers(
   onProgress: (progress: ExportProgress) => void
-): AsyncGenerator<string[]> {
+): AsyncGenerator<string[][]> {
   try {
     // First, get total count
     const { count } = await supabase
@@ -24,6 +21,7 @@ export async function* exportUsers(
 
     onProgress({ processed: 0, total: count });
 
+    const BATCH_SIZE = 100;
     // Process in batches
     for (let offset = 0; offset < count; offset += BATCH_SIZE) {
       const { data: profiles, error: profilesError } = await supabase
@@ -37,7 +35,7 @@ export async function* exportUsers(
           levels (
             name
           ),
-          user_roles (
+          user_roles!inner (
             role
           ),
           user_sbus (
@@ -51,6 +49,10 @@ export async function* exportUsers(
 
       if (profilesError) {
         throw profilesError;
+      }
+
+      if (!profiles) {
+        continue;
       }
 
       // Transform data to CSV format

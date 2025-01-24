@@ -160,7 +160,7 @@ export default function UserTable({
     });
 
     try {
-      const rows: string[][] = [];
+      const allRows: string[][] = [];
       for await (const batch of exportUsers((progress) => {
         setExportProgress(prev => ({
           ...prev,
@@ -169,11 +169,11 @@ export default function UserTable({
           error: progress.error || ""
         }));
       })) {
-        rows.push(...batch);
+        allRows.push(...batch);
       }
 
-      if (rows.length > 0) {
-        downloadCSV(rows, `users-export-${new Date().toISOString()}.csv`);
+      if (allRows.length > 0) {
+        downloadCSV(allRows, `users-export-${new Date().toISOString()}.csv`);
         setExportProgress(prev => ({ ...prev, isComplete: true }));
       }
     } catch (error: any) {
