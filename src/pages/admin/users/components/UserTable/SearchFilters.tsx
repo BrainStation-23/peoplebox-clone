@@ -2,6 +2,7 @@ import { Search, Upload, Download, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
 
 interface SearchFiltersProps {
   searchTerm: string;
@@ -12,6 +13,7 @@ interface SearchFiltersProps {
   onImport: () => void;
   sbus: Array<{ id: string; name: string; }>;
   isLoading?: boolean;
+  totalResults?: number;
 }
 
 export function SearchFilters({
@@ -22,7 +24,8 @@ export function SearchFilters({
   onExport,
   onImport,
   sbus,
-  isLoading
+  isLoading,
+  totalResults
 }: SearchFiltersProps) {
   return (
     <div className="flex items-center justify-between mb-4">
@@ -35,7 +38,7 @@ export function SearchFilters({
             onChange={(e) => setSearchTerm(e.target.value)}
             className="pl-8 w-[300px] pr-8"
           />
-          {searchTerm && (
+          {searchTerm && !isLoading && (
             <button
               onClick={() => setSearchTerm("")}
               className="absolute right-2 top-2.5 text-muted-foreground hover:text-foreground"
@@ -45,10 +48,15 @@ export function SearchFilters({
           )}
           {isLoading && (
             <div className="absolute right-2 top-2.5">
-              <div className="animate-spin rounded-full h-4 w-4 border-2 border-primary border-t-transparent" />
+              <LoadingSpinner size={16} />
             </div>
           )}
         </div>
+        {totalResults !== undefined && (
+          <span className="text-sm text-muted-foreground">
+            {totalResults} {totalResults === 1 ? 'result' : 'results'} found
+          </span>
+        )}
         <Select value={selectedSBU} onValueChange={setSelectedSBU}>
           <SelectTrigger className="w-[200px]">
             <SelectValue placeholder="Filter by SBU" />

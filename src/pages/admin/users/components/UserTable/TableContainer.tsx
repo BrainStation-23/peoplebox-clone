@@ -8,14 +8,24 @@ interface TableContainerProps {
   onEdit: (user: User) => void;
   onDelete: (userId: string) => void;
   onPasswordChange: (userId: string) => void;
+  isLoading?: boolean;
 }
 
 export function TableContainer({ 
   users, 
   onEdit, 
   onDelete, 
-  onPasswordChange 
+  onPasswordChange,
+  isLoading
 }: TableContainerProps) {
+  if (users.length === 0 && !isLoading) {
+    return (
+      <div className="text-center py-8 text-muted-foreground">
+        No users found. Try adjusting your search criteria.
+      </div>
+    );
+  }
+
   return (
     <Table>
       <UsersTableHeader />
