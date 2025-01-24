@@ -1,6 +1,17 @@
-export * from "@/types/survey";
+export type SurveyStatus = 'draft' | 'published' | 'archived';
 
-// Campaign-specific types that aren't part of the core survey types
+export type Survey = {
+  id: string;
+  name: string;
+  description: string | null;
+  tags: string[];
+  json_data: Record<string, any>;
+  status: SurveyStatus;
+  created_by: string;
+  created_at: string;
+  updated_at: string;
+};
+
 export type RecurringFrequency = 'daily' | 'weekly' | 'monthly' | 'quarterly' | 'yearly';
 
 export type Campaign = {

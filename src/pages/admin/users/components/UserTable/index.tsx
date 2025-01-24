@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { User } from "@/types/user";
+import { User } from "../../types";
 import { SearchFilters } from "./SearchFilters";
 import { TableContainer } from "./TableContainer";
 import { TablePagination } from "./TablePagination";

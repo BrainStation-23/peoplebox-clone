@@ -1,7 +1,7 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { User } from "@/types/user";
+import { User } from "../../types";
 import { BasicInfoTab } from "./BasicInfoTab";
 import { SBUAssignmentTab } from "./SBUAssignmentTab";
 import { ManagementTab } from "./ManagementTab";

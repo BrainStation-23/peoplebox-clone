@@ -7,7 +7,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
-import { User } from "@/types/user";
+import { User } from "../../types";
 
 export interface UserActionsProps {
   user: User;

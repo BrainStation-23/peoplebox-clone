@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { User, UserSBU } from "@/types/user";
+import { User, UserSBU } from "../types";
 import { toast } from "sonner";
 
 export function useSBUManagement(user: User | null) {

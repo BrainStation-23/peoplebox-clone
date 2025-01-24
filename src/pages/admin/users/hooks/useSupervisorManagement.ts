@@ -1,7 +1,7 @@
 import { useState, useCallback } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { User } from "@/types/user";
+import { User } from "../types";
 import { toast } from "sonner";
 
 export function useSupervisorManagement(user: User | null) {

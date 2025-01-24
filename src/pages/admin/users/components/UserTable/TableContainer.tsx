@@ -1,5 +1,5 @@
 import { Table, TableBody } from "@/components/ui/table";
-import { User } from "@/types/user";
+import { User } from "../../types";
 import { UsersTableHeader } from "./TableHeader";
 import { UserRow } from "./UserRow";
 

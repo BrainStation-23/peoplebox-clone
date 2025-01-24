@@ -7,7 +7,50 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { useState } from "react";
 import SurveyCard from "./SurveyCard";
 import SurveyFilters from "./components/SurveyFilters";
-import { SurveyAssignment } from "@/types/survey";
+import { Database } from "@/integrations/supabase/types";
+
+type Assignment = {
+  id: string;
+  survey_id: string;
+  user_id: string;
+  due_date: string | null;
+  status: Database["public"]["Enums"]["assignment_status"] | null;
+  created_by: string;
+  created_at: string | null;
+  updated_at: string | null;
+  is_organization_wide: boolean | null;
+  campaign_id: string | null;
+  survey: {
+    id: string;
+    name: string;
+    description: string | null;
+    status: Database["public"]["Enums"]["survey_status"] | null;
+    created_at: string;
+    created_by: string;
+    json_data: Database["public"]["Tables"]["surveys"]["Row"]["json_data"];
+    tags: string[] | null;
+    updated_at: string;
+  };
+  campaign?: {
+    id: string;
+    name: string;
+    description: string | null;
+    completion_rate: number | null;
+    status: string;
+    campaign_type: string;
+    created_at: string;
+    created_by: string;
+    ends_at: string | null;
+    is_recurring: boolean | null;
+    recurring_days: number[] | null;
+    recurring_ends_at: string | null;
+    recurring_frequency: string | null;
+    starts_at: string;
+    instance_duration_days: number | null;
+    instance_end_time: string | null;
+    updated_at: string;
+  };
+};
 
 export default function MySurveysList() {
   const navigate = useNavigate();
@@ -57,10 +100,11 @@ export default function MySurveysList() {
         .order("created_at", { ascending: false });
 
       if (error) throw error;
-      return data as SurveyAssignment[];
+      return data as Assignment[];
     },
   });
 
+  // Check for due dates and show notifications
   useEffect(() => {
     if (assignments) {
       const now = new Date();
