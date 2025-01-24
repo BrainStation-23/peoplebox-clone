@@ -11,14 +11,13 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import type { LocationFormValues } from "../types";
 
 const locationFormSchema = z.object({
   name: z.string().min(1, "Name is required"),
   google_maps_url: z.string().url().optional().or(z.literal("")),
   address: z.string().optional().or(z.literal("")),
 });
-
-export type LocationFormValues = z.infer<typeof locationFormSchema>;
 
 interface LocationFormProps {
   onSubmit: (values: LocationFormValues) => void;
