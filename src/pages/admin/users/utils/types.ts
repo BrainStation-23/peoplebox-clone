@@ -8,7 +8,7 @@ export type ProcessingStatus = "success" | "error" | "skipped";
 
 export interface CSVRow {
   id?: string;
-  email: string; // Required field
+  email: string;
   firstName?: string;
   lastName?: string;
   orgId?: string;
@@ -56,24 +56,15 @@ export interface ProcessingResult {
   };
 }
 
-export interface ImportProgress {
-  processed: number;
-  total: number;
-  currentBatch: number;
-  totalBatches: number;
-  logs: ProcessingLogEntry[];
-  estimatedTimeRemaining: number;
+export interface ImportError {
+  row: number;
+  type: 'validation' | 'creation' | 'update' | 'sbu' | 'level' | 'role' | 'location' | 'employment' | 'gender' | 'date';
+  message: string;
+  data?: Partial<CSVRow>;
 }
 
 export interface ImportResult {
   successful: number;
   failed: number;
   errors: ImportError[];
-}
-
-export interface ImportError {
-  row: number;
-  type: 'validation' | 'creation' | 'update' | 'sbu' | 'level' | 'role' | 'location' | 'employment' | 'gender' | 'date';
-  message: string;
-  data?: Partial<CSVRow>;
 }

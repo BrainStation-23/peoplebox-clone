@@ -404,3 +404,4 @@ async function assignSBUs(userId: string, sbuString: string): Promise<void> {
 
   await supabase.from("user_sbus").insert(assignments);
 }
+
