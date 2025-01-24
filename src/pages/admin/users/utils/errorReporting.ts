@@ -1,10 +1,6 @@
 import { ImportError } from "./types";
 
-export type ImportResult = {
-  successful: number;
-  failed: number;
-  errors: ImportError[];
-};
+export type { ImportError, ImportResult } from "./types";
 
 export function convertValidationErrorsToImportErrors(validationErrors: { row: number; errors: string[] }[]): ImportError[] {
   return validationErrors.flatMap(error => 

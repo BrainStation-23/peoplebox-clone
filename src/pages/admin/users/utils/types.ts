@@ -1,4 +1,7 @@
-import { User } from "../types";
+import { Database } from "@/integrations/supabase/types";
+
+export type UserRole = Database["public"]["Enums"]["user_role"];
+export type GenderType = Database["public"]["Enums"]["gender_type"];
 
 export type CSVRowType = "new" | "update";
 export type ProcessingStatus = "success" | "error" | "skipped";
@@ -27,8 +30,8 @@ export interface ProcessingLogEntry {
   id?: string;
   error?: string;
   details: {
-    attemptedChanges: Partial<User>;
-    actualChanges?: Partial<User>;
+    attemptedChanges: Partial<CSVRow>;
+    actualChanges?: Partial<CSVRow>;
   };
 }
 
