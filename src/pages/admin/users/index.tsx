@@ -14,6 +14,7 @@ export default function UsersPage() {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState("");
+  const [selectedSBU, setSelectedSBU] = useState("all");
   const debouncedSearch = useDebounce(searchTerm, 300);
   const pageSize = 10;
 
@@ -49,6 +50,8 @@ export default function UsersPage() {
         <SearchFilters
           searchTerm={searchTerm}
           setSearchTerm={setSearchTerm}
+          selectedSBU={selectedSBU}
+          setSelectedSBU={setSelectedSBU}
           onExport={() => {}} // Implement these handlers
           onImport={() => {}} // in the parent component
           sbus={[]} // Pass actual SBUs

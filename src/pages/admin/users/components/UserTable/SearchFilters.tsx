@@ -7,24 +7,24 @@ import { LoadingSpinner } from "@/components/ui/loading-spinner";
 interface SearchFiltersProps {
   searchTerm: string;
   setSearchTerm: (value: string) => void;
-  selectedSBU: string;
-  setSelectedSBU: (value: string) => void;
   onExport: () => void;
   onImport: () => void;
   sbus: Array<{ id: string; name: string; }>;
-  isLoading?: boolean;
   totalResults?: number;
+  isSearching?: boolean;
+  selectedSBU?: string;
+  setSelectedSBU?: (value: string) => void;
 }
 
 export function SearchFilters({
   searchTerm,
   setSearchTerm,
-  selectedSBU,
-  setSelectedSBU,
+  selectedSBU = "all",
+  setSelectedSBU = () => {},
   onExport,
   onImport,
   sbus,
-  isLoading,
+  isSearching,
   totalResults
 }: SearchFiltersProps) {
   return (
@@ -38,7 +38,7 @@ export function SearchFilters({
             onChange={(e) => setSearchTerm(e.target.value)}
             className="pl-8 w-[300px] pr-8"
           />
-          {searchTerm && !isLoading && (
+          {searchTerm && !isSearching && (
             <button
               onClick={() => setSearchTerm("")}
               className="absolute right-2 top-2.5 text-muted-foreground hover:text-foreground"
@@ -46,7 +46,7 @@ export function SearchFilters({
               <X className="h-4 w-4" />
             </button>
           )}
-          {isLoading && (
+          {isSearching && (
             <div className="absolute right-2 top-2.5">
               <LoadingSpinner size={16} />
             </div>
