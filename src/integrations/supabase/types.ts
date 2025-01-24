@@ -110,6 +110,33 @@ export type Database = {
         }
         Relationships: []
       }
+      locations: {
+        Row: {
+          address: string | null
+          created_at: string
+          google_maps_url: string | null
+          id: string
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          address?: string | null
+          created_at?: string
+          google_maps_url?: string | null
+          id?: string
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          address?: string | null
+          created_at?: string
+          google_maps_url?: string | null
+          id?: string
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string

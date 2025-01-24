@@ -1,5 +1,5 @@
 import { Outlet, Link, useLocation } from "react-router-dom";
-import { Database, Mail, Layers } from "lucide-react";
+import { Database, Mail, Layers, MapPin } from "lucide-react";
 import {
   NavigationMenu,
   NavigationMenuList,
@@ -23,6 +23,11 @@ const navigationItems = [
     title: "Level",
     icon: Layers,
     path: "/admin/config/level",
+  },
+  {
+    title: "Location",
+    icon: MapPin,
+    path: "/admin/config/location",
   },
 ];
 
