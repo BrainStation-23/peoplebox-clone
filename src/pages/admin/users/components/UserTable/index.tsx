@@ -7,7 +7,7 @@ import EditUserDialog from "../EditUserDialog";
 import { ExportProgress } from "./ExportProgress";
 import { ImportDialog } from "../ImportDialog";
 import { PasswordDialog } from "./PasswordDialog";
-import { exportUsers, downloadCSV } from "../../utils/exportUsers";
+import { exportUsers } from "../../utils/exportUsers";
 import { usePasswordManagement } from "../../hooks/usePasswordManagement";
 import { useUserFilters } from "../../hooks/useUserFilters";
 
