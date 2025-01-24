@@ -1,4 +1,10 @@
-import { CSVRow, ProcessingResult, ValidationError, ImportError } from '../types';
+import { 
+  CSVRow, 
+  ProcessingResult, 
+  ValidationError, 
+  ImportError,
+  ProcessingLogEntry 
+} from '../types';
 import { createProcessingLog } from './createProcessingLog';
 import { validateRow } from './validation';
 import { supabase } from "@/integrations/supabase/client";
@@ -140,4 +146,5 @@ function handleProcessingError(
   );
 }
 
+// Export the types that are needed by other modules
 export type { ProcessingResult, ImportError };
