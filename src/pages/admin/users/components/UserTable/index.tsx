@@ -10,6 +10,7 @@ import { PasswordDialog } from "./PasswordDialog";
 import { exportUsers } from "../../utils/exportUsers";
 import { usePasswordManagement } from "../../hooks/usePasswordManagement";
 import { useUserFilters } from "../../hooks/useUserFilters";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface UserTableProps {
   users: User[];
@@ -21,6 +22,8 @@ interface UserTableProps {
   onDelete: (userId: string) => void;
   searchTerm: string;
   setSearchTerm: (value: string) => void;
+  selectedSBU: string;
+  onPageSizeChange: (size: number) => void;
 }
 
 export default function UserTable({
@@ -33,6 +36,8 @@ export default function UserTable({
   onDelete,
   searchTerm,
   setSearchTerm,
+  selectedSBU,
+  onPageSizeChange,
 }: UserTableProps) {
   const [userToEdit, setUserToEdit] = useState<User | null>(null);
   const [isImportDialogOpen, setIsImportDialogOpen] = useState(false);
@@ -47,11 +52,7 @@ export default function UserTable({
     handlePasswordSave
   } = usePasswordManagement();
 
-  const {
-    selectedSBU,
-    setSelectedSBU,
-    filteredUsers
-  } = useUserFilters(users);
+  const { filteredUsers } = useUserFilters(users, selectedSBU);
 
   const [exportProgress, setExportProgress] = useState({
     isOpen: false,
@@ -69,6 +70,20 @@ export default function UserTable({
 
   return (
     <div className="space-y-4">
+      <div className="flex justify-end mb-4">
+        <Select value={pageSize.toString()} onValueChange={(value) => onPageSizeChange(Number(value))}>
+          <SelectTrigger className="w-[180px]">
+            <SelectValue placeholder="Select page size" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="5">5 per page</SelectItem>
+            <SelectItem value="10">10 per page</SelectItem>
+            <SelectItem value="20">20 per page</SelectItem>
+            <SelectItem value="50">50 per page</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
       <div className="relative min-h-[400px]">
         <TableContainer
           users={filteredUsers}

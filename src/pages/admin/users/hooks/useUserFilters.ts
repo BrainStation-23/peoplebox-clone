@@ -1,32 +1,20 @@
 import { useState } from "react";
 import { User } from "../types";
 
-export const useUserFilters = (users: User[] = []) => {
+export const useUserFilters = (users: User[] = [], selectedSBU: string) => {
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedSBU, setSelectedSBU] = useState("all");
 
   const filteredUsers = users.filter((user) => {
-    const matchesSearch =
-      searchTerm === "" ||
-      user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      `${user.first_name} ${user.last_name}`
-        .toLowerCase()
-        .includes(searchTerm.toLowerCase());
-
     const matchesSBU =
       selectedSBU === "all" ||
-      user.user_sbus?.some(
-        (sbu) => sbu.is_primary && sbu.sbu.id === selectedSBU
-      );
+      user.user_sbus?.some((sbu) => sbu.sbu_id === selectedSBU);
 
-    return matchesSearch && matchesSBU;
+    return matchesSBU;
   });
 
   return {
     searchTerm,
     setSearchTerm,
-    selectedSBU,
-    setSelectedSBU,
     filteredUsers
   };
 };

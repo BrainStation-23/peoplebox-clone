@@ -19,12 +19,12 @@ export default function UsersPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedSBU, setSelectedSBU] = useState("all");
+  const [pageSize, setPageSize] = useState(10);
   const debouncedSearch = useDebounce(searchTerm, 300);
-  const pageSize = 10;
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [debouncedSearch]);
+  }, [debouncedSearch, pageSize]);
 
   const { data, isLoading, refetch } = useUsers({
     currentPage,
@@ -38,6 +38,10 @@ export default function UsersPage() {
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
+  };
+
+  const handlePageSizeChange = (size: number) => {
+    setPageSize(size);
   };
 
   const handleImportComplete = () => {
@@ -81,6 +85,8 @@ export default function UsersPage() {
             onDelete={handleDelete}
             searchTerm={searchTerm}
             setSearchTerm={setSearchTerm}
+            selectedSBU={selectedSBU}
+            onPageSizeChange={handlePageSizeChange}
           />
         </div>
       </div>
