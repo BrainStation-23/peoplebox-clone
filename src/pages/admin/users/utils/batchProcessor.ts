@@ -3,8 +3,6 @@ import { ImportError } from "./errorReporting";
 import { supabase } from "@/integrations/supabase/client";
 
 const BATCH_SIZE = 50;
-const MAX_RETRIES = 3;
-const RETRY_DELAY = 2000; // 2 seconds
 
 export interface BatchProgress {
   processed: number;
@@ -25,63 +23,6 @@ async function sleep(ms: number): Promise<void> {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-async function processWithRetry<T>(
-  operation: () => Promise<T>,
-  retries = MAX_RETRIES,
-  delay = RETRY_DELAY
-): Promise<T> {
-  try {
-    return await operation();
-  } catch (error) {
-    if (retries > 0) {
-      await sleep(delay);
-      return processWithRetry(operation, retries - 1, delay * 1.5);
-    }
-    throw error;
-  }
-}
-
-export async function processBatch(
-  batch: CSVRow[],
-  options: BatchProcessorOptions
-): Promise<void> {
-  const { onProgress, onError, signal } = options;
-  
-  for (let i = 0; i < batch.length; i++) {
-    if (signal?.aborted) {
-      throw new Error('Operation cancelled');
-    }
-
-    try {
-      await processWithRetry(async () => {
-        // Process single user with retry logic
-        const user = batch[i];
-        const { data, error } = await supabase.functions.invoke('manage-users', {
-          body: {
-            method: 'POST',
-            action: {
-              email: user.email,
-              first_name: user.firstName,
-              last_name: user.lastName,
-              is_admin: user.role === 'admin',
-            },
-          }
-        });
-
-        if (error) throw error;
-        return data;
-      });
-    } catch (error: any) {
-      onError({
-        row: i + 1,
-        type: 'creation',
-        message: error.message,
-        data: batch[i],
-      });
-    }
-  }
-}
-
 export async function* batchProcessor(
   data: ProcessingResult,
   options: BatchProcessorOptions
@@ -98,33 +39,70 @@ export async function* batchProcessor(
     }
 
     const start = batchNum * BATCH_SIZE;
-    const batch = allUsers.slice(start, start + BATCH_SIZE);
+    const batchUsers = allUsers.slice(start, start + BATCH_SIZE);
 
-    await processBatch(batch, {
-      onProgress,
-      onError,
-      signal,
-    });
+    try {
+      const { data, error } = await supabase.functions.invoke('manage-users', {
+        body: {
+          method: 'BATCH_CREATE',
+          action: {
+            users: batchUsers.map(user => ({
+              email: user.email,
+              first_name: user.firstName,
+              last_name: user.lastName,
+              is_admin: user.role === 'admin',
+            }))
+          }
+        }
+      });
 
-    processed += batch.length;
-    const elapsedTime = Date.now() - startTime;
-    const avgTimePerItem = elapsedTime / processed;
-    const remainingItems = allUsers.length - processed;
-    const estimatedTimeRemaining = avgTimePerItem * remainingItems;
+      if (error) {
+        console.error('Batch processing error:', error);
+        throw error;
+      }
 
-    const progress: BatchProgress = {
-      processed,
-      total: allUsers.length,
-      currentBatch: batchNum + 1,
-      totalBatches,
-      estimatedTimeRemaining,
-      errors: [],
-    };
+      // Handle individual errors from the batch operation
+      if (data.errors) {
+        data.errors.forEach(err => {
+          onError({
+            row: allUsers.findIndex(u => u.email === err.user.email) + 1,
+            type: 'creation',
+            message: err.error,
+            data: err.user,
+          });
+        });
+      }
 
-    onProgress(progress);
-    yield progress;
+      processed += batchUsers.length;
+      const elapsedTime = Date.now() - startTime;
+      const avgTimePerItem = elapsedTime / processed;
+      const remainingItems = allUsers.length - processed;
+      const estimatedTimeRemaining = avgTimePerItem * remainingItems;
 
-    // Small delay between batches to prevent overwhelming the server
-    await sleep(100);
+      const progress: BatchProgress = {
+        processed,
+        total: allUsers.length,
+        currentBatch: batchNum + 1,
+        totalBatches,
+        estimatedTimeRemaining,
+        errors: [],
+      };
+
+      onProgress(progress);
+      yield progress;
+
+      // Small delay between batches to prevent overwhelming the server
+      await sleep(100);
+    } catch (error: any) {
+      console.error('Error processing batch:', error);
+      batchUsers.forEach((user, index) => {
+        onError({
+          row: start + index + 1,
+          type: 'creation',
+          message: error.message || 'Failed to process user',
+          data: user,
+        });
+      });
+    }
   }
 }

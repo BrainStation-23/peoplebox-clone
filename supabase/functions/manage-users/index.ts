@@ -17,6 +17,15 @@ interface DeleteUserPayload {
   user_id: string;
 }
 
+interface BatchCreateUserPayload {
+  users: Array<{
+    email: string;
+    first_name: string | null;
+    last_name: string | null;
+    is_admin: boolean;
+  }>;
+}
+
 Deno.serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
@@ -80,6 +89,77 @@ Deno.serve(async (req) => {
 
       return new Response(
         JSON.stringify({ message: 'User created successfully', user: authUser.user }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
+
+    if (method === 'BATCH_CREATE') {
+      const payload = action as BatchCreateUserPayload
+      console.log('Creating users in batch:', payload.users.length)
+
+      const results = []
+      const errors = []
+
+      for (const user of payload.users) {
+        try {
+          // Generate a random password for each user
+          const password = Math.random().toString(36).slice(-8)
+
+          // Create the user in auth.users
+          const { data: authUser, error: createUserError } = await supabaseClient.auth.admin.createUser({
+            email: user.email,
+            password: password,
+            email_confirm: true
+          })
+
+          if (createUserError) {
+            console.error('Error creating user:', createUserError)
+            errors.push({ user: user, error: createUserError.message })
+            continue
+          }
+
+          // Update the profile with additional information
+          const { error: updateProfileError } = await supabaseClient
+            .from('profiles')
+            .update({
+              first_name: user.first_name,
+              last_name: user.last_name,
+            })
+            .eq('id', authUser.user.id)
+
+          if (updateProfileError) {
+            console.error('Error updating profile:', updateProfileError)
+            errors.push({ user: user, error: updateProfileError.message })
+            continue
+          }
+
+          // If user should be admin, update their role
+          if (user.is_admin) {
+            const { error: updateRoleError } = await supabaseClient
+              .from('user_roles')
+              .update({ role: 'admin' })
+              .eq('user_id', authUser.user.id)
+
+            if (updateRoleError) {
+              console.error('Error updating role:', updateRoleError)
+              errors.push({ user: user, error: updateRoleError.message })
+              continue
+            }
+          }
+
+          results.push({ user: user, success: true })
+        } catch (error) {
+          console.error('Error processing user:', user, error)
+          errors.push({ user: user, error: error.message })
+        }
+      }
+
+      return new Response(
+        JSON.stringify({ 
+          message: 'Batch processing completed',
+          results: results,
+          errors: errors
+        }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }
