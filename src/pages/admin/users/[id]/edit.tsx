@@ -46,18 +46,26 @@ export default function EditUserPage() {
           )
         `)
         .eq("id", id)
-        .single();
+        .maybeSingle();
 
       if (profileError) throw profileError;
+
+      if (!profileData) {
+        throw new Error("Profile not found");
+      }
 
       // Then get the user role separately
       const { data: roleData, error: roleError } = await supabase
         .from("user_roles")
         .select("role")
         .eq("user_id", id)
-        .single();
+        .maybeSingle();
 
       if (roleError) throw roleError;
+
+      if (!roleData) {
+        throw new Error("User role not found");
+      }
 
       // Combine the data
       return {
