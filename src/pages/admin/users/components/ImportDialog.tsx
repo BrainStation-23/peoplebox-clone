@@ -4,7 +4,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Progress } from "@/components/ui/progress";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Upload, AlertCircle } from "lucide-react";
-import { validateCSV, type ValidationResult, type CSVValidationError } from "../utils/csvValidator";
+import { processCSVFile, importUsers, type ProcessingResult } from "../utils/csvProcessor";
 
 interface ImportDialogProps {
   open: boolean;
@@ -14,7 +14,7 @@ interface ImportDialogProps {
 
 export function ImportDialog({ open, onOpenChange, onImportComplete }: ImportDialogProps) {
   const [file, setFile] = useState<File | null>(null);
-  const [validationResult, setValidationResult] = useState<ValidationResult | null>(null);
+  const [processingResult, setProcessingResult] = useState<ProcessingResult | null>(null);
   const [importing, setImporting] = useState(false);
   const [progress, setProgress] = useState(0);
 
@@ -23,23 +23,24 @@ export function ImportDialog({ open, onOpenChange, onImportComplete }: ImportDia
     if (selectedFile) {
       setFile(selectedFile);
       try {
-        const result = await validateCSV(selectedFile);
-        setValidationResult(result);
+        const result = await processCSVFile(selectedFile);
+        setProcessingResult(result);
       } catch (error) {
-        console.error("Validation error:", error);
+        console.error("Processing error:", error);
       }
     }
   };
 
   const handleImport = async () => {
-    if (!validationResult?.validRows.length) return;
+    if (!processingResult) return;
     
     setImporting(true);
     setProgress(0);
 
     try {
-      // Import logic will be implemented here
-      setProgress(100);
+      await importUsers(processingResult, (current, total) => {
+        setProgress((current / total) * 100);
+      });
       onImportComplete();
       onOpenChange(false);
     } catch (error) {
@@ -49,15 +50,33 @@ export function ImportDialog({ open, onOpenChange, onImportComplete }: ImportDia
     }
   };
 
-  const renderValidationErrors = (errors: CSVValidationError[]) => {
-    return errors.map((error, index) => (
-      <Alert key={index} variant="destructive">
-        <AlertCircle className="h-4 w-4" />
-        <AlertDescription>
-          Row {error.row}: {error.errors.join(", ")}
-        </AlertDescription>
-      </Alert>
-    ));
+  const renderValidationSummary = () => {
+    if (!processingResult) return null;
+
+    return (
+      <div className="space-y-4">
+        {processingResult.errors.length > 0 ? (
+          <div className="space-y-2">
+            <h3 className="font-medium">Validation Errors</h3>
+            {processingResult.errors.map((error, index) => (
+              <Alert key={index} variant="destructive">
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>
+                  Row {error.row}: {error.errors.join(", ")}
+                </AlertDescription>
+              </Alert>
+            ))}
+          </div>
+        ) : (
+          <Alert>
+            <AlertDescription>
+              Ready to import {processingResult.newUsers.length} new users and update{" "}
+              {processingResult.existingUsers.length} existing users
+            </AlertDescription>
+          </Alert>
+        )}
+      </div>
+    );
   };
 
   return (
@@ -88,31 +107,19 @@ export function ImportDialog({ open, onOpenChange, onImportComplete }: ImportDia
                 </label>
               </div>
 
-              {validationResult && (
-                <div className="space-y-4">
-                  {validationResult.errors.length > 0 ? (
-                    <div className="space-y-2">
-                      <h3 className="font-medium">Validation Errors</h3>
-                      {renderValidationErrors(validationResult.errors)}
-                    </div>
-                  ) : (
-                    <Alert>
-                      <AlertDescription>
-                        {validationResult.validRows.length} rows ready to import
-                      </AlertDescription>
-                    </Alert>
+              {processingResult && (
+                <>
+                  {renderValidationSummary()}
+                  {processingResult.errors.length === 0 && (
+                    <Button
+                      onClick={handleImport}
+                      className="w-full"
+                      disabled={importing}
+                    >
+                      Import Users
+                    </Button>
                   )}
-                </div>
-              )}
-
-              {validationResult?.isValid && (
-                <Button
-                  onClick={handleImport}
-                  className="w-full"
-                  disabled={importing}
-                >
-                  Import Users
-                </Button>
+                </>
               )}
             </div>
           )}
@@ -121,7 +128,7 @@ export function ImportDialog({ open, onOpenChange, onImportComplete }: ImportDia
             <div className="space-y-4">
               <Progress value={progress} />
               <p className="text-sm text-center text-gray-500">
-                Importing users... {progress}%
+                Importing users... {Math.round(progress)}%
               </p>
             </div>
           )}
