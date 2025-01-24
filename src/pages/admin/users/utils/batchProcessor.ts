@@ -42,7 +42,9 @@ export async function* batchProcessor(
     const batchUsers = allUsers.slice(start, start + BATCH_SIZE);
 
     try {
-      const { data, error } = await supabase.functions.invoke('manage-users', {
+      console.log('Processing batch with users:', batchUsers);
+      
+      const { data: responseData, error } = await supabase.functions.invoke('manage-users', {
         body: {
           method: 'BATCH_CREATE',
           action: {
@@ -52,18 +54,30 @@ export async function* batchProcessor(
               first_name: user.firstName,
               last_name: user.lastName,
               is_admin: user.role === 'admin',
+              // Add all additional fields
+              level: user.level,
+              employment_type: user.employmentType,
+              designation: user.designation,
+              org_id: user.orgId,
+              location: user.location,
+              gender: user.gender,
+              date_of_birth: user.dateOfBirth,
+              sbus: user.sbus
             }))
           }
         }
       });
+
+      console.log('Edge function response:', responseData);
 
       if (error) {
         console.error('Batch processing error:', error);
         throw error;
       }
 
-      if (data.errors) {
-        data.errors.forEach(err => {
+      if (responseData?.errors) {
+        console.log('Processing errors:', responseData.errors);
+        responseData.errors.forEach(err => {
           onError({
             row: allUsers.findIndex(u => u.email === err.user.email) + 1,
             type: err.user.id ? 'update' : 'creation',
