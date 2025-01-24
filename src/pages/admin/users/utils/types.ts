@@ -5,7 +5,7 @@ export type ProcessingStatus = "success" | "error" | "skipped";
 
 export interface CSVRow {
   id?: string;
-  email: string;
+  email: string; // Required field
   firstName?: string;
   lastName?: string;
   orgId?: string;
@@ -65,7 +65,7 @@ export interface ImportProgress {
 export interface ImportResult {
   successful: number;
   failed: number;
-  logs: ProcessingLogEntry[];
+  errors: ImportError[];
 }
 
 export interface ImportError {

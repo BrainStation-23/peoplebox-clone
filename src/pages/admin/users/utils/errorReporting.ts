@@ -1,4 +1,4 @@
-import { CSVRow, ImportError } from "./types";
+import { ImportError } from "./types";
 
 export type ImportResult = {
   successful: number;

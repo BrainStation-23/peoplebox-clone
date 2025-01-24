@@ -7,23 +7,6 @@ import {
   ValidationError,
   ImportError 
 } from "./types";
-import { toast } from "@/hooks/use-toast";
-
-const csvRowSchema = z.object({
-  id: z.string().uuid().optional(),
-  email: z.string().email("Invalid email format"),
-  firstName: z.string().optional(),
-  lastName: z.string().optional(),
-  orgId: z.string().optional(),
-  level: z.string().optional(),
-  sbus: z.string().optional(),
-  role: z.enum(["admin", "user"]).optional().default("user"),
-  gender: z.enum(["male", "female", "other"]).optional(),
-  dateOfBirth: z.string().optional(),
-  designation: z.string().optional(),
-  location: z.string().optional(),
-  employmentType: z.string().optional(),
-});
 
 function createProcessingLog(
   row: number,
@@ -75,7 +58,7 @@ export async function processCSVFile(file: File): Promise<ProcessingResult> {
       continue;
     }
 
-    const rowData = {
+    const rowData: Partial<CSVRow> = {
       id: row[headers.indexOf("ID")]?.trim(),
       email: row[headers.indexOf("Email")]?.trim(),
       firstName: row[headers.indexOf("First Name")]?.trim(),
@@ -92,8 +75,13 @@ export async function processCSVFile(file: File): Promise<ProcessingResult> {
     };
 
     try {
-      const validatedRow = csvRowSchema.parse(rowData);
-      
+      // Ensure email is present before proceeding
+      if (!rowData.email) {
+        throw new Error("Email is required");
+      }
+
+      const validatedRow = rowData as CSVRow;
+
       if (validatedRow.id) {
         // Check if user exists
         const { data: existingUser } = await supabase
@@ -148,7 +136,7 @@ export async function processCSVFile(file: File): Promise<ProcessingResult> {
             i + 1,
             rowData.id ? "update" : "new",
             "error",
-            rowData,
+            rowData as CSVRow,
             error.errors.map(e => `${e.path.join(".")}: ${e.message}`).join(", ")
           )
         );
@@ -166,7 +154,7 @@ export async function processCSVFile(file: File): Promise<ProcessingResult> {
             i + 1,
             rowData.id ? "update" : "new",
             "error",
-            rowData,
+            rowData as CSVRow,
             (error as Error).message
           )
         );
