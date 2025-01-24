@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { User, GenderType } from "../types";
+import { User, GenderType } from "@/types/user";
 
 export function useProfileManagement(user: User | null) {
   const [firstName, setFirstName] = useState("");

@@ -10,7 +10,7 @@ import { EmploymentDetailsTab } from "../components/EditUserDialog/EmploymentDet
 import { useProfileManagement } from "../hooks/useProfileManagement";
 import { useSupervisorManagement } from "../hooks/useSupervisorManagement";
 import { supabase } from "@/integrations/supabase/client";
-import { User } from "../types";
+import { User } from "@/types/user";
 
 export default function EditUserPage() {
   const { id } = useParams();
