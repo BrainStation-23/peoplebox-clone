@@ -61,16 +61,18 @@ export function useUsers({ currentPage, pageSize, searchTerm, selectedSBU }: Use
       }
 
       // Get the total count with filters applied
-      const countQuery = baseQuery.count();
-      const { count: total, error: countError } = await countQuery;
+      const { data: countData, error: countError } = await baseQuery
+        .select('id', { count: 'exact', head: true });
 
       if (countError) {
         console.error("Error fetching count:", countError);
         throw countError;
       }
 
+      const total = countData?.length || 0;
+
       // Calculate pagination
-      const totalPages = Math.ceil((total || 0) / pageSize);
+      const totalPages = Math.ceil(total / pageSize);
       const safePage = Math.min(currentPage, totalPages || 1);
       const start = (safePage - 1) * pageSize;
 
@@ -117,7 +119,7 @@ export function useUsers({ currentPage, pageSize, searchTerm, selectedSBU }: Use
 
       return {
         users: usersWithData as User[],
-        total: total || 0
+        total
       };
     },
   });
