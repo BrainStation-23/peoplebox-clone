@@ -1,26 +1,15 @@
 import { useState } from "react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { Badge } from "@/components/ui/badge";
-import { Switch } from "@/components/ui/switch";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
+import { useQueryClient } from "@tanstack/react-query";
+import { Table, TableBody } from "@/components/ui/table";
 import { User } from "../../types";
 import { SearchFilters } from "./SearchFilters";
-import { UserActions } from "./UserActions";
+import { TableHeader } from "./TableHeader";
+import { UserRow } from "./UserRow";
 import { TablePagination } from "./TablePagination";
-import { PasswordDialog } from "./PasswordDialog";
 import EditUserDialog from "../EditUserDialog";
 import { ExportProgress } from "./ExportProgress";
-import { exportUsers, downloadCSV } from "../../utils/exportUsers";
 import { ImportDialog } from "../ImportDialog";
+import { exportUsers, downloadCSV } from "../../utils/exportUsers";
 
 interface UserTableProps {
   users: User[];
@@ -34,10 +23,10 @@ interface UserTableProps {
 
 export default function UserTable({
   users,
-  total,
+  isLoading,
   page,
   pageSize,
-  isLoading,
+  total,
   onPageChange,
   onDelete,
 }: UserTableProps) {
@@ -50,19 +39,9 @@ export default function UserTable({
     processed: 0,
     total: 0,
     error: "",
-    isComplete: false
-  });
-  const [passwordDialog, setPasswordDialog] = useState<{
-    isOpen: boolean;
-    userId: string | null;
-    newPassword: string;
-  }>({
-    isOpen: false,
-    userId: null,
-    newPassword: "",
+    isComplete: false,
   });
 
-  const { toast } = useToast();
   const queryClient = useQueryClient();
   const totalPages = Math.ceil(total / pageSize);
 
@@ -84,91 +63,23 @@ export default function UserTable({
     return matchesSearch && matchesSBU;
   });
 
-  const updateRoleMutation = useMutation({
-    mutationFn: async ({ userId, isAdmin }: { userId: string; isAdmin: boolean }) => {
-      const { error } = await supabase
-        .from("user_roles")
-        .update({ role: isAdmin ? "admin" : "user" })
-        .eq("user_id", userId);
-
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["users"] });
-      toast({
-        title: "Success",
-        description: "User role updated successfully",
-      });
-    },
-    onError: (error) => {
-      toast({
-        title: "Error",
-        description: "Failed to update user role",
-        variant: "destructive",
-      });
-      console.error("Error updating user role:", error);
-    },
-  });
-
-  // Mutation for updating password
-  const updatePasswordMutation = useMutation({
-    mutationFn: async ({ userId, newPassword }: { userId: string; newPassword: string }) => {
-      const response = await fetch("/api/update-user-password", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ user_id: userId, new_password: newPassword }),
-      });
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message);
-      }
-    },
-    onSuccess: () => {
-      setPasswordDialog({ isOpen: false, userId: null, newPassword: "" });
-      toast({
-        title: "Success",
-        description: "Password updated successfully",
-      });
-    },
-    onError: (error) => {
-      toast({
-        title: "Error",
-        description: "Failed to update password",
-        variant: "destructive",
-      });
-      console.error("Error updating password:", error);
-    },
-  });
-
-  const handlePasswordUpdate = () => {
-    if (passwordDialog.userId && passwordDialog.newPassword) {
-      updatePasswordMutation.mutate({
-        userId: passwordDialog.userId,
-        newPassword: passwordDialog.newPassword,
-      });
-    }
-  };
-
   const handleExport = async () => {
     setExportProgress({
       isOpen: true,
       processed: 0,
       total: 0,
       error: "",
-      isComplete: false
+      isComplete: false,
     });
 
     try {
       const allRows: string[][] = [];
       for await (const batch of exportUsers((progress) => {
-        setExportProgress(prev => ({
+        setExportProgress((prev) => ({
           ...prev,
           processed: progress.processed,
           total: progress.total,
-          error: progress.error || ""
+          error: progress.error || "",
         }));
       })) {
         allRows.push(...batch);
@@ -176,18 +87,13 @@ export default function UserTable({
 
       if (allRows.length > 0) {
         downloadCSV(allRows, `users-export-${new Date().toISOString()}.csv`);
-        setExportProgress(prev => ({ ...prev, isComplete: true }));
+        setExportProgress((prev) => ({ ...prev, isComplete: true }));
       }
     } catch (error: any) {
-      setExportProgress(prev => ({
+      setExportProgress((prev) => ({
         ...prev,
-        error: error.message || "Export failed"
+        error: error.message || "Export failed",
       }));
-      toast({
-        variant: "destructive",
-        title: "Export failed",
-        description: error.message || "Failed to export users",
-      });
     }
   };
 
@@ -215,55 +121,15 @@ export default function UserTable({
       />
 
       <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Name</TableHead>
-            <TableHead>Email</TableHead>
-            <TableHead>Org ID</TableHead>
-            <TableHead>Role</TableHead>
-            <TableHead>Primary SBU</TableHead>
-            <TableHead className="w-[200px]">Actions</TableHead>
-          </TableRow>
-        </TableHeader>
+        <TableHeader />
         <TableBody>
           {filteredUsers.map((user) => (
-            <TableRow key={user.id}>
-              <TableCell>
-                {user.first_name || user.last_name
-                  ? `${user.first_name || ""} ${user.last_name || ""}`
-                  : "N/A"}
-              </TableCell>
-              <TableCell>{user.email}</TableCell>
-              <TableCell>{user.org_id || "N/A"}</TableCell>
-              <TableCell className="space-x-2">
-                <Badge variant={user.user_roles.role === "admin" ? "default" : "secondary"}>
-                  {user.user_roles.role}
-                </Badge>
-                <Switch
-                  checked={user.user_roles.role === "admin"}
-                  onCheckedChange={(checked) =>
-                    updateRoleMutation.mutate({ userId: user.id, isAdmin: checked })
-                  }
-                />
-              </TableCell>
-              <TableCell>
-                {user.user_sbus?.find((sbu) => sbu.is_primary)?.sbu.name || "N/A"}
-              </TableCell>
-              <TableCell>
-                <UserActions
-                  user={user}
-                  onEdit={setUserToEdit}
-                  onDelete={onDelete}
-                  onPasswordChange={(userId) =>
-                    setPasswordDialog({
-                      isOpen: true,
-                      userId,
-                      newPassword: "",
-                    })
-                  }
-                />
-              </TableCell>
-            </TableRow>
+            <UserRow
+              key={user.id}
+              user={user}
+              onEdit={setUserToEdit}
+              onDelete={onDelete}
+            />
           ))}
         </TableBody>
       </Table>
@@ -276,7 +142,9 @@ export default function UserTable({
 
       <ExportProgress
         open={exportProgress.isOpen}
-        onOpenChange={(open) => setExportProgress(prev => ({ ...prev, isOpen: open }))}
+        onOpenChange={(open) =>
+          setExportProgress((prev) => ({ ...prev, isOpen: open }))
+        }
         progress={exportProgress.processed}
         total={exportProgress.total}
         error={exportProgress.error}
@@ -287,21 +155,6 @@ export default function UserTable({
         page={page}
         totalPages={totalPages}
         onPageChange={onPageChange}
-      />
-
-      <PasswordDialog
-        isOpen={passwordDialog.isOpen}
-        onOpenChange={(open) =>
-          setPasswordDialog({ isOpen: open, userId: null, newPassword: "" })
-        }
-        newPassword={passwordDialog.newPassword}
-        onPasswordChange={(value) =>
-          setPasswordDialog((prev) => ({
-            ...prev,
-            newPassword: value,
-          }))
-        }
-        onSave={handlePasswordUpdate}
       />
 
       <EditUserDialog
