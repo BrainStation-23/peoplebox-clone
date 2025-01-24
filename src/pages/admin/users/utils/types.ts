@@ -3,9 +3,6 @@ import { Database } from "@/integrations/supabase/types";
 export type UserRole = Database["public"]["Enums"]["user_role"];
 export type GenderType = Database["public"]["Enums"]["gender_type"];
 
-export type CSVRowType = "new" | "update";
-export type ProcessingStatus = "success" | "error" | "skipped";
-
 export interface CSVRow {
   id?: string;
   email: string;
@@ -21,6 +18,9 @@ export interface CSVRow {
   location?: string;
   employmentType?: string;
 }
+
+export type CSVRowType = "new" | "update";
+export type ProcessingStatus = "success" | "error" | "skipped";
 
 export interface ProcessingLogEntry {
   row: number;
@@ -66,5 +66,14 @@ export interface ImportError {
 export interface ImportResult {
   successful: number;
   failed: number;
+  errors: ImportError[];
+}
+
+export interface BatchProgress {
+  processed: number;
+  total: number;
+  currentBatch: number;
+  totalBatches: number;
+  estimatedTimeRemaining: number;
   errors: ImportError[];
 }
