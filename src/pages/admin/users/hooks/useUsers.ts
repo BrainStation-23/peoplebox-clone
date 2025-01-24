@@ -43,30 +43,38 @@ export function useUsers({ currentPage, pageSize, searchTerm, selectedSBU }: Use
 
       // Apply SBU filter if selected and not "all"
       if (selectedSBU && selectedSBU !== "all") {
-        baseQuery = baseQuery.in(
-          'id', 
-          supabase
-            .from('user_sbus')
-            .select('user_id')
-            .eq('sbu_id', selectedSBU)
-            .then(result => result.data?.map(item => item.user_id) || [])
-        );
+        // First get the user_ids for the selected SBU
+        const { data: sbuUsers } = await supabase
+          .from('user_sbus')
+          .select('user_id')
+          .eq('sbu_id', selectedSBU);
+        
+        const userIds = sbuUsers?.map(item => item.user_id) || [];
+        
+        // Then filter profiles by these user_ids
+        if (userIds.length > 0) {
+          baseQuery = baseQuery.in('id', userIds);
+        } else {
+          // If no users found for SBU, return empty result
+          return { users: [], total: 0 };
+        }
       }
 
-      // First, get the total count with filters applied
-      const { count, error: countError } = await baseQuery.count();
+      // Get the total count with filters applied
+      const countQuery = baseQuery.count();
+      const { count: total, error: countError } = await countQuery;
 
       if (countError) {
         console.error("Error fetching count:", countError);
         throw countError;
       }
 
-      const total = count || 0;
-      const totalPages = Math.ceil(total / pageSize);
+      // Calculate pagination
+      const totalPages = Math.ceil((total || 0) / pageSize);
       const safePage = Math.min(currentPage, totalPages || 1);
       const start = (safePage - 1) * pageSize;
 
-      // Then, get profiles with pagination
+      // Get profiles with pagination
       const { data: profiles, error: profilesError } = await baseQuery
         .range(start, start + pageSize - 1);
 
@@ -109,7 +117,7 @@ export function useUsers({ currentPage, pageSize, searchTerm, selectedSBU }: Use
 
       return {
         users: usersWithData as User[],
-        total
+        total: total || 0
       };
     },
   });
