@@ -128,3 +128,5 @@ export function ImportDialog({ open, onOpenChange, onImportComplete }: ImportDia
         </div>
       </DialogContent>
     </Dialog>
+  );
+}
