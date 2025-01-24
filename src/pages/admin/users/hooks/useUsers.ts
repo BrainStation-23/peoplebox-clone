@@ -13,10 +13,29 @@ export function useUsers({ currentPage, pageSize, searchTerm }: UseUsersProps) {
     queryKey: ["users", currentPage, pageSize, searchTerm],
     queryFn: async () => {
       console.log("Fetching users with params:", { currentPage, pageSize, searchTerm });
-      const start = (currentPage - 1) * pageSize;
-      const end = start + pageSize - 1;
+      
+      // First, get the total count
+      const countQuery = supabase
+        .from("profiles")
+        .select('*', { count: 'exact', head: true });
 
-      // First, get profiles with their related data
+      if (searchTerm) {
+        countQuery.or(`email.ilike.%${searchTerm}%,first_name.ilike.%${searchTerm}%,last_name.ilike.%${searchTerm}%,org_id.ilike.%${searchTerm}%`);
+      }
+
+      const { count, error: countError } = await countQuery;
+
+      if (countError) {
+        console.error("Error fetching count:", countError);
+        throw countError;
+      }
+
+      const total = count || 0;
+      const totalPages = Math.ceil(total / pageSize);
+      const safePage = Math.min(currentPage, totalPages);
+      const start = (safePage - 1) * pageSize;
+
+      // Then, get profiles with their related data
       let query = supabase
         .from("profiles")
         .select(`
@@ -36,14 +55,14 @@ export function useUsers({ currentPage, pageSize, searchTerm }: UseUsersProps) {
             is_primary,
             sbu:sbus(name)
           )
-        `, { count: 'exact' });
+        `);
 
       if (searchTerm) {
         query = query.or(`email.ilike.%${searchTerm}%,first_name.ilike.%${searchTerm}%,last_name.ilike.%${searchTerm}%,org_id.ilike.%${searchTerm}%`);
       }
 
-      const { data: profiles, error: profilesError, count } = await query
-        .range(start, end);
+      const { data: profiles, error: profilesError } = await query
+        .range(start, start + pageSize - 1);
 
       console.log("Fetched profiles:", profiles);
 
@@ -84,7 +103,7 @@ export function useUsers({ currentPage, pageSize, searchTerm }: UseUsersProps) {
 
       return {
         users: usersWithData as User[],
-        total: count || 0
+        total
       };
     },
   });
