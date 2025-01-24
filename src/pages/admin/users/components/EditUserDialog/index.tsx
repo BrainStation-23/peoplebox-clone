@@ -95,6 +95,8 @@ export default function EditUserDialog({
               setSelectedLocation={setSelectedLocation}
               selectedEmploymentType={selectedEmploymentType}
               setSelectedEmploymentType={setSelectedEmploymentType}
+              selectedLevel={selectedLevel}
+              setSelectedLevel={setSelectedLevel}
             />
           </TabsContent>
 
