@@ -11,10 +11,23 @@ export interface User {
   profile_image_url?: string | null;
   level_id?: string | null;
   org_id?: string | null;
+  gender?: GenderType | null;
+  date_of_birth?: string | null;
+  designation?: string | null;
+  location_id?: string | null;
+  employment_type_id?: string | null;
   level?: {
     id: string;
     name: string;
     status: 'active' | 'inactive';
+  } | null;
+  location?: {
+    id: string;
+    name: string;
+  } | null;
+  employment_type?: {
+    id: string;
+    name: string;
   } | null;
   user_roles: {
     role: UserRole;
