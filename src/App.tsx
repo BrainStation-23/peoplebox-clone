@@ -74,6 +74,7 @@ const App = () => (
               <Route path="sbus/:id" element={<SBUDetails />} />
               <Route path="email" element={<EmailConfig />} />
               <Route path="level" element={<LevelConfig />} />
+              <Route path="location" element={<LocationConfig />} />
             </Route>
             <Route path="profile" element={<AdminProfile />} />
           </Route>
