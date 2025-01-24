@@ -2,5 +2,5 @@
 project_id = "iqpgjxbqoeioqlfzosvu"
 
 [functions]
-[functions.send-survey-reminder]
+[functions.manage-users]
 verify_jwt = true

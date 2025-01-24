@@ -18,6 +18,7 @@ interface DeleteUserPayload {
 }
 
 Deno.serve(async (req) => {
+  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders })
   }
@@ -32,63 +33,10 @@ Deno.serve(async (req) => {
     const { method, action } = await req.json()
     console.log(`Received request with method: ${method}`)
 
-    if (method === 'CREATE') {
-      const payload = action as CreateUserPayload
-      console.log('Creating new user with email:', payload.email)
-      
-      // Create user in auth.users
-      const { data: authUser, error: createError } = await supabaseClient.auth.admin.createUser({
-        email: payload.email,
-        password: payload.password,
-        email_confirm: true
-      })
-
-      if (createError) {
-        console.error('Error creating auth user:', createError)
-        throw createError
-      }
-      console.log('Auth user created successfully:', authUser.user.id)
-
-      // Update profile
-      const { error: profileError } = await supabaseClient
-        .from('profiles')
-        .update({
-          first_name: payload.first_name,
-          last_name: payload.last_name
-        })
-        .eq('id', authUser.user.id)
-
-      if (profileError) {
-        console.error('Error updating profile:', profileError)
-        throw profileError
-      }
-      console.log('Profile updated successfully')
-
-      // Set admin role if needed
-      if (payload.is_admin) {
-        console.log('Setting admin role for user')
-        const { error: roleError } = await supabaseClient
-          .from('user_roles')
-          .update({ role: 'admin' })
-          .eq('user_id', authUser.user.id)
-
-        if (roleError) {
-          console.error('Error setting admin role:', roleError)
-          throw roleError
-        }
-        console.log('Admin role set successfully')
-      }
-
-      return new Response(
-        JSON.stringify({ message: 'User created successfully' }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      )
-    }
-
     if (method === 'DELETE') {
       const payload = action as DeleteUserPayload
       console.log('Attempting to delete user:', payload.user_id)
-
+      
       // First verify the user exists
       const { data: user, error: getUserError } = await supabaseClient.auth.admin.getUserById(
         payload.user_id
