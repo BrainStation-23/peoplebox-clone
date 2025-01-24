@@ -7,24 +7,43 @@ export const exportUsers = async (users: User[], onProgress?: ProgressCallback) 
     "Email",
     "First Name",
     "Last Name",
-    "Organization ID",
+    "Org ID",
     "Level",
-    "Primary SBU",
-    "Additional SBUs",
+    "Role",
+    "Gender",
+    "Date of Birth",
+    "Designation",
+    "Location",
+    "Employment Type",
+    "SBUs",
+    "ID" // Hidden technical field for import/update
   ];
 
   const processUsers = async () => {
     const rows = [];
     for (let i = 0; i < users.length; i++) {
       const user = users[i];
+      
+      // Combine primary and additional SBUs into semicolon-separated list
+      const allSbus = user.user_sbus
+        ?.sort((a, b) => (b.is_primary ? 1 : 0) - (a.is_primary ? 1 : 0))
+        ?.map(sbu => sbu.sbu.name)
+        ?.join(";") || "";
+
       rows.push([
         user.email,
         user.first_name || "",
         user.last_name || "",
         user.org_id || "",
         user.level?.name || "",
-        user.user_sbus?.find((sbu) => sbu.is_primary)?.sbu.name || "",
-        user.user_sbus?.filter((sbu) => !sbu.is_primary).map((sbu) => sbu.sbu.name).join(", ") || "",
+        user.user_roles?.role || "user",
+        user.gender || "",
+        user.date_of_birth || "",
+        user.designation || "",
+        user.location?.name || "",
+        user.employment_type?.name || "",
+        allSbus,
+        user.id // Include user ID for update operations
       ]);
       
       if (onProgress) {
