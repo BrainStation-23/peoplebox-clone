@@ -12,20 +12,144 @@ interface CreateUserPayload {
   first_name: string | null;
   last_name: string | null;
   is_admin: boolean;
+  level?: string;
+  employment_type?: string;
+  sbus?: string;
+  org_id?: string;
+  gender?: string;
+  date_of_birth?: string;
+  designation?: string;
+  location?: string;
+}
+
+interface BatchCreateUserPayload {
+  users: CreateUserPayload[];
 }
 
 interface DeleteUserPayload {
   user_id: string;
 }
 
-interface BatchCreateUserPayload {
-  users: Array<{
-    id?: string;
-    email: string;
-    first_name: string | null;
-    last_name: string | null;
-    is_admin: boolean;
-  }>;
+async function getLevelId(supabaseClient: any, levelName: string) {
+  const { data, error } = await supabaseClient
+    .from('levels')
+    .select('id')
+    .eq('name', levelName)
+    .single();
+  
+  if (error) {
+    console.error('Error finding level:', levelName, error);
+    return null;
+  }
+  return data?.id;
+}
+
+async function getEmploymentTypeId(supabaseClient: any, typeName: string) {
+  const { data, error } = await supabaseClient
+    .from('employment_types')
+    .select('id')
+    .eq('name', typeName)
+    .eq('status', 'active')
+    .single();
+  
+  if (error) {
+    console.error('Error finding employment type:', typeName, error);
+    return null;
+  }
+  return data?.id;
+}
+
+async function getLocationId(supabaseClient: any, locationName: string) {
+  const { data, error } = await supabaseClient
+    .from('locations')
+    .select('id')
+    .eq('name', locationName)
+    .single();
+  
+  if (error) {
+    console.error('Error finding location:', locationName, error);
+    return null;
+  }
+  return data?.id;
+}
+
+async function getSBUIds(supabaseClient: any, sbuNames: string) {
+  const names = sbuNames.split(',').map(name => name.trim());
+  const { data, error } = await supabaseClient
+    .from('sbus')
+    .select('id, name')
+    .in('name', names);
+  
+  if (error) {
+    console.error('Error finding SBUs:', names, error);
+    return [];
+  }
+  return data;
+}
+
+async function handleUserRelationships(supabaseClient: any, userId: string, user: CreateUserPayload) {
+  console.log('Processing relationships for user:', user.email);
+  
+  try {
+    // Get IDs for relationships
+    const [levelId, employmentTypeId, locationId] = await Promise.all([
+      user.level ? getLevelId(supabaseClient, user.level) : null,
+      user.employment_type ? getEmploymentTypeId(supabaseClient, user.employment_type) : null,
+      user.location ? getLocationId(supabaseClient, user.location) : null
+    ]);
+
+    // Update profile with all fields
+    const { error: updateProfileError } = await supabaseClient
+      .from('profiles')
+      .update({
+        first_name: user.first_name,
+        last_name: user.last_name,
+        org_id: user.org_id,
+        level_id: levelId,
+        employment_type_id: employmentTypeId,
+        location_id: locationId,
+        gender: user.gender,
+        date_of_birth: user.date_of_birth,
+        designation: user.designation
+      })
+      .eq('id', userId);
+
+    if (updateProfileError) {
+      throw updateProfileError;
+    }
+
+    // Handle SBU assignments if provided
+    if (user.sbus) {
+      const sbuData = await getSBUIds(supabaseClient, user.sbus);
+      if (sbuData.length > 0) {
+        // Remove existing assignments
+        await supabaseClient
+          .from('user_sbus')
+          .delete()
+          .eq('user_id', userId);
+
+        // Create new assignments
+        const sbuAssignments = sbuData.map((sbu, index) => ({
+          user_id: userId,
+          sbu_id: sbu.id,
+          is_primary: index === 0 // First SBU is primary
+        }));
+
+        const { error: sbuError } = await supabaseClient
+          .from('user_sbus')
+          .insert(sbuAssignments);
+
+        if (sbuError) {
+          throw sbuError;
+        }
+      }
+    }
+
+    return null;
+  } catch (error) {
+    console.error('Error handling relationships:', error);
+    return error;
+  }
 }
 
 Deno.serve(async (req) => {
@@ -56,18 +180,12 @@ Deno.serve(async (req) => {
             // Update existing user
             console.log('Updating existing user:', user.id)
             
-            const { error: updateProfileError } = await supabaseClient
-              .from('profiles')
-              .update({
-                first_name: user.first_name,
-                last_name: user.last_name,
-              })
-              .eq('id', user.id)
-
-            if (updateProfileError) {
-              console.error('Error updating profile:', updateProfileError)
-              errors.push({ user: user, error: updateProfileError.message })
-              continue
+            // Handle all relationships and profile updates
+            const relationshipError = await handleUserRelationships(supabaseClient, user.id, user);
+            
+            if (relationshipError) {
+              errors.push({ user: user, error: relationshipError.message });
+              continue;
             }
 
             // Update role if needed
@@ -75,64 +193,58 @@ Deno.serve(async (req) => {
               const { error: updateRoleError } = await supabaseClient
                 .from('user_roles')
                 .update({ role: 'admin' })
-                .eq('user_id', user.id)
+                .eq('user_id', user.id);
 
               if (updateRoleError) {
-                console.error('Error updating role:', updateRoleError)
-                errors.push({ user: user, error: updateRoleError.message })
-                continue
+                errors.push({ user: user, error: updateRoleError.message });
+                continue;
               }
             }
 
-            results.push({ user: user, success: true })
+            results.push({ user: user, success: true });
           } else {
             // Create new user
-            const password = Math.random().toString(36).slice(-8)
+            console.log('Creating new user:', user.email);
+            const password = user.password || Math.random().toString(36).slice(-8);
             
             const { data: authUser, error: createUserError } = await supabaseClient.auth.admin.createUser({
               email: user.email,
               password: password,
               email_confirm: true
-            })
+            });
 
             if (createUserError) {
-              console.error('Error creating user:', createUserError)
-              errors.push({ user: user, error: createUserError.message })
-              continue
+              console.error('Error creating user:', createUserError);
+              errors.push({ user: user, error: createUserError.message });
+              continue;
             }
 
-            const { error: updateProfileError } = await supabaseClient
-              .from('profiles')
-              .update({
-                first_name: user.first_name,
-                last_name: user.last_name,
-              })
-              .eq('id', authUser.user.id)
-
-            if (updateProfileError) {
-              console.error('Error updating profile:', updateProfileError)
-              errors.push({ user: user, error: updateProfileError.message })
-              continue
+            // Handle all relationships and profile updates
+            const relationshipError = await handleUserRelationships(supabaseClient, authUser.user.id, user);
+            
+            if (relationshipError) {
+              errors.push({ user: user, error: relationshipError.message });
+              continue;
             }
 
+            // Set admin role if needed
             if (user.is_admin) {
               const { error: updateRoleError } = await supabaseClient
                 .from('user_roles')
                 .update({ role: 'admin' })
-                .eq('user_id', authUser.user.id)
+                .eq('user_id', authUser.user.id);
 
               if (updateRoleError) {
-                console.error('Error updating role:', updateRoleError)
-                errors.push({ user: user, error: updateRoleError.message })
-                continue
+                errors.push({ user: user, error: updateRoleError.message });
+                continue;
               }
             }
 
-            results.push({ user: user, success: true })
+            results.push({ user: user, success: true });
           }
         } catch (error) {
-          console.error('Error processing user:', user, error)
-          errors.push({ user: user, error: error.message })
+          console.error('Error processing user:', user, error);
+          errors.push({ user: user, error: error.message });
         }
       }
 
@@ -143,19 +255,19 @@ Deno.serve(async (req) => {
           errors: errors
         }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      )
+      );
     }
 
     // Handle CORS preflight requests
     if (req.method === 'OPTIONS') {
-      return new Response(null, { headers: corsHeaders })
+      return new Response(null, { headers: corsHeaders });
     }
 
-    console.error('Invalid method received:', method)
-    throw new Error('Invalid method')
+    console.error('Invalid method received:', method);
+    throw new Error('Invalid method');
 
   } catch (error) {
-    console.error('Function error:', error)
+    console.error('Function error:', error);
     return new Response(
       JSON.stringify({ 
         error: error.message,
@@ -165,6 +277,6 @@ Deno.serve(async (req) => {
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       }
-    )
+    );
   }
 })
