@@ -1,16 +1,7 @@
 import { Card } from "@/components/ui/card";
 import { ProcessedResponse } from "../../hooks/useResponseProcessing";
 import { ComparisonDimension } from "../../types/comparison";
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  Legend,
-  ResponsiveContainer,
-} from "recharts";
+import { GroupedBarChart } from "../../charts/GroupedBarChart";
 
 interface BooleanComparisonProps {
   responses: ProcessedResponse[];
@@ -57,6 +48,7 @@ export function BooleanComparison({
       }
     });
 
+    // Convert to format needed for GroupedBarChart
     return Object.entries(groupedData).map(([name, data]) => ({
       name,
       Yes: data.yes,
@@ -65,20 +57,17 @@ export function BooleanComparison({
   };
 
   const data = processData();
+  const keys = ["Yes", "No"];
+  const colors = ["#22c55e", "#ef4444"]; // Green for Yes, Red for No
 
   return (
     <Card className="p-4">
-      <ResponsiveContainer width="100%" height={300}>
-        <BarChart data={data}>
-          <CartesianGrid strokeDasharray="3 3" />
-          <XAxis dataKey="name" />
-          <YAxis />
-          <Tooltip />
-          <Legend />
-          <Bar dataKey="Yes" fill="#22c55e" />
-          <Bar dataKey="No" fill="#ef4444" />
-        </BarChart>
-      </ResponsiveContainer>
+      <GroupedBarChart 
+        data={data} 
+        keys={keys} 
+        colors={colors}
+        height={300} // Taller to accommodate multiple groups
+      />
     </Card>
   );
 }
