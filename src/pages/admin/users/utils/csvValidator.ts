@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 
 // CSV row validation schema
 const csvRowSchema = z.object({
-  email: z.string().email(),
+  email: z.string().email("Invalid email format"),
   firstName: z.string().optional(),
   lastName: z.string().optional(),
   orgId: z.string().optional(),
@@ -88,22 +88,19 @@ export async function validateCSV(file: File): Promise<ValidationResult> {
         });
       }
 
-      // Validate level exists
+      // Only validate reference data if the fields are provided
       if (rowData.level && !levelNames.has(rowData.level)) {
         rowErrors.push(`Level "${rowData.level}" does not exist`);
       }
 
-      // Validate location exists
       if (rowData.location && !locationNames.has(rowData.location)) {
         rowErrors.push(`Location "${rowData.location}" does not exist`);
       }
 
-      // Validate employment type exists
       if (rowData.employmentType && !employmentTypeNames.has(rowData.employmentType)) {
         rowErrors.push(`Employment Type "${rowData.employmentType}" does not exist`);
       }
 
-      // Validate SBUs exist
       if (rowData.sbus) {
         const sbuList = rowData.sbus.split(";").map(s => s.trim());
         sbuList.forEach(sbu => {
