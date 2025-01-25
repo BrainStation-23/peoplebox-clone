@@ -29,6 +29,7 @@ export default function EditUserPage() {
           last_name,
           profile_image_url,
           level_id,
+          status,
           levels (
             id,
             name,
