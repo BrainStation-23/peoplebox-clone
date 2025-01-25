@@ -1,5 +1,11 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { Campaign, ResponseData, SurveyData, Question } from "../types";
+import { Json } from "@/integrations/supabase/types";
+
+function isSurveyData(data: unknown): data is SurveyData {
+  if (!data || typeof data !== 'object') return false;
+  return 'pages' in data && Array.isArray((data as any).pages);
+}
 
 export async function fetchCampaignData(campaignId: string): Promise<Campaign> {
   const { data, error } = await supabase
@@ -16,7 +22,20 @@ export async function fetchCampaignData(campaignId: string): Promise<Campaign> {
     .single();
 
   if (error) throw error;
-  return data as Campaign;
+  
+  // Validate survey data structure
+  const jsonData = data.survey.json_data;
+  if (!isSurveyData(jsonData)) {
+    throw new Error('Invalid survey data structure');
+  }
+
+  return {
+    ...data,
+    survey: {
+      ...data.survey,
+      json_data: jsonData
+    }
+  } as Campaign;
 }
 
 export async function fetchCampaignStatistics(campaignId: string) {
@@ -57,16 +76,15 @@ export async function fetchResponses(campaignId: string): Promise<ResponseData[]
     .eq("id", campaignId)
     .single();
 
-  // Type assertion with validation
+  // Validate survey data structure
   const jsonData = campaign?.survey?.json_data;
-  if (!jsonData || typeof jsonData !== 'object' || !('pages' in jsonData)) {
+  if (!isSurveyData(jsonData)) {
     throw new Error('Invalid survey data structure');
   }
 
-  const surveyData = jsonData as SurveyData;
-  const surveyQuestions = surveyData.pages?.flatMap(
+  const surveyQuestions = jsonData.pages.flatMap(
     (page) => page.elements || []
-  ) || [];
+  );
 
   const { data, error } = await supabase
     .from("survey_responses")
