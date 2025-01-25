@@ -49,9 +49,9 @@ export function ReportsTab({ campaignId }: ReportsTabProps) {
   };
 
   return (
-    <div className="space-y-8">
+    <div className="grid gap-6 md:grid-cols-2">
       {data.questions.map((question: any) => (
-        <Card key={question.name}>
+        <Card key={question.name} className="w-full">
           <CardHeader>
             <CardTitle>{question.title}</CardTitle>
           </CardHeader>

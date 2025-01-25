@@ -1,10 +1,9 @@
-import { CardContent } from "@/components/ui/card";
 import {
   ChartContainer,
   ChartTooltip,
   ChartTooltipContent,
 } from "@/components/ui/chart";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Cell } from "recharts";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Cell, ResponsiveContainer } from "recharts";
 
 interface NpsChartProps {
   data: Array<{
@@ -21,17 +20,8 @@ export function NpsChart({ data }: NpsChartProps) {
   };
 
   return (
-    <CardContent className="h-[300px] w-full">
-      <ChartContainer
-        config={{
-          grid: {
-            theme: {
-              light: "var(--border)",
-              dark: "var(--border)",
-            },
-          },
-        }}
-      >
+    <div className="h-[240px] w-full">
+      <ResponsiveContainer width="100%" height="100%">
         <BarChart data={data} margin={{ top: 20, right: 30, left: 20, bottom: 20 }}>
           <CartesianGrid strokeDasharray="3 3" />
           <XAxis dataKey="rating" />
@@ -54,7 +44,7 @@ export function NpsChart({ data }: NpsChartProps) {
             ))}
           </Bar>
         </BarChart>
-      </ChartContainer>
-    </CardContent>
+      </ResponsiveContainer>
+    </div>
   );
 }
