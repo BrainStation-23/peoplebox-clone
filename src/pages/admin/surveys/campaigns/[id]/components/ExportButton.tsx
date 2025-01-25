@@ -39,6 +39,7 @@ export function ExportButton({ campaign }: ExportButtonProps) {
           id,
           response_data,
           submitted_at,
+          assignment:survey_assignments!survey_responses_assignment_id_fkey(campaign_id),
           user:profiles!survey_responses_user_id_fkey (
             first_name,
             last_name,
