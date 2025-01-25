@@ -17,8 +17,19 @@ export interface ProcessedResponse {
   answers: Record<string, ProcessedAnswer>;
 }
 
+interface Question {
+  name: string;
+  title: string;
+  type: string;
+}
+
+interface ProcessedData {
+  questions: Question[];
+  responses: ProcessedResponse[];
+}
+
 export function useResponseProcessing(campaignId: string) {
-  return useQuery({
+  return useQuery<ProcessedData>({
     queryKey: ["campaign-report", campaignId],
     queryFn: async () => {
       // First get the survey details and its questions
@@ -43,7 +54,7 @@ export function useResponseProcessing(campaignId: string) {
         : campaign.survey.json_data;
 
       const surveyQuestions = surveyData.pages?.flatMap(
-        (page: any) => page.elements
+        (page: any) => page.elements || []
       ) || [];
 
       // Then get all responses for this campaign
@@ -96,7 +107,11 @@ export function useResponseProcessing(campaignId: string) {
       });
 
       return {
-        questions: surveyQuestions,
+        questions: surveyQuestions.map((q: any) => ({
+          name: q.name,
+          title: q.title,
+          type: q.type,
+        })),
         responses: processedResponses,
       };
     },
