@@ -17,7 +17,7 @@ export default function AuthCallback() {
           variant: "destructive",
           title: "Authentication error",
           description: error.message,
-          duration: 5000 // Explicitly set duration as a number
+          duration: 5000
         });
         navigate("/login");
         return;
@@ -46,14 +46,14 @@ export default function AuthCallback() {
           toast({
             title: "Success",
             description: "You have been successfully authenticated",
-            duration: 5000 // Explicitly set duration as a number
+            duration: 5000
           });
         } catch (error: any) {
           toast({
             variant: "destructive",
             title: "Error",
             description: "Could not verify user role",
-            duration: 5000 // Explicitly set duration as a number
+            duration: 5000
           });
           navigate("/login");
         }
@@ -65,7 +65,7 @@ export default function AuthCallback() {
 
   return (
     <div className="min-h-screen flex items-center justify-center">
-      <LoadingSpinner size="lg" />
+      <LoadingSpinner size={32} />
     </div>
   );
 }
