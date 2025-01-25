@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { Auth } from "@supabase/auth-ui-react";
 import { ThemeSupa } from "@supabase/auth-ui-shared";
 import { supabase } from "@/integrations/supabase/client";
@@ -7,11 +7,15 @@ import { Card } from "@/components/ui/card";
 
 export default function Login() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
 
   useEffect(() => {
     const checkUser = async () => {
       const { data: { session } } = await supabase.auth.getSession();
-      if (session) {
+      
+      // Don't redirect if we have a recovery token - let Supabase handle the password reset
+      const hasRecoveryToken = searchParams.get('type') === 'recovery';
+      if (!hasRecoveryToken && session) {
         // Check if user is admin
         const { data: roleData } = await supabase
           .from('user_roles')
@@ -27,14 +31,17 @@ export default function Login() {
       }
     };
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      checkUser();
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      // Only redirect on specific auth events
+      if (event === 'SIGNED_IN' || event === 'PASSWORD_RECOVERY') {
+        checkUser();
+      }
     });
 
     checkUser();
 
     return () => subscription.unsubscribe();
-  }, [navigate]);
+  }, [navigate, searchParams]);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50">
