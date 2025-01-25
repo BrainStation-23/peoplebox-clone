@@ -1,10 +1,11 @@
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { FONTS, TABLE_STYLES, PAGE_SETTINGS } from "../utils/pdfStyles";
+import { createPieChartConfig, createBarChartConfig, addChartToPDF } from "../utils/chartUtils";
 import type { ResponseStatistics, DemographicData } from "../types";
 
 export async function generateResponseStatistics(
-  doc: jsPDF,
+  doc: jsPdf,
   statistics: ResponseStatistics,
   demographicData: DemographicData
 ) {
@@ -12,52 +13,76 @@ export async function generateResponseStatistics(
   doc.setFontSize(FONTS.heading.size);
   doc.text("Response Statistics", PAGE_SETTINGS.margin, 20);
 
-  // Status Distribution
+  // Status Distribution Chart
+  const statusLabels = ["Completed", "Pending"];
   const statusData = [
-    ["Completed", statistics.statusDistribution.completed, `${((statistics.statusDistribution.completed / statistics.totalResponses) * 100).toFixed(1)}%`],
-    ["Pending", statistics.statusDistribution.pending, `${((statistics.statusDistribution.pending / statistics.totalResponses) * 100).toFixed(1)}%`],
+    statistics.statusDistribution.completed,
+    statistics.statusDistribution.pending,
   ];
+  
+  let currentY = 40;
+  currentY = await addChartToPDF(
+    doc,
+    createPieChartConfig(statusLabels, statusData),
+    currentY,
+    "Response Status Distribution"
+  );
 
-  autoTable(doc, {
-    ...TABLE_STYLES,
-    startY: 30,
-    head: [["Status", "Count", "Percentage"]],
-    body: statusData,
-  });
+  // Gender Distribution Chart
+  if (demographicData.gender.length > 0) {
+    const genderLabels = demographicData.gender.map(item => item.category);
+    const genderData = demographicData.gender.map(item => item.count);
+    
+    currentY = await addChartToPDF(
+      doc,
+      createBarChartConfig(genderLabels, genderData),
+      currentY,
+      "Gender Distribution"
+    );
+  }
 
-  // Demographic Breakdowns
-  const sections = [
-    { title: "Gender Distribution", data: demographicData.gender },
-    { title: "Location Distribution", data: demographicData.location },
-    { title: "Employment Type Distribution", data: demographicData.employmentType },
-    { title: "Department Distribution", data: demographicData.sbu },
-  ];
+  // Location Distribution Chart
+  if (demographicData.location.length > 0) {
+    doc.addPage();
+    currentY = 40;
+    
+    const locationLabels = demographicData.location.map(item => item.category);
+    const locationData = demographicData.location.map(item => item.count);
+    
+    currentY = await addChartToPDF(
+      doc,
+      createBarChartConfig(locationLabels, locationData),
+      currentY,
+      "Location Distribution"
+    );
+  }
 
-  let currentY = (doc as any).lastAutoTable.finalY + 20;
+  // Employment Type Distribution Chart
+  if (demographicData.employmentType.length > 0) {
+    const employmentLabels = demographicData.employmentType.map(item => item.category);
+    const employmentData = demographicData.employmentType.map(item => item.count);
+    
+    currentY = await addChartToPDF(
+      doc,
+      createPieChartConfig(employmentLabels, employmentData),
+      currentY,
+      "Employment Type Distribution"
+    );
+  }
 
-  for (const section of sections) {
-    // Check if we need a new page
-    if (currentY > doc.internal.pageSize.height - 100) {
-      doc.addPage();
-      currentY = 20;
-    }
-
-    doc.setFontSize(FONTS.subheading.size);
-    doc.text(section.title, PAGE_SETTINGS.margin, currentY);
-
-    const tableData = section.data.map(item => [
-      item.category,
-      item.count,
-      `${item.percentage.toFixed(1)}%`,
-    ]);
-
-    autoTable(doc, {
-      ...TABLE_STYLES,
-      startY: currentY + 10,
-      head: [["Category", "Count", "Percentage"]],
-      body: tableData,
-    });
-
-    currentY = (doc as any).lastAutoTable.finalY + 20;
+  // Department Distribution Chart
+  if (demographicData.sbu.length > 0) {
+    doc.addPage();
+    currentY = 40;
+    
+    const sbuLabels = demographicData.sbu.map(item => item.category);
+    const sbuData = demographicData.sbu.map(item => item.count);
+    
+    currentY = await addChartToPDF(
+      doc,
+      createBarChartConfig(sbuLabels, sbuData),
+      currentY,
+      "Department Distribution"
+    );
   }
 }
