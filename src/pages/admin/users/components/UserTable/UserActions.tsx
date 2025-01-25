@@ -13,10 +13,9 @@ export interface UserActionsProps {
   user: User;
   onDelete: (userId: string) => void;
   onPasswordChange: (userId: string) => void;
-  onEdit: (user: User) => void;
 }
 
-const UserActions = ({ user, onDelete, onPasswordChange, onEdit }: UserActionsProps) => {
+const UserActions = ({ user, onDelete, onPasswordChange }: UserActionsProps) => {
   const navigate = useNavigate();
 
   return (
@@ -28,7 +27,7 @@ const UserActions = ({ user, onDelete, onPasswordChange, onEdit }: UserActionsPr
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
-        <DropdownMenuItem onClick={() => onEdit(user)}>
+        <DropdownMenuItem onClick={() => navigate(`/admin/users/${user.id}/edit`)}>
           Edit
         </DropdownMenuItem>
         <DropdownMenuItem onClick={() => onPasswordChange(user.id)}>

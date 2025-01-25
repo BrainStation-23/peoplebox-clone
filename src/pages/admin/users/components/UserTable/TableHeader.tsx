@@ -13,7 +13,6 @@ export function UsersTableHeader() {
         <TableHead>Org ID</TableHead>
         <TableHead>Is Admin</TableHead>
         <TableHead>Primary SBU</TableHead>
-        <TableHead>Status</TableHead>
         <TableHead className="w-[200px]">Actions</TableHead>
       </TableRow>
     </ShadcnTableHeader>
