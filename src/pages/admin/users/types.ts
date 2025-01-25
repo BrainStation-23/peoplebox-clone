@@ -2,6 +2,7 @@ import { Database } from "@/integrations/supabase/types";
 
 export type UserRole = Database["public"]["Enums"]["user_role"];
 export type GenderType = Database["public"]["Enums"]["gender_type"];
+export type ProfileStatus = Database["public"]["Enums"]["profile_status"];
 
 export interface User {
   id: string;
@@ -16,7 +17,7 @@ export interface User {
   designation?: string | null;
   location?: string | null;
   employment_type?: string | null;
-  status?: 'active' | 'disabled';
+  status?: ProfileStatus | null;
   user_roles: {
     role: UserRole;
   };

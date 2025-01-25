@@ -161,7 +161,6 @@ export type Database = {
         }
         Relationships: []
       }
-
       profiles: {
         Row: {
           created_at: string
@@ -177,7 +176,7 @@ export type Database = {
           location_id: string | null
           org_id: string | null
           profile_image_url: string | null
-          status: Database["public"]["Enums"]["profile_status"] | null
+          status: Database["public"]["Enums"]["profile_status"]
           updated_at: string
         }
         Insert: {
@@ -194,7 +193,7 @@ export type Database = {
           location_id?: string | null
           org_id?: string | null
           profile_image_url?: string | null
-          status?: Database["public"]["Enums"]["profile_status"] | null
+          status?: Database["public"]["Enums"]["profile_status"]
           updated_at?: string
         }
         Update: {
@@ -211,7 +210,7 @@ export type Database = {
           location_id?: string | null
           org_id?: string | null
           profile_image_url?: string | null
-          status?: Database["public"]["Enums"]["profile_status"] | null
+          status?: Database["public"]["Enums"]["profile_status"]
           updated_at?: string
         }
         Relationships: [
@@ -238,7 +237,6 @@ export type Database = {
           },
         ]
       }
-
       sbus: {
         Row: {
           created_at: string
@@ -766,4 +764,3 @@ export type CompositeTypes<
   : PublicCompositeTypeNameOrOptions extends keyof PublicSchema["CompositeTypes"]
     ? PublicSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
     : never
-
