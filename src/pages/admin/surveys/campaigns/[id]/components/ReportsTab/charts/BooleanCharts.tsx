@@ -58,9 +58,9 @@ export function BooleanCharts({ title, data }: BooleanChartsProps) {
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="answer" />
                 <YAxis allowDecimals={false} />
-                <ChartTooltip>
-                  <ChartTooltipContent />
-                </ChartTooltip>
+                <ChartTooltip content={(props) => (
+                  <ChartTooltipContent {...props} />
+                )} />
                 <Bar
                   dataKey="count"
                   fill="currentColor"
@@ -106,9 +106,9 @@ export function BooleanCharts({ title, data }: BooleanChartsProps) {
                     />
                   ))}
                 </Pie>
-                <ChartTooltip>
-                  <ChartTooltipContent />
-                </ChartTooltip>
+                <ChartTooltip content={(props) => (
+                  <ChartTooltipContent {...props} />
+                )} />
               </PieChart>
             </ChartContainer>
           </TabsContent>

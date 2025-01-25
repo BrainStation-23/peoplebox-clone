@@ -49,9 +49,9 @@ export function NpsChart({ title, data }: NpsChartProps) {
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis dataKey="rating" />
             <YAxis allowDecimals={false} />
-            <ChartTooltip>
-              <ChartTooltipContent />
-            </ChartTooltip>
+            <ChartTooltip content={(props) => (
+              <ChartTooltipContent {...props} />
+            )} />
             <Bar
               dataKey="count"
               fill="currentColor"
