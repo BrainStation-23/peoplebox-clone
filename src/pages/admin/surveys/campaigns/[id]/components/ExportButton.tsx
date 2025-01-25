@@ -53,9 +53,11 @@ export function ExportButton({
         startY: 55,
       });
 
+      let currentY = doc.previousAutoTable?.finalY || 55;
+
       // Response Trends
       doc.setFontSize(16);
-      doc.text("Response Trends", 14, doc.lastAutoTable.finalY + 15);
+      doc.text("Response Trends", 14, currentY + 15);
 
       const responseTableData = responseData.map(item => [
         item.date,
@@ -65,7 +67,7 @@ export function ExportButton({
       autoTable(doc, {
         head: [["Date", "Responses"]],
         body: responseTableData,
-        startY: doc.lastAutoTable.finalY + 20,
+        startY: currentY + 20,
       });
 
       // Demographics
@@ -87,6 +89,8 @@ export function ExportButton({
         startY: 25,
       });
 
+      currentY = doc.previousAutoTable?.finalY || 25;
+
       // Location Distribution
       const locationTableData = locationData.map(item => [
         item.location_name,
@@ -98,8 +102,10 @@ export function ExportButton({
       autoTable(doc, {
         head: [["Location", "Total", "Completed", "Rate"]],
         body: locationTableData,
-        startY: doc.lastAutoTable.finalY + 20,
+        startY: currentY + 20,
       });
+
+      currentY = doc.previousAutoTable?.finalY || currentY + 20;
 
       // Employment Type Distribution
       const employmentTableData = employmentData.map(item => [
@@ -112,7 +118,7 @@ export function ExportButton({
       autoTable(doc, {
         head: [["Employment Type", "Total", "Completed", "Rate"]],
         body: employmentTableData,
-        startY: doc.lastAutoTable.finalY + 20,
+        startY: currentY + 20,
       });
 
       // Save the PDF
