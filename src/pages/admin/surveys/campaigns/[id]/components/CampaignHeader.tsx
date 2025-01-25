@@ -4,10 +4,9 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Skeleton } from "@/components/ui/skeleton";
 import { CalendarDateTime } from "@/components/ui/calendar-datetime";
 import { useToast } from "@/hooks/use-toast";
-import { Calendar, Check, Edit2, X } from "lucide-react";
+import { Calendar, Check, Edit2, Play, X } from "lucide-react";
 import { format } from "date-fns";
 import {
   Select,
@@ -89,6 +88,10 @@ export function CampaignHeader({ campaign, isLoading }: CampaignHeaderProps) {
     navigate(`/admin/surveys/campaigns/${id}`);
   };
 
+  const handlePresent = () => {
+    navigate(`/admin/surveys/campaigns/${id}/present`);
+  };
+
   if (isLoading) {
     return (
       <div className="space-y-4">
@@ -133,6 +136,15 @@ export function CampaignHeader({ campaign, isLoading }: CampaignHeaderProps) {
           )}
         </div>
         <div className="flex gap-2">
+          <Button
+            onClick={handlePresent}
+            variant="outline"
+            size="sm"
+            className="gap-2"
+          >
+            <Play className="h-4 w-4" />
+            Present
+          </Button>
           {isEditing ? (
             <>
               <Button onClick={handleCancel} variant="outline" size="sm">
