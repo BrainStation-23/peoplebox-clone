@@ -11,7 +11,6 @@ import { SearchFilters } from "./components/UserTable/SearchFilters";
 import { ImportDialog } from "./components/ImportDialog";
 import { ExportProgress } from "./components/UserTable/ExportProgress";
 import { exportUsers } from "./utils/exportUsers";
-import { PasswordDialog } from "./components/UserTable/PasswordDialog";
 
 export default function UsersPage() {
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
@@ -22,8 +21,6 @@ export default function UsersPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedSBU, setSelectedSBU] = useState("all");
   const [pageSize, setPageSize] = useState(10);
-  const [isPasswordDialogOpen, setIsPasswordDialogOpen] = useState(false);
-  const [selectedUserForPassword, setSelectedUserForPassword] = useState<string | null>(null);
   const [exportProgress, setExportProgress] = useState({
     isOpen: false,
     processed: 0,
@@ -46,11 +43,6 @@ export default function UsersPage() {
 
   const { data: sbus = [] } = useSBUs();
   const { handleCreateSuccess, handleDelete } = useUserActions(refetch);
-
-  const handlePasswordChange = (userId: string) => {
-    setSelectedUserForPassword(userId);
-    setIsPasswordDialogOpen(true);
-  };
 
   const handleExport = async () => {
     if (!data?.users) return;
@@ -138,7 +130,6 @@ export default function UsersPage() {
             total={data?.total || 0}
             onPageChange={handlePageChange}
             onDelete={handleDelete}
-            onPasswordChange={handlePasswordChange}
             searchTerm={searchTerm}
             setSearchTerm={setSearchTerm}
             selectedSBU={selectedSBU}
@@ -163,12 +154,6 @@ export default function UsersPage() {
         open={isImportDialogOpen}
         onOpenChange={setIsImportDialogOpen}
         onImportComplete={handleImportComplete}
-      />
-
-      <PasswordDialog
-        isOpen={isPasswordDialogOpen}
-        onOpenChange={setIsPasswordDialogOpen}
-        userId={selectedUserForPassword}
       />
 
       <ExportProgress
