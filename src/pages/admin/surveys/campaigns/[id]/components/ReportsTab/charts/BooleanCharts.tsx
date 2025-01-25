@@ -40,7 +40,7 @@ export function BooleanCharts({ title, data }: BooleanChartsProps) {
             <TabsTrigger value="pie">Pie Chart</TabsTrigger>
           </TabsList>
 
-          <TabsContent value="bar" className="h-[300px]">
+          <TabsContent value="bar" className="h-[300px] w-full">
             <ChartContainer
               config={{
                 grid: {
@@ -51,7 +51,7 @@ export function BooleanCharts({ title, data }: BooleanChartsProps) {
                 },
               }}
             >
-              <BarChart data={barData}>
+              <BarChart data={barData} margin={{ top: 20, right: 30, left: 20, bottom: 20 }}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="answer" />
                 <YAxis allowDecimals={false} />
@@ -76,7 +76,7 @@ export function BooleanCharts({ title, data }: BooleanChartsProps) {
             </ChartContainer>
           </TabsContent>
 
-          <TabsContent value="pie" className="h-[300px]">
+          <TabsContent value="pie" className="h-[300px] w-full">
             <ChartContainer
               config={{
                 grid: {
@@ -87,7 +87,7 @@ export function BooleanCharts({ title, data }: BooleanChartsProps) {
                 },
               }}
             >
-              <PieChart>
+              <PieChart margin={{ top: 20, right: 30, left: 20, bottom: 20 }}>
                 <Pie
                   data={pieData}
                   dataKey="value"

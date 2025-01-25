@@ -26,7 +26,7 @@ export function NpsChart({ title, data }: NpsChartProps) {
       <CardHeader>
         <CardTitle>{title}</CardTitle>
       </CardHeader>
-      <CardContent className="h-[300px]">
+      <CardContent className="h-[300px] w-full">
         <ChartContainer
           config={{
             grid: {
@@ -37,7 +37,7 @@ export function NpsChart({ title, data }: NpsChartProps) {
             },
           }}
         >
-          <BarChart data={data}>
+          <BarChart data={data} margin={{ top: 20, right: 30, left: 20, bottom: 20 }}>
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis dataKey="rating" />
             <YAxis allowDecimals={false} />
