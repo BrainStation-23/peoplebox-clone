@@ -1,16 +1,7 @@
 import { Card } from "@/components/ui/card";
 import { ProcessedResponse } from "../../hooks/useResponseProcessing";
 import { ComparisonDimension } from "../../types/comparison";
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  Legend,
-  ResponsiveContainer,
-} from "recharts";
+import { BarChart } from "../../charts/BarChart";
 
 interface NpsComparisonProps {
   responses: ProcessedResponse[];
@@ -26,7 +17,7 @@ export function NpsComparison({
   const processData = () => {
     const groupedData: Record<
       string,
-      { detractors: number; passives: number; promoters: number; total: number }
+      { promoters: number; passives: number; detractors: number; total: number }
     > = {};
 
     responses.forEach((response) => {
@@ -51,9 +42,9 @@ export function NpsComparison({
 
       if (!groupedData[groupKey]) {
         groupedData[groupKey] = {
-          detractors: 0,
-          passives: 0,
           promoters: 0,
+          passives: 0,
+          detractors: 0,
           total: 0,
         };
       }
@@ -70,9 +61,10 @@ export function NpsComparison({
       }
     });
 
+    // Calculate NPS for each group
     return Object.entries(groupedData).map(([name, data]) => ({
       name,
-      NPS: Math.round(
+      value: Math.round(
         ((data.promoters - data.detractors) / data.total) * 100
       ),
     }));
@@ -82,16 +74,13 @@ export function NpsComparison({
 
   return (
     <Card className="p-4">
-      <ResponsiveContainer width="100%" height={300}>
-        <BarChart data={data}>
-          <CartesianGrid strokeDasharray="3 3" />
-          <XAxis dataKey="name" />
-          <YAxis domain={[-100, 100]} />
-          <Tooltip />
-          <Legend />
-          <Bar dataKey="NPS" fill="#3b82f6" />
-        </BarChart>
-      </ResponsiveContainer>
+      <BarChart 
+        data={data}
+        colors={["#3b82f6"]} // Use blue as the primary color
+      />
+      <div className="mt-4 text-sm text-center text-muted-foreground">
+        NPS Score by {dimension.replace('_', ' ').toUpperCase()}
+      </div>
     </Card>
   );
 }
