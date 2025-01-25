@@ -6,6 +6,8 @@ import { supabase } from "@/integrations/supabase/client";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { format } from "date-fns";
+import { BarChart, Bar, PieChart, Pie, Cell } from "recharts";
+import { renderToString } from "react-dom/server";
 
 interface ExtendedJsPDF extends jsPDF {
   lastAutoTable: {
@@ -111,62 +113,50 @@ export function ExportButton({ campaign }: ExportButtonProps) {
 
       // Gender Distribution
       const genderStats = calculateGenderDistribution(responses);
-      autoTable(doc, {
-        startY: 30,
-        head: [["Gender", "Count", "Percentage"]],
-        body: Object.entries(genderStats).map(([gender, { count, percentage }]) => [
-          gender,
-          count,
-          `${percentage.toFixed(1)}%`,
-        ]),
-        theme: "grid",
-        headStyles: { fillColor: [41, 128, 185] },
-      });
+      const genderData = Object.entries(genderStats).map(([gender, { count, percentage }]) => ({
+        name: gender,
+        value: count,
+      }));
+
+      const genderChart = (
+        <PieChart width={400} height={200}>
+          <Pie
+            data={genderData}
+            cx={200}
+            cy={100}
+            innerRadius={60}
+            outerRadius={80}
+            fill="#8884d8"
+            dataKey="value"
+            label
+          >
+            {genderData.map((entry, index) => (
+              <Cell key={`cell-${index}`} fill={`#${Math.floor(Math.random()*16777215).toString(16)}`} />
+            ))}
+          </Pie>
+        </PieChart>
+      );
+
+      const genderChartSvg = renderToString(genderChart);
+      const genderChartUrl = `data:image/svg+xml;base64,${Buffer.from(genderChartSvg).toString('base64')}`;
+      doc.addImage(genderChartUrl, 'SVG', margin, doc.lastAutoTable.finalY + 40, 160, 80);
 
       // Location Distribution
       const locationStats = calculateLocationDistribution(responses);
-      doc.text("Response by Location", margin, doc.lastAutoTable.finalY + 15);
-      autoTable(doc, {
-        startY: doc.lastAutoTable.finalY + 20,
-        head: [["Location", "Count", "Percentage"]],
-        body: Object.entries(locationStats).map(([location, { count, percentage }]) => [
-          location,
-          count,
-          `${percentage.toFixed(1)}%`,
-        ]),
-        theme: "grid",
-        headStyles: { fillColor: [41, 128, 185] },
-      });
+      const locationData = Object.entries(locationStats).map(([location, { count }]) => ({
+        name: location,
+        value: count,
+      }));
 
-      // SBU Distribution
-      const sbuStats = calculateSBUDistribution(responses);
-      doc.text("Response by Department (SBU)", margin, doc.lastAutoTable.finalY + 15);
-      autoTable(doc, {
-        startY: doc.lastAutoTable.finalY + 20,
-        head: [["Department", "Count", "Percentage"]],
-        body: Object.entries(sbuStats).map(([sbu, { count, percentage }]) => [
-          sbu,
-          count,
-          `${percentage.toFixed(1)}%`,
-        ]),
-        theme: "grid",
-        headStyles: { fillColor: [41, 128, 185] },
-      });
+      const locationChart = (
+        <BarChart width={400} height={200} data={locationData}>
+          <Bar dataKey="value" fill="#82ca9d" />
+        </BarChart>
+      );
 
-      // Employment Type Distribution
-      const employmentStats = calculateEmploymentDistribution(responses);
-      doc.text("Response by Employment Type", margin, doc.lastAutoTable.finalY + 15);
-      autoTable(doc, {
-        startY: doc.lastAutoTable.finalY + 20,
-        head: [["Employment Type", "Count", "Percentage"]],
-        body: Object.entries(employmentStats).map(([type, { count, percentage }]) => [
-          type,
-          count,
-          `${percentage.toFixed(1)}%`,
-        ]),
-        theme: "grid",
-        headStyles: { fillColor: [41, 128, 185] },
-      });
+      const locationChartSvg = renderToString(locationChart);
+      const locationChartUrl = `data:image/svg+xml;base64,${Buffer.from(locationChartSvg).toString('base64')}`;
+      doc.addImage(locationChartUrl, 'SVG', margin, doc.lastAutoTable.finalY + 140, 160, 80);
 
       // Save the PDF
       doc.save(`${campaign.name}-Report.pdf`);
