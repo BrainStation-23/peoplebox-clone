@@ -1,45 +1,20 @@
-export type Campaign = {
-  id: string;
-  name: string;
-  description: string | null;
-  status: string;
-  starts_at: string;
-  ends_at: string | null;
-  survey: {
-    name: string;
-    json_data: any;
-  };
-};
+import { Json } from "@/integrations/supabase/types";
 
-export type ResponseStatistics = {
-  totalResponses: number;
-  completionRate: number;
-  statusDistribution: {
-    completed: number;
-    pending: number;
-  };
-};
-
-export type DemographicData = {
-  gender: CategoryBreakdown[];
-  location: CategoryBreakdown[];
-  employmentType: CategoryBreakdown[];
-  sbu: CategoryBreakdown[];
-};
-
-export type CategoryBreakdown = {
-  category: string;
-  count: number;
-  percentage: number;
-};
-
-export type Question = {
+export interface Question {
   name: string;
   title: string;
-  type: "boolean" | "rating" | "nps" | "text" | "comment";
-};
+  type: string;
+}
 
-export type ResponseData = {
+export interface SurveyPage {
+  elements: Question[];
+}
+
+export interface SurveyData {
+  pages: SurveyPage[];
+}
+
+export interface ResponseData {
   id: string;
   answers: Record<string, {
     question: string;
@@ -49,15 +24,9 @@ export type ResponseData = {
   respondent: {
     name: string;
     email: string;
-    gender: string | null;
-    location: {
-      name: string;
-    } | null;
-    sbu: {
-      name: string;
-    } | null;
-    employment_type: {
-      name: string;
-    } | null;
+    gender: "male" | "female" | "other" | null;
+    location: { name: string } | null;
+    sbu: { name: string } | null;
+    employment_type: { name: string } | null;
   };
-};
+}

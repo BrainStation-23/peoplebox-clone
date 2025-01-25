@@ -1,7 +1,7 @@
 import { supabase } from "@/integrations/supabase/client";
-import type { Campaign, ResponseData } from "../types";
+import type { ResponseData, SurveyData, Question } from "../types";
 
-export async function fetchCampaignData(campaignId: string): Promise<Campaign> {
+export async function fetchCampaignData(campaignId: string) {
   const { data, error } = await supabase
     .from("survey_campaigns")
     .select(`
@@ -57,8 +57,9 @@ export async function fetchResponses(campaignId: string): Promise<ResponseData[]
     .eq("id", campaignId)
     .single();
 
-  const surveyQuestions = campaign?.survey?.json_data?.pages?.flatMap(
-    (page: any) => page.elements || []
+  const surveyData = campaign?.survey?.json_data as SurveyData;
+  const surveyQuestions = surveyData?.pages?.flatMap(
+    (page) => page.elements || []
   ) || [];
 
   const { data, error } = await supabase
@@ -94,7 +95,7 @@ export async function fetchResponses(campaignId: string): Promise<ResponseData[]
     const answers: Record<string, { question: string; answer: any; questionType: string }> = {};
     
     // Process each question and its answer
-    surveyQuestions.forEach((question: any) => {
+    surveyQuestions.forEach((question: Question) => {
       const answer = response.response_data[question.name];
       if (answer !== undefined) {
         answers[question.name] = {
