@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { MoreHorizontal } from "lucide-react";
+import { MoreHorizontal, Power } from "lucide-react";
 import { User } from "../../types";
 import { TableContainer } from "./TableContainer";
 import { TablePagination } from "./TablePagination";
@@ -20,6 +20,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 interface UserTableProps {
   users: User[];
@@ -114,6 +115,43 @@ export default function UserTable({
     }
   };
 
+  const handleBulkStatusToggle = async () => {
+    try {
+      // Get the current status of the first selected user to determine the toggle action
+      const { data: firstUser } = await supabase
+        .from('profiles')
+        .select('status')
+        .eq('id', selectedUsers[0])
+        .single();
+
+      const newStatus = firstUser?.status === 'active' ? 'disabled' : 'active';
+
+      // Update all selected users
+      const { error } = await supabase
+        .from('profiles')
+        .update({ status: newStatus })
+        .in('id', selectedUsers);
+
+      if (error) throw error;
+
+      queryClient.invalidateQueries({ queryKey: ["users"] });
+      
+      toast({
+        title: "Success",
+        description: `Successfully ${newStatus === 'active' ? 'activated' : 'deactivated'} ${selectedUsers.length} users`,
+      });
+      
+      setSelectedUsers([]);
+    } catch (error) {
+      console.error('Error toggling status:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update user status",
+        variant: "destructive",
+      });
+    }
+  };
+
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center mb-4">
@@ -126,6 +164,10 @@ export default function UserTable({
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent>
+                <DropdownMenuItem onClick={handleBulkStatusToggle}>
+                  <Power className="mr-2 h-4 w-4" />
+                  Toggle Status
+                </DropdownMenuItem>
                 <DropdownMenuItem
                   className="text-destructive"
                   onClick={handleBulkDelete}
