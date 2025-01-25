@@ -1,10 +1,13 @@
 import type { FontStyle } from 'jspdf-autotable';
 
-export const COLORS = {
-  primary: [41, 128, 185],
-  success: [34, 197, 94],
-  warning: [234, 179, 8],
-  danger: [239, 68, 68],
+type RGB = [number, number, number];
+
+export const COLORS: Record<string, RGB> = {
+  primary: [41, 128, 185] as RGB,
+  success: [34, 197, 94] as RGB,
+  warning: [234, 179, 8] as RGB,
+  danger: [239, 68, 68] as RGB,
+  background: [245, 247, 250] as RGB,
 };
 
 export const FONTS = {
@@ -29,7 +32,7 @@ export const TABLE_STYLES = {
     fontStyle: 'bold' as FontStyle,
   },
   alternateRowStyles: {
-    fillColor: [245, 247, 250],
+    fillColor: COLORS.background,
   },
   margin: { top: 10 },
 };
