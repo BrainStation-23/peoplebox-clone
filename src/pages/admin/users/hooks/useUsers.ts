@@ -60,13 +60,12 @@ export function useUsers({ currentPage, pageSize, searchTerm, selectedSBU }: Use
       }
 
       // First get the total count
-      const { count, error: countError } = await baseQuery
-        .count()
-        .throwOnError();
+      const countQuery = await baseQuery
+        .select('id', { count: 'exact', head: true });
 
-      if (countError) {
-        console.error("Error fetching count:", countError);
-        throw countError;
+      if (countQuery.error) {
+        console.error("Error fetching count:", countQuery.error);
+        throw countQuery.error;
       }
 
       // Then get the paginated data using the same base query
@@ -112,7 +111,7 @@ export function useUsers({ currentPage, pageSize, searchTerm, selectedSBU }: Use
 
       return {
         users: usersWithData as User[],
-        total: count || 0
+        total: countQuery.count || 0
       };
     },
   });
