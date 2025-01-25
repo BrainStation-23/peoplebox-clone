@@ -15,7 +15,42 @@ export function useUsers({ currentPage, pageSize, searchTerm, selectedSBU }: Use
     queryFn: async () => {
       console.log("Fetching users with params:", { currentPage, pageSize, searchTerm, selectedSBU });
       
-      let baseQuery = supabase
+      // First, get the total count with filters
+      let countQuery = supabase
+        .from("profiles")
+        .select('*', { count: 'exact', head: true });
+
+      if (searchTerm) {
+        countQuery = countQuery.or(`email.ilike.%${searchTerm}%,first_name.ilike.%${searchTerm}%,last_name.ilike.%${searchTerm}%,org_id.ilike.%${searchTerm}%`);
+      }
+
+      // If SBU is selected, first get the user IDs belonging to that SBU
+      if (selectedSBU !== 'all') {
+        const { data: sbuUsers } = await supabase
+          .from('user_sbus')
+          .select('user_id')
+          .eq('sbu_id', selectedSBU);
+        
+        if (sbuUsers && sbuUsers.length > 0) {
+          countQuery = countQuery.in('id', sbuUsers.map(u => u.user_id));
+        } else {
+          // If no users in the selected SBU, return empty result
+          return { users: [], total: 0 };
+        }
+      }
+
+      const { count, error: countError } = await countQuery;
+
+      if (countError) {
+        console.error("Error fetching count:", countError);
+        throw countError;
+      }
+
+      const total = count || 0;
+      const start = (currentPage - 1) * pageSize;
+
+      // Then, get profiles with their related data
+      let query = supabase
         .from("profiles")
         .select(`
           id,
@@ -36,40 +71,26 @@ export function useUsers({ currentPage, pageSize, searchTerm, selectedSBU }: Use
           )
         `);
 
-      // Apply search filter if provided
       if (searchTerm) {
-        baseQuery = baseQuery.or(`email.ilike.%${searchTerm}%,first_name.ilike.%${searchTerm}%,last_name.ilike.%${searchTerm}%,org_id.ilike.%${searchTerm}%`);
+        query = query.or(`email.ilike.%${searchTerm}%,first_name.ilike.%${searchTerm}%,last_name.ilike.%${searchTerm}%,org_id.ilike.%${searchTerm}%`);
       }
 
-      // Apply SBU filter if selected
+      // Apply SBU filter to the main query
       if (selectedSBU !== 'all') {
-        // First get the user IDs for the selected SBU
         const { data: sbuUsers } = await supabase
           .from('user_sbus')
           .select('user_id')
           .eq('sbu_id', selectedSBU);
-
-        const userIds = sbuUsers?.map(u => u.user_id) || [];
         
-        // If no users found in the SBU, return empty result
-        if (userIds.length === 0) {
+        if (sbuUsers && sbuUsers.length > 0) {
+          query = query.in('id', sbuUsers.map(u => u.user_id));
+        } else {
           return { users: [], total: 0 };
         }
-        
-        baseQuery = baseQuery.in('id', userIds);
       }
 
-      // First get the total count
-      const countQuery = await baseQuery.count();
-
-      if (countQuery.error) {
-        console.error("Error fetching count:", countQuery.error);
-        throw countQuery.error;
-      }
-
-      // Then get the paginated data using the same base query
-      const { data: profiles, error: profilesError } = await baseQuery
-        .range(pageSize * (currentPage - 1), pageSize * currentPage - 1);
+      const { data: profiles, error: profilesError } = await query
+        .range(start, start + pageSize - 1);
 
       console.log("Fetched profiles:", profiles);
 
@@ -110,7 +131,7 @@ export function useUsers({ currentPage, pageSize, searchTerm, selectedSBU }: Use
 
       return {
         users: usersWithData as User[],
-        total: countQuery.count || 0
+        total
       };
     },
   });
