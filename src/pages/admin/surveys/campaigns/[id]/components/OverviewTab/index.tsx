@@ -3,11 +3,14 @@ import { format } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
 import { CompletionRateCard } from "./CompletionRateCard";
 import { ResponseRateChart } from "./ResponseRateChart";
-import { StatusDistributionChart, type StatusData } from "./StatusDistributionChart";
+import { StatusDistributionChart } from "./StatusDistributionChart";
 import { RecentActivityList } from "./RecentActivityList";
 import { SBUResponseRates } from "./SBUResponseRates";
 import { CompletionTrends } from "./CompletionTrends";
 import { PendingRespondents } from "./PendingRespondents";
+import { ResponseByGenderChart } from "./ResponseByGenderChart";
+import { ResponseByLocationChart } from "./ResponseByLocationChart";
+import { ResponseByEmploymentTypeChart } from "./ResponseByEmploymentTypeChart";
 
 interface OverviewTabProps {
   campaignId: string;
@@ -15,7 +18,6 @@ interface OverviewTabProps {
 }
 
 export function OverviewTab({ campaignId, selectedInstanceId }: OverviewTabProps) {
-  // Fetch instance details including completion rate
   const { data: instanceStats } = useQuery({
     queryKey: ["instance-stats", selectedInstanceId],
     queryFn: async () => {
@@ -188,6 +190,24 @@ export function OverviewTab({ campaignId, selectedInstanceId }: OverviewTabProps
       <div className="grid gap-6 md:grid-cols-2">
         <StatusDistributionChart data={statusData || []} />
         <ResponseRateChart data={responseData || []} />
+      </div>
+
+      <div className="grid gap-6 md:grid-cols-2">
+        <ResponseByGenderChart 
+          campaignId={campaignId} 
+          instanceId={selectedInstanceId}
+        />
+        <ResponseByLocationChart 
+          campaignId={campaignId} 
+          instanceId={selectedInstanceId}
+        />
+      </div>
+
+      <div className="grid gap-6 md:grid-cols-2">
+        <ResponseByEmploymentTypeChart 
+          campaignId={campaignId} 
+          instanceId={selectedInstanceId}
+        />
       </div>
 
       <PendingRespondents 
