@@ -34,13 +34,20 @@ export default function Login() {
     };
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      // Only redirect on specific auth events
+      console.log('Auth event:', event); // Add logging to debug auth events
+      
+      // Only redirect on successful sign in, not during recovery
       if (event === 'SIGNED_IN') {
         checkUser();
       }
     });
 
-    checkUser();
+    // Only check user if not in recovery flow
+    const isRecoveryFlow = searchParams.get('type') === 'recovery' || 
+                          searchParams.get('code') !== null;
+    if (!isRecoveryFlow) {
+      checkUser();
+    }
 
     return () => subscription.unsubscribe();
   }, [navigate, searchParams]);
