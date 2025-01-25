@@ -7,6 +7,7 @@ export type Campaign = {
   ends_at: string | null;
   survey: {
     name: string;
+    json_data: any;
   };
 };
 

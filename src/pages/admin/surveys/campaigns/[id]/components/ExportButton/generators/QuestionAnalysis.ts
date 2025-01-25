@@ -1,6 +1,5 @@
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
-import { format } from "date-fns";
 import { FONTS, TABLE_STYLES, PAGE_SETTINGS } from "../utils/pdfStyles";
 import type { Question, ResponseData } from "../types";
 
@@ -29,10 +28,10 @@ export async function generateQuestionAnalysis(
     const questionData = processQuestionResponses(question, responses);
     
     if (question.type === "boolean") {
-      generateBooleanAnalysis(doc, questionData, currentY);
+      generateBooleanAnalysis(doc, questionData as Record<string, number>, currentY);
       currentY += 60;
     } else if (question.type === "rating" || question.type === "nps") {
-      generateRatingAnalysis(doc, questionData, currentY);
+      generateRatingAnalysis(doc, questionData as number[], currentY);
       currentY += 80;
     } else if (question.type === "text" || question.type === "comment") {
       generateTextAnalysis(doc, questionData as string[], currentY);
@@ -65,7 +64,7 @@ function processQuestionResponses(question: Question, responses: ResponseData[])
     
     case "text":
     case "comment":
-      return answers.filter(a => typeof a === "string" && a.trim() !== "");
+      return answers.filter(a => typeof a === "string" && a.trim() !== "") as string[];
     
     default:
       return [];
@@ -104,7 +103,6 @@ function generateRatingAnalysis(doc: jsPDF, data: number[], startY: number) {
 }
 
 function generateTextAnalysis(doc: jsPDF, responses: string[], startY: number) {
-  // Show response count and sample responses
   doc.setFontSize(FONTS.body.size);
   doc.text(`Total Responses: ${responses.length}`, PAGE_SETTINGS.margin, startY);
 
