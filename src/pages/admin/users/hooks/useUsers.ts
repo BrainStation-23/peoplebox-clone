@@ -50,7 +50,7 @@ export function useUsers({ currentPage, pageSize, searchTerm, selectedSBU }: Use
       }
 
       // Transform the data to match the User type
-      const transformedUsers = (data as SearchUsersResponse[]).map(item => {
+      const transformedUsers = (data as unknown as SearchUsersResponse[]).map(item => {
         const profile = item.profile;
         console.log("Raw user data:", profile);
         
