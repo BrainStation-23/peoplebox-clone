@@ -12,6 +12,19 @@ export interface ProcessedResponse {
   respondent: {
     name: string;
     email: string;
+    gender: string | null;
+    location: {
+      id: string;
+      name: string;
+    } | null;
+    sbu: {
+      id: string;
+      name: string;
+    } | null;
+    employment_type: {
+      id: string;
+      name: string;
+    } | null;
   };
   submitted_at: string;
   answers: Record<string, ProcessedAnswer>;
@@ -57,7 +70,7 @@ export function useResponseProcessing(campaignId: string, instanceId?: string) {
         (page: any) => page.elements || []
       ) || [];
 
-      // Build the query for responses
+      // Build the query for responses with extended user metadata
       let query = supabase
         .from("survey_responses")
         .select(`
@@ -67,7 +80,23 @@ export function useResponseProcessing(campaignId: string, instanceId?: string) {
           user:profiles!survey_responses_user_id_fkey (
             first_name,
             last_name,
-            email
+            email,
+            gender,
+            location:locations (
+              id,
+              name
+            ),
+            employment_type:employment_types (
+              id,
+              name
+            ),
+            user_sbus:user_sbus (
+              is_primary,
+              sbu:sbus (
+                id,
+                name
+              )
+            )
           )
         `);
 
@@ -99,6 +128,11 @@ export function useResponseProcessing(campaignId: string, instanceId?: string) {
           };
         });
 
+        // Find primary SBU
+        const primarySbu = response.user.user_sbus?.find(
+          (us: any) => us.is_primary && us.sbu
+        );
+
         return {
           id: response.id,
           respondent: {
@@ -106,6 +140,10 @@ export function useResponseProcessing(campaignId: string, instanceId?: string) {
               response.user.last_name || ""
             }`.trim(),
             email: response.user.email,
+            gender: response.user.gender,
+            location: response.user.location,
+            sbu: primarySbu?.sbu || null,
+            employment_type: response.user.employment_type,
           },
           submitted_at: response.submitted_at,
           answers,
