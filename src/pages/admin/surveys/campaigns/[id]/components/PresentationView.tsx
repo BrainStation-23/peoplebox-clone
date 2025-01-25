@@ -5,8 +5,25 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useState } from "react";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
-export function PresentationView() {
+interface SurveyQuestion {
+  name: string;
+  title: string;
+  type: string;
+}
+
+interface SurveyData {
+  id: string;
+  name: string;
+  json_data: {
+    pages?: Array<{
+      elements?: SurveyQuestion[];
+    }>;
+  };
+}
+
+export default function PresentationView() {
   const { id: campaignId } = useParams();
   const [currentSlide, setCurrentSlide] = useState(0);
 
@@ -29,7 +46,7 @@ export function PresentationView() {
         throw new Error("Survey not found");
       }
 
-      return campaign.survey;
+      return campaign.survey as SurveyData;
     },
   });
 
@@ -60,7 +77,7 @@ export function PresentationView() {
   }
 
   const surveyQuestions = surveyData.json_data.pages?.flatMap(
-    (page: any) => page.elements || []
+    (page) => page.elements || []
   ) || [];
 
   const handlePrevSlide = () => {
@@ -80,6 +97,27 @@ export function PresentationView() {
     (response) => response.response_data[currentQuestion.name]
   ).filter(Boolean);
 
+  // Process responses for visualization
+  const getChartData = () => {
+    if (typeof questionResponses[0] === 'boolean') {
+      const trueCount = questionResponses.filter(r => r === true).length;
+      const falseCount = questionResponses.filter(r => r === false).length;
+      return [
+        { name: 'Yes', value: trueCount },
+        { name: 'No', value: falseCount }
+      ];
+    }
+
+    // For non-boolean responses, count occurrences
+    const counts = questionResponses.reduce((acc: Record<string, number>, curr) => {
+      const key = String(curr);
+      acc[key] = (acc[key] || 0) + 1;
+      return acc;
+    }, {});
+
+    return Object.entries(counts).map(([name, value]) => ({ name, value }));
+  };
+
   return (
     <div className="min-h-screen bg-black text-white p-8">
       <div className="max-w-6xl mx-auto">
@@ -96,24 +134,38 @@ export function PresentationView() {
               {currentQuestion.title}
             </h2>
 
-            <div className="space-y-4">
-              {questionResponses.length > 0 ? (
-                questionResponses.map((response, index) => (
-                  <div
-                    key={index}
-                    className="p-4 bg-gray-800 rounded-lg"
-                  >
-                    {typeof response === "boolean" ? (
-                      response ? "Yes" : "No"
-                    ) : (
-                      response
-                    )}
-                  </div>
-                ))
-              ) : (
-                <div className="text-gray-400">No responses yet</div>
-              )}
-            </div>
+            {questionResponses.length > 0 ? (
+              <div className="space-y-8">
+                <div className="h-[300px]">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={getChartData()}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="name" />
+                      <YAxis />
+                      <Tooltip />
+                      <Bar dataKey="value" fill="#8884d8" />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+
+                <div className="space-y-4">
+                  {questionResponses.map((response, index) => (
+                    <div
+                      key={index}
+                      className="p-4 bg-gray-800 rounded-lg"
+                    >
+                      {typeof response === "boolean" ? (
+                        response ? "Yes" : "No"
+                      ) : (
+                        response
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ) : (
+              <div className="text-gray-400">No responses yet</div>
+            )}
           </CardContent>
         </Card>
 
