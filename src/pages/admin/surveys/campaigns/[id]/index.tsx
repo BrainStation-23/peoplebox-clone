@@ -7,6 +7,7 @@ import { CampaignTabs, TabPanel } from "./components/CampaignTabs";
 import { AssignmentInstanceList } from "./components/AssignmentInstanceList";
 import { OverviewTab } from "./components/OverviewTab";
 import { ResponsesTab } from "./components/ResponsesTab";
+import { ActivityTab } from "./components/ActivityTab";
 import { InstanceSelector } from "./components/InstanceSelector";
 
 export default function CampaignDetailsPage() {
@@ -91,6 +92,12 @@ export default function CampaignDetailsPage() {
         </TabPanel>
         <TabPanel value="responses">
           <ResponsesTab instanceId={selectedInstanceId} />
+        </TabPanel>
+        <TabPanel value="activity">
+          <ActivityTab 
+            campaignId={id}
+            selectedInstanceId={selectedInstanceId}
+          />
         </TabPanel>
         <TabPanel value="reports">
           <h2>Reports Content</h2>

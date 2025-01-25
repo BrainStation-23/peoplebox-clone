@@ -3,7 +3,6 @@ import { format } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
 import { StatisticsSection } from "./components/StatisticsSection";
 import { ChartsSection } from "./components/ChartsSection";
-import { RespondentsSection } from "./components/RespondentsSection";
 
 interface OverviewTabProps {
   campaignId: string;
@@ -121,35 +120,6 @@ export function OverviewTab({ campaignId, selectedInstanceId }: OverviewTabProps
     },
   });
 
-  const { data: recentActivity } = useQuery({
-    queryKey: ["instance-recent-activity", selectedInstanceId],
-    queryFn: async () => {
-      const query = supabase
-        .from("survey_responses")
-        .select(`
-          created_at,
-          assignment:survey_assignments!inner(campaign_id),
-          user:profiles!survey_responses_user_id_fkey (
-            first_name,
-            last_name,
-            email
-          )
-        `)
-        .eq("assignment.campaign_id", campaignId);
-
-      if (selectedInstanceId) {
-        query.eq("campaign_instance_id", selectedInstanceId);
-      }
-
-      const { data, error } = await query
-        .order("created_at", { ascending: false })
-        .limit(10);
-      
-      if (error) throw error;
-      return data;
-    },
-  });
-
   return (
     <div className="space-y-6">
       <StatisticsSection 
@@ -163,12 +133,6 @@ export function OverviewTab({ campaignId, selectedInstanceId }: OverviewTabProps
         responseData={responseData}
         campaignId={campaignId}
         selectedInstanceId={selectedInstanceId}
-      />
-
-      <RespondentsSection 
-        campaignId={campaignId}
-        selectedInstanceId={selectedInstanceId}
-        recentActivity={recentActivity}
       />
     </div>
   );
