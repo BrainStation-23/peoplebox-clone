@@ -30,7 +30,17 @@ interface DeleteUserPayload {
   user_id: string;
 }
 
+// Helper function to convert empty strings to null
+function nullIfEmpty(value: string | undefined | null): string | null {
+  if (value === undefined || value === null || value.trim() === '') {
+    return null;
+  }
+  return value.trim();
+}
+
 async function getLevelId(supabaseClient: any, levelName: string) {
+  if (!levelName?.trim()) return null;
+  
   const { data, error } = await supabaseClient
     .from('levels')
     .select('id')
@@ -45,6 +55,8 @@ async function getLevelId(supabaseClient: any, levelName: string) {
 }
 
 async function getEmploymentTypeId(supabaseClient: any, typeName: string) {
+  if (!typeName?.trim()) return null;
+
   const { data, error } = await supabaseClient
     .from('employment_types')
     .select('id')
@@ -60,6 +72,8 @@ async function getEmploymentTypeId(supabaseClient: any, typeName: string) {
 }
 
 async function getLocationId(supabaseClient: any, locationName: string) {
+  if (!locationName?.trim()) return null;
+
   const { data, error } = await supabaseClient
     .from('locations')
     .select('id')
@@ -74,6 +88,8 @@ async function getLocationId(supabaseClient: any, locationName: string) {
 }
 
 async function getSBUIds(supabaseClient: any, sbuNames: string) {
+  if (!sbuNames?.trim()) return [];
+
   const names = sbuNames.split(',').map(name => name.trim());
   const { data, error } = await supabaseClient
     .from('sbus')
@@ -98,19 +114,19 @@ async function handleUserRelationships(supabaseClient: any, userId: string, user
       user.location ? getLocationId(supabaseClient, user.location) : null
     ]);
 
-    // Update profile with all fields
+    // Update profile with all fields, converting empty strings to null
     const { error: updateProfileError } = await supabaseClient
       .from('profiles')
       .update({
-        first_name: user.first_name,
-        last_name: user.last_name,
-        org_id: user.org_id,
+        first_name: nullIfEmpty(user.first_name),
+        last_name: nullIfEmpty(user.last_name),
+        org_id: nullIfEmpty(user.org_id),
         level_id: levelId,
         employment_type_id: employmentTypeId,
         location_id: locationId,
-        gender: user.gender,
-        date_of_birth: user.date_of_birth,
-        designation: user.designation
+        gender: nullIfEmpty(user.gender),
+        date_of_birth: nullIfEmpty(user.date_of_birth),
+        designation: nullIfEmpty(user.designation)
       })
       .eq('id', userId);
 
