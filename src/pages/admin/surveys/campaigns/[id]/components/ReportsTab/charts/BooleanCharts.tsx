@@ -4,8 +4,8 @@ import {
   ChartTooltip,
   ChartTooltipContent,
 } from "@/components/ui/chart";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, PieChart, Pie, Cell } from "recharts";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, PieChart, Pie, Cell } from "recharts";
 
 interface BooleanChartsProps {
   title: string;
@@ -43,8 +43,15 @@ export function BooleanCharts({ title, data }: BooleanChartsProps) {
           <TabsContent value="bar" className="h-[300px]">
             <ChartContainer
               config={{
-                grid: { stroke: "var(--border)" },
-                tooltip: { fill: "var(--background)" },
+                bar: {
+                  color: "var(--primary)"
+                },
+                grid: {
+                  color: "var(--border)"
+                },
+                tooltip: {
+                  color: "var(--background)"
+                },
               }}
             >
               <BarChart data={barData}>
@@ -58,9 +65,13 @@ export function BooleanCharts({ title, data }: BooleanChartsProps) {
                   dataKey="count"
                   fill="currentColor"
                   radius={[4, 4, 0, 0]}
+                  className="fill-primary"
                 >
                   {barData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={COLORS[index]} />
+                    <Cell 
+                      key={`cell-${index}`}
+                      fill={COLORS[index % COLORS.length]} 
+                    />
                   ))}
                 </Bar>
               </BarChart>
@@ -70,7 +81,12 @@ export function BooleanCharts({ title, data }: BooleanChartsProps) {
           <TabsContent value="pie" className="h-[300px]">
             <ChartContainer
               config={{
-                tooltip: { fill: "var(--background)" },
+                pie: {
+                  color: "var(--primary)"
+                },
+                tooltip: {
+                  color: "var(--background)"
+                },
               }}
             >
               <PieChart>
@@ -84,7 +100,10 @@ export function BooleanCharts({ title, data }: BooleanChartsProps) {
                   label
                 >
                   {pieData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={COLORS[index]} />
+                    <Cell 
+                      key={`cell-${index}`}
+                      fill={COLORS[index % COLORS.length]}
+                    />
                   ))}
                 </Pie>
                 <ChartTooltip>

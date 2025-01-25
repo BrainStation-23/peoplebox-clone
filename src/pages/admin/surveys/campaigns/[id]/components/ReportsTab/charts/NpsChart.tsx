@@ -34,8 +34,15 @@ export function NpsChart({ title, data }: NpsChartProps) {
       <CardContent className="h-[300px]">
         <ChartContainer
           config={{
-            grid: { stroke: "var(--border)" },
-            tooltip: { fill: "var(--background)" },
+            bar: {
+              color: "var(--primary)"
+            },
+            grid: {
+              color: "var(--border)"
+            },
+            tooltip: {
+              color: "var(--background)"
+            },
           }}
         >
           <BarChart data={chartData}>
@@ -50,16 +57,14 @@ export function NpsChart({ title, data }: NpsChartProps) {
               fill="currentColor"
               radius={[4, 4, 0, 0]}
               className="fill-primary"
-              cellContent={(props: any) => {
-                const { x, y, width, height, rating } = props;
-                return (
-                  <path
-                    d={`M${x},${y + height}h${width}v${-height}h${-width}z`}
-                    fill={getBarColor(rating)}
-                  />
-                );
-              }}
-            />
+            >
+              {chartData.map((entry, index) => (
+                <rect
+                  key={`cell-${index}`}
+                  fill={getBarColor(entry.rating)}
+                />
+              ))}
+            </Bar>
           </BarChart>
         </ChartContainer>
       </CardContent>
