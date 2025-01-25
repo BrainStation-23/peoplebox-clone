@@ -1,8 +1,4 @@
-import {
-  ChartContainer,
-  ChartTooltip,
-  ChartTooltipContent,
-} from "@/components/ui/chart";
+import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Cell, ResponsiveContainer } from "recharts";
 
 interface NpsChartProps {
@@ -26,9 +22,9 @@ export function NpsChart({ data }: NpsChartProps) {
   };
 
   return (
-    <div className="h-[240px] w-full">
-      <ChartContainer config={chartConfig}>
-        <BarChart data={data} margin={{ top: 20, right: 30, left: 20, bottom: 20 }}>
+    <ChartContainer config={chartConfig}>
+      <ResponsiveContainer width="100%" height={180}>
+        <BarChart data={data} margin={{ top: 10, right: 10, left: 10, bottom: 10 }}>
           <CartesianGrid strokeDasharray="3 3" />
           <XAxis dataKey="rating" />
           <YAxis allowDecimals={false} />
@@ -50,7 +46,7 @@ export function NpsChart({ data }: NpsChartProps) {
             ))}
           </Bar>
         </BarChart>
-      </ChartContainer>
-    </div>
+      </ResponsiveContainer>
+    </ChartContainer>
   );
 }

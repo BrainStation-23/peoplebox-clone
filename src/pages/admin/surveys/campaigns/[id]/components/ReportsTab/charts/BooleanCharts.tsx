@@ -1,11 +1,8 @@
 import { CardContent } from "@/components/ui/card";
-import {
-  ChartContainer,
-  ChartTooltip,
-  ChartTooltipContent,
-} from "@/components/ui/chart";
+import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, PieChart, Pie, Cell, ResponsiveContainer } from "recharts";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
 interface BooleanChartsProps {
   data: {
@@ -32,16 +29,16 @@ export function BooleanCharts({ data }: BooleanChartsProps) {
   };
 
   return (
-    <Tabs defaultValue="bar" className="w-full">
+    <Tabs defaultValue="chart" className="w-full">
       <TabsList className="mb-4">
-        <TabsTrigger value="bar">Bar Chart</TabsTrigger>
-        <TabsTrigger value="pie">Pie Chart</TabsTrigger>
+        <TabsTrigger value="chart">Bar Chart</TabsTrigger>
+        <TabsTrigger value="table">Table View</TabsTrigger>
       </TabsList>
 
-      <TabsContent value="bar" className="w-full">
-        <div className="h-[240px] w-full">
-          <ChartContainer config={chartConfig}>
-            <BarChart data={barData} margin={{ top: 20, right: 30, left: 20, bottom: 20 }}>
+      <TabsContent value="chart">
+        <ChartContainer config={chartConfig}>
+          <ResponsiveContainer width="100%" height={180}>
+            <BarChart data={barData} margin={{ top: 10, right: 10, left: 10, bottom: 10 }}>
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis dataKey="answer" />
               <YAxis allowDecimals={false} />
@@ -63,39 +60,27 @@ export function BooleanCharts({ data }: BooleanChartsProps) {
                 ))}
               </Bar>
             </BarChart>
-          </ChartContainer>
-        </div>
+          </ResponsiveContainer>
+        </ChartContainer>
       </TabsContent>
 
-      <TabsContent value="pie" className="w-full">
-        <div className="h-[240px] w-full">
-          <ChartContainer config={chartConfig}>
-            <PieChart>
-              <Pie
-                data={pieData}
-                dataKey="value"
-                nameKey="name"
-                cx="50%"
-                cy="50%"
-                outerRadius={80}
-                label
-              >
-                {pieData.map((entry, index) => (
-                  <Cell 
-                    key={`cell-${index}`}
-                    fill={COLORS[index % COLORS.length]}
-                  />
-                ))}
-              </Pie>
-              <ChartTooltip 
-                content={({ active, payload }) => {
-                  if (!active || !payload?.length) return null;
-                  return <ChartTooltipContent active={active} payload={payload} />;
-                }}
-              />
-            </PieChart>
-          </ChartContainer>
-        </div>
+      <TabsContent value="table">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Answer</TableHead>
+              <TableHead className="text-right">Count</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {barData.map((stat) => (
+              <TableRow key={stat.answer}>
+                <TableCell>{stat.answer}</TableCell>
+                <TableCell className="text-right">{stat.count}</TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
       </TabsContent>
     </Tabs>
   );
