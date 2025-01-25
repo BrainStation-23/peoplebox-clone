@@ -21,6 +21,7 @@ const csvRowSchema = z.object({
   location: z.string().optional(),
   employmentType: z.string().optional(),
   sbus: z.string().optional(),
+  id: z.string().uuid("Invalid uuid").optional().nullable(),
 });
 
 export type CSVValidationError = {
@@ -77,6 +78,7 @@ export async function validateCSV(file: File): Promise<ValidationResult> {
         location: row[headers.indexOf("Location")]?.trim(),
         employmentType: row[headers.indexOf("Employment Type")]?.trim(),
         sbus: row[headers.indexOf("SBUs")]?.trim(),
+        id: row[headers.indexOf("ID")]?.trim() || null, // Handle empty ID values
       };
 
       // Validate against schema
@@ -84,6 +86,8 @@ export async function validateCSV(file: File): Promise<ValidationResult> {
       
       if (!result.success) {
         result.error.errors.forEach(err => {
+          // Skip ID-related errors if the ID field is empty
+          if (err.path.includes('id') && !rowData.id) return;
           rowErrors.push(`${err.path.join(".")}: ${err.message}`);
         });
       }
