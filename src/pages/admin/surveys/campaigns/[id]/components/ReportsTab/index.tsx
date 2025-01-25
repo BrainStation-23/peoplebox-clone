@@ -38,7 +38,7 @@ export function ReportsTab({ campaignId, instanceId }: ReportsTabProps) {
       
       case "nps":
       case "rating":
-        const ratingCounts = new Array(11).fill(0); // 0-10 ratings
+        const ratingCounts = new Array(11).fill(0);
         answers.forEach(rating => {
           if (typeof rating === 'number' && rating >= 0 && rating <= 10) {
             ratingCounts[rating]++;
@@ -48,8 +48,30 @@ export function ReportsTab({ campaignId, instanceId }: ReportsTabProps) {
       
       case "text":
       case "comment":
-        // We'll implement this in the next step
-        return null;
+        // Process text responses
+        const wordFrequency: Record<string, number> = {};
+        
+        // Combine all text responses and split into words
+        answers.forEach(answer => {
+          if (typeof answer === 'string') {
+            // Convert to lowercase, remove punctuation, and split into words
+            const words = answer.toLowerCase()
+              .replace(/[^\w\s]/g, '')
+              .split(/\s+/)
+              .filter(word => word.length > 2); // Filter out short words
+            
+            // Count word frequencies
+            words.forEach(word => {
+              wordFrequency[word] = (wordFrequency[word] || 0) + 1;
+            });
+          }
+        });
+        
+        // Convert to array format required by WordCloud
+        return Object.entries(wordFrequency)
+          .map(([text, value]) => ({ text, value }))
+          .sort((a, b) => b.value - a.value)
+          .slice(0, 50); // Limit to top 50 words
       
       default:
         return null;
