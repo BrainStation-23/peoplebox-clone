@@ -23,8 +23,10 @@ function Calendar({
   const getInitialYear = () => {
     if (!props.selected) return new Date().getFullYear();
     if (props.selected instanceof Date) return props.selected.getFullYear();
-    if (Array.isArray(props.selected) && props.selected[0]) 
+    if (Array.isArray(props.selected) && props.selected[0] instanceof Date) 
       return props.selected[0].getFullYear();
+    if (typeof props.selected === 'object' && 'from' in props.selected && props.selected.from instanceof Date)
+      return props.selected.from.getFullYear();
     return new Date().getFullYear();
   };
 
