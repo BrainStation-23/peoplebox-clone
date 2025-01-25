@@ -15,6 +15,23 @@ interface ReportsTabProps {
   instanceId?: string;
 }
 
+type BooleanAnswer = {
+  yes: number;
+  no: number;
+};
+
+type RatingAnswer = {
+  rating: number;
+  count: number;
+}[];
+
+type TextAnswer = {
+  text: string;
+  value: number;
+}[];
+
+type ProcessedAnswer = BooleanAnswer | RatingAnswer | TextAnswer;
+
 export function ReportsTab({ campaignId, instanceId }: ReportsTabProps) {
   const { data, isLoading } = useResponseProcessing(campaignId, instanceId);
   const [comparisonDimensions, setComparisonDimensions] = useState<
@@ -40,6 +57,11 @@ export function ReportsTab({ campaignId, instanceId }: ReportsTabProps) {
     <div className="grid gap-6">
       {data.questions.map((question: any) => {
         const currentDimension = comparisonDimensions[question.name] || "none";
+        const processedData = processAnswersForQuestion(
+          question.name,
+          question.type,
+          data.responses
+        );
 
         return (
           <Card key={question.name} className="w-full">
@@ -53,40 +75,26 @@ export function ReportsTab({ campaignId, instanceId }: ReportsTabProps) {
               />
             </CardHeader>
             <CardContent className="space-y-4">
-              {/* Original visualization */}
               {currentDimension === "none" && (
                 <>
                   {question.type === "boolean" && (
                     <BooleanCharts
-                      data={processAnswersForQuestion(
-                        question.name,
-                        question.type,
-                        data.responses
-                      )}
+                      data={processedData as BooleanAnswer}
                     />
                   )}
                   {(question.type === "nps" || question.type === "rating") && (
                     <NpsChart
-                      data={processAnswersForQuestion(
-                        question.name,
-                        question.type,
-                        data.responses
-                      )}
+                      data={processedData as RatingAnswer}
                     />
                   )}
                   {(question.type === "text" || question.type === "comment") && (
                     <WordCloud
-                      words={processAnswersForQuestion(
-                        question.name,
-                        question.type,
-                        data.responses
-                      )}
+                      words={processedData as TextAnswer}
                     />
                   )}
                 </>
               )}
 
-              {/* Comparison visualization */}
               {currentDimension !== "none" && (
                 <>
                   {question.type === "boolean" && (
@@ -124,7 +132,7 @@ function processAnswersForQuestion(
   questionName: string,
   type: string,
   responses: any[]
-) {
+): ProcessedAnswer {
   const answers = responses.map(
     (response) => response.answers[questionName]?.answer
   );
@@ -169,6 +177,6 @@ function processAnswersForQuestion(
         .slice(0, 50);
 
     default:
-      return null;
+      throw new Error(`Unsupported question type: ${type}`);
   }
 }
