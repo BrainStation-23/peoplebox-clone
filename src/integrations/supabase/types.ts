@@ -642,6 +642,18 @@ export type Database = {
         }
         Returns: boolean
       }
+      search_users: {
+        Args: {
+          search_text: string
+          page_number: number
+          page_size: number
+          sbu_filter?: string
+        }
+        Returns: {
+          profile: Json
+          total_count: number
+        }[]
+      }
     }
     Enums: {
       assignment_status: "pending" | "completed" | "expired"
