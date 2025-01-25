@@ -13,7 +13,7 @@ interface RequestBody {
 Deno.serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders })
+    return new Response(null, { headers: corsHeaders });
   }
 
   try {
@@ -27,20 +27,20 @@ Deno.serve(async (req) => {
           persistSession: false,
         },
       }
-    )
+    );
 
     // Get authorization header
-    const authHeader = req.headers.get('Authorization')
+    const authHeader = req.headers.get('Authorization');
     if (!authHeader) {
-      throw new Error('No authorization header')
+      throw new Error('No authorization header');
     }
 
     // Verify the requesting user is an admin
     const { data: { user }, error: userError } = await supabaseClient.auth.getUser(
       authHeader.replace('Bearer ', '')
-    )
+    );
     if (userError || !user) {
-      throw new Error('Invalid user token')
+      throw new Error('Invalid user token');
     }
 
     // Check if user is admin
@@ -48,36 +48,36 @@ Deno.serve(async (req) => {
       .from('user_roles')
       .select('role')
       .eq('user_id', user.id)
-      .single()
+      .single();
 
     if (roleError || roleData?.role !== 'admin') {
-      throw new Error('Unauthorized - Admin access required')
+      throw new Error('Unauthorized - Admin access required');
     }
 
     // Parse request body
-    const { userId, status } = await req.json() as RequestBody
-    console.log(`Updating user ${userId} status to ${status}`)
+    const { userId, status } = await req.json() as RequestBody;
+    console.log(`Updating user ${userId} status to ${status}`);
 
     // Update profile status
     const { error: profileError } = await supabaseClient
       .from('profiles')
       .update({ status })
-      .eq('id', userId)
+      .eq('id', userId);
 
     if (profileError) {
-      console.error('Error updating profile:', profileError)
-      throw new Error('Failed to update profile status')
+      console.error('Error updating profile:', profileError);
+      throw new Error('Failed to update profile status');
     }
 
     // Update auth.users banned status
     const { error: authError } = await supabaseClient.auth.admin.updateUserById(
       userId,
       { banned: status === 'disabled' }
-    )
+    );
 
     if (authError) {
-      console.error('Error updating auth user:', authError)
-      throw new Error('Failed to update auth user status')
+      console.error('Error updating auth user:', authError);
+      throw new Error('Failed to update auth user status');
     }
 
     return new Response(
@@ -89,10 +89,10 @@ Deno.serve(async (req) => {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 200,
       }
-    )
+    );
 
   } catch (error) {
-    console.error('Error in toggle-user-status:', error)
+    console.error('Error in toggle-user-status:', error);
     return new Response(
       JSON.stringify({
         error: error.message || 'An error occurred while updating user status'
@@ -101,6 +101,6 @@ Deno.serve(async (req) => {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 400,
       }
-    )
+    );
   }
-})
+});
