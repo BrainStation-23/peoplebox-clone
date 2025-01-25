@@ -113,7 +113,7 @@ export function ExportButton({ campaign }: ExportButtonProps) {
 
       // Gender Distribution
       const genderStats = calculateGenderDistribution(responses);
-      const genderData = Object.entries(genderStats).map(([gender, { count, percentage }]) => ({
+      const genderData = Object.entries(genderStats).map(([gender, { count }]) => ({
         name: gender,
         value: count,
       }));
@@ -138,7 +138,7 @@ export function ExportButton({ campaign }: ExportButtonProps) {
       );
 
       const genderChartSvg = renderToString(genderChart);
-      const genderChartUrl = `data:image/svg+xml;base64,${Buffer.from(genderChartSvg).toString('base64')}`;
+      const genderChartUrl = `data:image/svg+xml;base64,${btoa(genderChartSvg)}`;
       doc.addImage(genderChartUrl, 'SVG', margin, doc.lastAutoTable.finalY + 40, 160, 80);
 
       // Location Distribution
@@ -155,7 +155,7 @@ export function ExportButton({ campaign }: ExportButtonProps) {
       );
 
       const locationChartSvg = renderToString(locationChart);
-      const locationChartUrl = `data:image/svg+xml;base64,${Buffer.from(locationChartSvg).toString('base64')}`;
+      const locationChartUrl = `data:image/svg+xml;base64,${btoa(locationChartSvg)}`;
       doc.addImage(locationChartUrl, 'SVG', margin, doc.lastAutoTable.finalY + 140, 160, 80);
 
       // Save the PDF
