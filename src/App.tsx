@@ -11,6 +11,7 @@ import Dashboard from "./pages/Dashboard";
 // User pages
 import UserDashboard from "./pages/user/Dashboard";
 import UserProfile from "./pages/user/Profile";
+import UserSettings from "./pages/user/Settings";
 import UserMySurveys from "./pages/user/my-surveys";
 import UserSurveyResponse from "./pages/user/my-surveys/[id]";
 
@@ -54,6 +55,7 @@ const App = () => (
             <Route path="my-surveys" element={<UserMySurveys />} />
             <Route path="my-surveys/:id" element={<UserSurveyResponse />} />
             <Route path="profile" element={<UserProfile />} />
+            <Route path="settings" element={<UserSettings />} />
           </Route>
           
           {/* Admin routes */}
