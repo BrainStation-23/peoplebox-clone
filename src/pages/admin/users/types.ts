@@ -16,7 +16,7 @@ export interface User {
   designation?: string | null;
   location?: string | null;
   employment_type?: string | null;
-  status: 'active' | 'disabled';
+  status?: 'active' | 'disabled';
   user_roles: {
     role: UserRole;
   };
@@ -45,11 +45,4 @@ export interface Location {
   name: string;
   google_maps_url: string | null;
   address: string | null;
-}
-
-export interface Supervisor {
-  id: string;
-  first_name: string | null;
-  last_name: string | null;
-  is_primary: boolean;
 }
