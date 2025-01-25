@@ -25,10 +25,10 @@ export function ResponseByGenderChart({ campaignId, instanceId }: Props) {
         .from("survey_assignments")
         .select(`
           id,
-          user:profiles!inner(
+          user:profiles!survey_assignments_user_id_fkey (
             gender
           ),
-          responses:survey_responses!left(
+          responses:survey_responses!survey_responses_assignment_id_fkey (
             id,
             campaign_instance_id
           )

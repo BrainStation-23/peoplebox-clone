@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { CompletionRateCard } from "./CompletionRateCard";
 import { ResponseRateChart } from "./ResponseRateChart";
 import { StatusDistributionChart } from "./StatusDistributionChart";
+import type { StatusData } from "./StatusDistributionChart";
 import { RecentActivityList } from "./RecentActivityList";
 import { SBUResponseRates } from "./SBUResponseRates";
 import { CompletionTrends } from "./CompletionTrends";
