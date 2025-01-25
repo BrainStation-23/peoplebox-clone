@@ -1,5 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { useEffect, useRef } from "react";
+import ReactWordcloud from "react-wordcloud";
+import "tippy.js/dist/tippy.css";
+import "tippy.js/animations/scale.css";
 
 interface WordCloudProps {
   title: string;
@@ -10,13 +12,18 @@ interface WordCloudProps {
 }
 
 export function WordCloud({ title, words }: WordCloudProps) {
-  const containerRef = useRef<HTMLDivElement>(null);
+  const options = {
+    rotations: 2,
+    rotationAngles: [-90, 0] as [number, number],
+    fontSizes: [12, 30] as [number, number],
+    padding: 2,
+    deterministic: true,
+  };
 
-  useEffect(() => {
-    // TODO: Implement word cloud visualization
-    // We'll need to add a word cloud library dependency
-    // For now, display the words in a simple format
-  }, [words]);
+  const callbacks = {
+    getWordTooltip: (word: { text: string; value: number }) => 
+      `${word.text} (${word.value} occurrences)`,
+  };
 
   return (
     <Card>
@@ -24,18 +31,12 @@ export function WordCloud({ title, words }: WordCloudProps) {
         <CardTitle>{title}</CardTitle>
       </CardHeader>
       <CardContent>
-        <div ref={containerRef} className="h-[300px] flex flex-wrap gap-2">
-          {words.map((word) => (
-            <span
-              key={word.text}
-              style={{
-                fontSize: `${Math.max(12, Math.min(30, word.value * 5))}px`,
-              }}
-              className="text-primary"
-            >
-              {word.text}
-            </span>
-          ))}
+        <div style={{ height: "300px", width: "100%" }}>
+          <ReactWordcloud
+            words={words}
+            options={options}
+            callbacks={callbacks}
+          />
         </div>
       </CardContent>
     </Card>
