@@ -100,7 +100,6 @@ export function ReportsTab({ campaignId, instanceId }: ReportsTabProps) {
 
             {(question.type === "text" || question.type === "comment") && (
               <WordCloud
-                title={question.title}
                 words={processAnswersForQuestion(question.name, question.type) as Array<{ text: string; value: number }>}
               />
             )}

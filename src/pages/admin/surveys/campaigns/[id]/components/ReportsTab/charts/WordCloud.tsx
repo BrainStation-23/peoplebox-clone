@@ -4,14 +4,13 @@ import "tippy.js/dist/tippy.css";
 import "tippy.js/animations/scale.css";
 
 interface WordCloudProps {
-  title: string;
   words: Array<{
     text: string;
     value: number;
   }>;
 }
 
-export function WordCloud({ title, words }: WordCloudProps) {
+export function WordCloud({ words }: WordCloudProps) {
   const options = {
     rotations: 2,
     rotationAngles: [-90, 0] as [number, number],
@@ -26,19 +25,12 @@ export function WordCloud({ title, words }: WordCloudProps) {
   };
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>{title}</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <div style={{ height: "300px", width: "100%" }}>
-          <ReactWordcloud
-            words={words}
-            options={options}
-            callbacks={callbacks}
-          />
-        </div>
-      </CardContent>
-    </Card>
+    <div style={{ height: "300px", width: "100%" }}>
+      <ReactWordcloud
+        words={words}
+        options={options}
+        callbacks={callbacks}
+      />
+    </div>
   );
 }
