@@ -1,0 +1,100 @@
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+
+interface ProcessedAnswer {
+  question: string;
+  answer: any;
+  questionType: string;
+}
+
+export interface ProcessedResponse {
+  id: string;
+  respondent: {
+    name: string;
+    email: string;
+  };
+  submitted_at: string;
+  answers: Record<string, ProcessedAnswer>;
+}
+
+export function useResponseProcessing(campaignId: string) {
+  return useQuery({
+    queryKey: ["campaign-report", campaignId],
+    queryFn: async () => {
+      // First get the survey details and its questions
+      const { data: campaign } = await supabase
+        .from("survey_campaigns")
+        .select(`
+          survey:surveys (
+            id,
+            name,
+            json_data
+          )
+        `)
+        .eq("id", campaignId)
+        .single();
+
+      if (!campaign?.survey) {
+        throw new Error("Survey not found");
+      }
+
+      const surveyQuestions = campaign.survey.json_data.pages.flatMap(
+        (page: any) => page.elements
+      );
+
+      // Then get all responses for this campaign
+      const { data: responses } = await supabase
+        .from("survey_responses")
+        .select(`
+          id,
+          response_data,
+          submitted_at,
+          user:profiles!survey_responses_user_id_fkey (
+            first_name,
+            last_name,
+            email
+          )
+        `)
+        .eq("campaign_instance_id", campaignId);
+
+      if (!responses) {
+        return {
+          questions: surveyQuestions,
+          responses: [],
+        };
+      }
+
+      // Process each response
+      const processedResponses: ProcessedResponse[] = responses.map((response) => {
+        const answers: Record<string, ProcessedAnswer> = {};
+
+        // Map each question to its answer
+        surveyQuestions.forEach((question: any) => {
+          const answer = response.response_data[question.name];
+          answers[question.name] = {
+            question: question.title,
+            answer: answer,
+            questionType: question.type,
+          };
+        });
+
+        return {
+          id: response.id,
+          respondent: {
+            name: `${response.user.first_name || ""} ${
+              response.user.last_name || ""
+            }`.trim(),
+            email: response.user.email,
+          },
+          submitted_at: response.submitted_at,
+          answers,
+        };
+      });
+
+      return {
+        questions: surveyQuestions,
+        responses: processedResponses,
+      };
+    },
+  });
+}
