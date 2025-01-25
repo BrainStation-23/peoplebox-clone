@@ -6,9 +6,6 @@ import { TablePagination } from "./TablePagination";
 import EditUserDialog from "../EditUserDialog";
 import { ExportProgress } from "./ExportProgress";
 import { ImportDialog } from "../ImportDialog";
-import { PasswordDialog } from "./PasswordDialog";
-import { exportUsers } from "../../utils/exportUsers";
-import { usePasswordManagement } from "../../hooks/usePasswordManagement";
 import { useUserFilters } from "../../hooks/useUserFilters";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
@@ -20,6 +17,7 @@ interface UserTableProps {
   total: number;
   onPageChange: (page: number) => void;
   onDelete: (userId: string) => void;
+  onPasswordChange: (userId: string) => void;
   searchTerm: string;
   setSearchTerm: (value: string) => void;
   selectedSBU: string;
@@ -34,6 +32,7 @@ export default function UserTable({
   total,
   onPageChange,
   onDelete,
+  onPasswordChange,
   searchTerm,
   setSearchTerm,
   selectedSBU,
@@ -43,24 +42,7 @@ export default function UserTable({
   const [isImportDialogOpen, setIsImportDialogOpen] = useState(false);
   const queryClient = useQueryClient();
 
-  const {
-    isPasswordDialogOpen,
-    setIsPasswordDialogOpen,
-    newPassword,
-    setNewPassword,
-    handlePasswordChange,
-    handlePasswordSave
-  } = usePasswordManagement();
-
   const { filteredUsers } = useUserFilters(users, selectedSBU);
-
-  const [exportProgress, setExportProgress] = useState({
-    isOpen: false,
-    processed: 0,
-    total: 0,
-    error: "",
-    isComplete: false,
-  });
 
   const handleImportComplete = () => {
     queryClient.invalidateQueries({ queryKey: ["users"] });
@@ -89,7 +71,7 @@ export default function UserTable({
           users={filteredUsers}
           onEdit={setUserToEdit}
           onDelete={onDelete}
-          onPasswordChange={handlePasswordChange}
+          onPasswordChange={onPasswordChange}
           isLoading={isLoading}
         />
       </div>
@@ -98,25 +80,6 @@ export default function UserTable({
         open={isImportDialogOpen}
         onOpenChange={setIsImportDialogOpen}
         onImportComplete={handleImportComplete}
-      />
-
-      <PasswordDialog
-        isOpen={isPasswordDialogOpen}
-        onOpenChange={setIsPasswordDialogOpen}
-        newPassword={newPassword}
-        onPasswordChange={setNewPassword}
-        onSave={handlePasswordSave}
-      />
-
-      <ExportProgress
-        open={exportProgress.isOpen}
-        onOpenChange={(open) =>
-          setExportProgress((prev) => ({ ...prev, isOpen: open }))
-        }
-        progress={exportProgress.processed}
-        total={exportProgress.total}
-        error={exportProgress.error}
-        isComplete={exportProgress.isComplete}
       />
 
       <TablePagination
