@@ -16,6 +16,11 @@ interface ReportsTabProps {
   campaignId: string;
 }
 
+type ProcessedAnswerData = {
+  boolean: { yes: number; no: number };
+  rating: Array<{ rating: number; count: number }>;
+};
+
 export function ReportsTab({ campaignId }: ReportsTabProps) {
   const { data, isLoading } = useResponseProcessing(campaignId);
 
@@ -27,16 +32,15 @@ export function ReportsTab({ campaignId }: ReportsTabProps) {
     return <div>No data available</div>;
   }
 
-  const processAnswersForQuestion = (questionName: string, type: string) => {
+  const processAnswersForQuestion = (questionName: string, type: string): ProcessedAnswerData[keyof ProcessedAnswerData] | null => {
     const answers = data.responses.map(response => response.answers[questionName]?.answer);
     
     switch (type) {
       case "boolean":
-        const booleanCounts = {
+        return {
           yes: answers.filter(a => a === true).length,
           no: answers.filter(a => a === false).length,
         };
-        return booleanCounts;
       
       case "nps":
       case "rating":
@@ -82,17 +86,17 @@ export function ReportsTab({ campaignId }: ReportsTabProps) {
           </CardHeader>
           <CardContent className="space-y-6">
             {/* Charts based on question type */}
-            {(question.type === "boolean") && (
+            {question.type === "boolean" && (
               <BooleanCharts
                 title={question.title}
-                data={processAnswersForQuestion(question.name, question.type)}
+                data={processAnswersForQuestion(question.name, question.type) as { yes: number; no: number }}
               />
             )}
             
             {(question.type === "nps" || question.type === "rating") && (
               <NpsChart
                 title={question.title}
-                data={processAnswersForQuestion(question.name, question.type)}
+                data={processAnswersForQuestion(question.name, question.type) as Array<{ rating: number; count: number }>}
               />
             )}
 
