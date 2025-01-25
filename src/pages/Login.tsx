@@ -72,6 +72,7 @@ export default function Login() {
           providers={[]}
           view={searchParams.get('type') === 'recovery' ? 'update_password' : undefined}
           theme="light"
+          magicLink={true}
         />
       </Card>
     </div>
