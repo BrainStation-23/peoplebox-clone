@@ -13,9 +13,11 @@ export default function Login() {
     const checkUser = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       
-      // Don't redirect if we have a recovery token - let Supabase handle the password reset
-      const hasRecoveryToken = searchParams.get('type') === 'recovery';
-      if (!hasRecoveryToken && session) {
+      // Don't redirect if we're in the recovery flow
+      const isRecoveryFlow = searchParams.get('type') === 'recovery' || 
+                            searchParams.get('code') !== null;
+                            
+      if (!isRecoveryFlow && session) {
         // Check if user is admin
         const { data: roleData } = await supabase
           .from('user_roles')
@@ -33,7 +35,7 @@ export default function Login() {
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       // Only redirect on specific auth events
-      if (event === 'SIGNED_IN' || event === 'PASSWORD_RECOVERY') {
+      if (event === 'SIGNED_IN') {
         checkUser();
       }
     });
@@ -61,6 +63,7 @@ export default function Login() {
             },
           }}
           providers={[]}
+          view={searchParams.get('type') === 'recovery' ? 'update_password' : undefined}
           theme="light"
         />
       </Card>
