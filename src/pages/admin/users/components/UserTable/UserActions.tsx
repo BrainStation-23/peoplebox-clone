@@ -1,3 +1,4 @@
+import { useNavigate } from "react-router-dom";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -15,7 +16,9 @@ interface UserActionsProps {
   onPasswordChange: (userId: string) => void;
 }
 
-export default function UserActions({ user, onEdit, onDelete, onPasswordChange }: UserActionsProps) {
+export default function UserActions({ user, onDelete, onPasswordChange }: UserActionsProps) {
+  const navigate = useNavigate();
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -25,7 +28,7 @@ export default function UserActions({ user, onEdit, onDelete, onPasswordChange }
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
-        <DropdownMenuItem onClick={() => onEdit(user)}>
+        <DropdownMenuItem onClick={() => navigate(`/admin/users/${user.id}/edit`)}>
           Edit
         </DropdownMenuItem>
         <DropdownMenuItem onClick={() => onPasswordChange(user.id)}>
