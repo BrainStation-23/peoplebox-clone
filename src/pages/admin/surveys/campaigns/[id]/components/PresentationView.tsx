@@ -7,6 +7,7 @@ import { ChevronLeft, ChevronRight, Fullscreen, StickyNote } from "lucide-react"
 import { useState, useEffect, useCallback } from "react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import { format } from "date-fns";
+import { Json } from "@/integrations/supabase/types";
 
 interface SurveyQuestion {
   name: string;
@@ -14,15 +15,19 @@ interface SurveyQuestion {
   type: string;
 }
 
+interface SurveyPage {
+  elements?: SurveyQuestion[];
+}
+
+interface SurveyJsonData {
+  pages?: SurveyPage[];
+}
+
 interface SurveyData {
   id: string;
   name: string;
   description: string | null;
-  json_data: {
-    pages?: Array<{
-      elements?: SurveyQuestion[];
-    }>;
-  };
+  json_data: SurveyJsonData;
 }
 
 interface CampaignData {
@@ -32,6 +37,7 @@ interface CampaignData {
   starts_at: string;
   ends_at: string;
   completion_rate: number;
+  survey: SurveyData;
 }
 
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28'];
@@ -65,7 +71,13 @@ export default function PresentationView() {
         .single();
 
       if (error) throw error;
-      return data;
+      
+      // Ensure json_data is parsed if it's a string
+      if (data?.survey?.json_data && typeof data.survey.json_data === 'string') {
+        data.survey.json_data = JSON.parse(data.survey.json_data);
+      }
+      
+      return data as CampaignData;
     },
   });
 
