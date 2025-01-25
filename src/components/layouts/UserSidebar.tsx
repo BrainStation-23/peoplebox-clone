@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { LogOut, LayoutDashboard, ClipboardList, UserRound } from "lucide-react";
+import { LogOut, LayoutDashboard, ClipboardList, UserRound, Settings2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { usePendingSurveysCount } from "@/hooks/use-pending-surveys-count";
 import {
@@ -24,6 +24,11 @@ const navigationItems = [
     title: "Profile",
     icon: UserRound,
     path: "/user/profile",
+  },
+  {
+    title: "Settings",
+    icon: Settings2,
+    path: "/user/settings",
   },
 ];
 
