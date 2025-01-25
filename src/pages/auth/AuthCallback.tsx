@@ -17,6 +17,7 @@ export default function AuthCallback() {
           variant: "destructive",
           title: "Authentication error",
           description: error.message,
+          duration: 5000 // Explicitly set duration as a number
         });
         navigate("/login");
         return;
@@ -45,12 +46,14 @@ export default function AuthCallback() {
           toast({
             title: "Success",
             description: "You have been successfully authenticated",
+            duration: 5000 // Explicitly set duration as a number
           });
         } catch (error: any) {
           toast({
             variant: "destructive",
             title: "Error",
             description: "Could not verify user role",
+            duration: 5000 // Explicitly set duration as a number
           });
           navigate("/login");
         }
