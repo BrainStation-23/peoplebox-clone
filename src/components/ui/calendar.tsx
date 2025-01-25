@@ -1,7 +1,13 @@
 import * as React from "react";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, ChevronsUpDown } from "lucide-react";
 import { DayPicker } from "react-day-picker";
-
+import { Button } from "@/components/ui/button";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { buttonVariants } from "@/components/ui/button";
 
@@ -13,6 +19,36 @@ function Calendar({
   showOutsideDays = true,
   ...props
 }: CalendarProps) {
+  const [selectedYear, setSelectedYear] = React.useState<number>(
+    props.selected ? props.selected.getFullYear() : new Date().getFullYear()
+  );
+  const [isYearPickerOpen, setIsYearPickerOpen] = React.useState(false);
+
+  // Generate century options for quick navigation
+  const centuries = React.useMemo(() => {
+    const result = [];
+    for (let year = 1900; year <= 3000; year += 100) {
+      result.push({
+        start: year,
+        end: year + 99,
+        label: `${year}-${year + 99}`,
+      });
+    }
+    return result;
+  }, []);
+
+  const handleYearInput = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const year = parseInt(e.target.value);
+    if (!isNaN(year) && year >= 1900 && year <= 3000) {
+      setSelectedYear(year);
+    }
+  };
+
+  const handleYearSelect = (year: number) => {
+    setSelectedYear(year);
+    setIsYearPickerOpen(false);
+  };
+
   return (
     <DayPicker
       showOutsideDays={showOutsideDays}
@@ -21,8 +57,8 @@ function Calendar({
         months: "flex flex-col sm:flex-row space-y-4 sm:space-x-4 sm:space-y-0",
         month: "space-y-4",
         caption: "flex justify-center items-center pt-1 relative",
-        caption_label: "hidden", // Hides the extra text-based month/year label
-        caption_dropdowns: "flex gap-1", // Keeps only the dropdowns for Month and Year
+        caption_label: "hidden",
+        caption_dropdowns: "flex gap-1",
         nav: "space-x-1 flex items-center",
         nav_button: cn(
           buttonVariants({ variant: "outline" }),
@@ -51,18 +87,85 @@ function Calendar({
           "aria-selected:bg-accent aria-selected:text-accent-foreground",
         day_hidden: "invisible",
         vhidden: "hidden",
-        dropdown: "p-1 bg-popover border rounded-md shadow-md focus-within:outline-none",
+        dropdown: "relative",
         dropdown_month: "text-sm rounded-md p-1 hover:bg-accent",
-        dropdown_year: "text-sm rounded-md p-1 hover:bg-accent",
+        dropdown_year: "w-[70px] text-sm rounded-md p-1",
         ...classNames,
       }}
       components={{
         IconLeft: ({ ..._props }) => <ChevronLeft className="h-4 w-4" />,
         IconRight: ({ ..._props }) => <ChevronRight className="h-4 w-4" />,
+        Dropdown: ({ value, onChange, children, ...dropdownProps }) => {
+          const isYearDropdown = dropdownProps.name === "year";
+
+          if (!isYearDropdown) {
+            return (
+              <select
+                value={value}
+                onChange={onChange}
+                className="text-sm rounded-md p-1 hover:bg-accent"
+              >
+                {children}
+              </select>
+            );
+          }
+
+          return (
+            <div className="relative">
+              <Popover open={isYearPickerOpen} onOpenChange={setIsYearPickerOpen}>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className="w-[100px] justify-between text-sm font-normal"
+                  >
+                    {selectedYear}
+                    <ChevronsUpDown className="h-4 w-4" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-[200px] p-0" align="start">
+                  <div className="flex flex-col gap-2 p-2">
+                    <Input
+                      type="number"
+                      value={selectedYear}
+                      onChange={handleYearInput}
+                      min={1900}
+                      max={3000}
+                      className="text-sm"
+                    />
+                    <div className="max-h-[200px] overflow-y-auto">
+                      {centuries.map((century) => (
+                        <div key={century.start} className="mb-2">
+                          <div className="text-sm font-semibold text-muted-foreground px-2 py-1">
+                            {century.label}
+                          </div>
+                          <div className="grid grid-cols-5 gap-1">
+                            {Array.from(
+                              { length: 100 },
+                              (_, i) => century.start + i
+                            ).map((year) => (
+                              <Button
+                                key={year}
+                                variant="ghost"
+                                className="h-7 text-xs"
+                                onClick={() => handleYearSelect(year)}
+                              >
+                                {year}
+                              </Button>
+                            ))}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </PopoverContent>
+              </Popover>
+            </div>
+          );
+        },
       }}
-      captionLayout="dropdown" // Ensures the dropdown is the only UI for Month/Year
-      fromYear={2020}
-      toYear={2030}
+      captionLayout="dropdown"
+      fromYear={1900}
+      toYear={3000}
       {...props}
     />
   );
