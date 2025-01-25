@@ -19,10 +19,10 @@ export async function generateResponseStatistics(
   ];
 
   autoTable(doc, {
+    ...TABLE_STYLES,
     startY: 30,
     head: [["Status", "Count", "Percentage"]],
     body: statusData,
-    ...TABLE_STYLES,
   });
 
   // Demographic Breakdowns
@@ -52,10 +52,10 @@ export async function generateResponseStatistics(
     ]);
 
     autoTable(doc, {
+      ...TABLE_STYLES,
       startY: currentY + 10,
       head: [["Category", "Count", "Percentage"]],
       body: tableData,
-      ...TABLE_STYLES,
     });
 
     currentY = (doc as any).lastAutoTable.finalY + 20;

@@ -1,3 +1,5 @@
+import type { FontStyle } from 'jspdf-autotable';
+
 export const COLORS = {
   primary: [41, 128, 185],
   success: [34, 197, 94],
@@ -8,15 +10,15 @@ export const COLORS = {
 export const FONTS = {
   heading: {
     size: 18,
-    style: "bold",
+    style: 'bold',
   },
   subheading: {
     size: 14,
-    style: "bold",
+    style: 'bold',
   },
   body: {
     size: 12,
-    style: "normal",
+    style: 'normal',
   },
 };
 
@@ -24,7 +26,7 @@ export const TABLE_STYLES = {
   headStyles: { 
     fillColor: COLORS.primary,
     textColor: 255,
-    fontStyle: "bold",
+    fontStyle: 'bold' as FontStyle,
   },
   alternateRowStyles: {
     fillColor: [245, 247, 250],
@@ -34,5 +36,5 @@ export const TABLE_STYLES = {
 
 export const PAGE_SETTINGS = {
   margin: 20,
-  pageBreak: "avoid",
+  pageBreak: 'avoid' as const,
 };

@@ -12,13 +12,13 @@ export async function generateCampaignOverview(
   // Title Page
   doc.setFontSize(FONTS.heading.size);
   doc.setFont("helvetica", "bold");
-  doc.text("Campaign Report", PAGE_SETTINGS.margin, 40, { align: "center" });
+  doc.text("Campaign Report", doc.internal.pageSize.width / 2, 40, { align: "center" });
   
   doc.setFontSize(FONTS.subheading.size);
-  doc.text(campaign.name, PAGE_SETTINGS.margin, 60, { align: "center" });
+  doc.text(campaign.name, doc.internal.pageSize.width / 2, 60, { align: "center" });
   
   doc.setFontSize(FONTS.body.size);
-  doc.text(format(new Date(), "PPP"), PAGE_SETTINGS.margin, 80, { align: "center" });
+  doc.text(format(new Date(), "PPP"), doc.internal.pageSize.width / 2, 80, { align: "center" });
 
   // Add new page for overview
   doc.addPage();
@@ -37,10 +37,10 @@ export async function generateCampaignOverview(
   ];
 
   autoTable(doc, {
+    ...TABLE_STYLES,
     startY: 30,
     head: [["Metric", "Value"]],
     body: overviewData,
-    ...TABLE_STYLES,
   });
 
   // Add description if available
