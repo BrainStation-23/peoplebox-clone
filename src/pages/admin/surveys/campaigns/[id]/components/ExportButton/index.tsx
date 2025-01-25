@@ -8,6 +8,7 @@ import { generateCampaignOverview } from "./generators/CampaignOverview";
 import { generateResponseStatistics } from "./generators/ResponseStatistics";
 import { generateQuestionAnalysis } from "./generators/QuestionAnalysis";
 import { fetchCampaignData, fetchCampaignStatistics, fetchResponses, processDemographicData } from "./services/campaignExportService";
+import type { SurveyData } from "./types";
 
 interface ExportButtonProps {
   campaignId: string;
@@ -45,26 +46,17 @@ export function ExportButton({ campaignId }: ExportButtonProps) {
       const doc = new jsPDF();
       const demographicData = processDemographicData(responses);
       
-      // Generate campaign overview
       await generateCampaignOverview(doc, campaign, statistics);
-      
-      // Generate response statistics
       await generateResponseStatistics(doc, statistics, demographicData);
 
       // Get questions from survey json_data
       const surveyData = campaign.survey.json_data;
       const questions = surveyData.pages?.flatMap(
-        (page: any) => page.elements || []
-      ).map((q: any) => ({
-        name: q.name,
-        title: q.title,
-        type: q.type,
-      })) || [];
+        (page) => page.elements || []
+      ) || [];
 
-      // Generate question analysis
       await generateQuestionAnalysis(doc, questions, responses);
 
-      // Save the PDF
       doc.save(`${campaign.name}-Report.pdf`);
 
       toast({
