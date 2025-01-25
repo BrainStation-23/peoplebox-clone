@@ -2,6 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useResponseProcessing } from "./hooks/useResponseProcessing";
 import { BooleanCharts } from "./charts/BooleanCharts";
 import { NpsChart } from "./charts/NpsChart";
+import { WordCloud } from "./charts/WordCloud";
 
 interface ReportsTabProps {
   campaignId: string;
@@ -11,6 +12,7 @@ interface ReportsTabProps {
 type ProcessedAnswerData = {
   boolean: { yes: number; no: number };
   rating: Array<{ rating: number; count: number }>;
+  text: Array<{ text: string; value: number }>;
 };
 
 export function ReportsTab({ campaignId, instanceId }: ReportsTabProps) {
@@ -44,6 +46,11 @@ export function ReportsTab({ campaignId, instanceId }: ReportsTabProps) {
         });
         return ratingCounts.map((count, rating) => ({ rating, count }));
       
+      case "text":
+      case "comment":
+        // We'll implement this in the next step
+        return null;
+      
       default:
         return null;
     }
@@ -66,6 +73,13 @@ export function ReportsTab({ campaignId, instanceId }: ReportsTabProps) {
             {(question.type === "nps" || question.type === "rating") && (
               <NpsChart
                 data={processAnswersForQuestion(question.name, question.type) as Array<{ rating: number; count: number }>}
+              />
+            )}
+
+            {(question.type === "text" || question.type === "comment") && (
+              <WordCloud
+                title={question.title}
+                words={processAnswersForQuestion(question.name, question.type) as Array<{ text: string; value: number }>}
               />
             )}
           </CardContent>
