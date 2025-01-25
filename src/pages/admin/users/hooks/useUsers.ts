@@ -62,6 +62,7 @@ export function useUsers({ currentPage, pageSize, searchTerm, selectedSBU }: Use
           gender,
           date_of_birth,
           designation,
+          status,
           level:levels!left(name),
           location:locations!left(name),
           employment_type:employment_types!left(name),
