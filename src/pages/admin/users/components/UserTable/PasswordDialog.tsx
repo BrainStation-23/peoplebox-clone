@@ -8,22 +8,50 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 interface PasswordDialogProps {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
-  newPassword: string;
-  onPasswordChange: (value: string) => void;
-  onSave: () => void;
+  userId: string | null;
 }
 
 export function PasswordDialog({
   isOpen,
   onOpenChange,
-  newPassword,
-  onPasswordChange,
-  onSave,
+  userId,
 }: PasswordDialogProps) {
+  const [newPassword, setNewPassword] = useState("");
+  const { toast } = useToast();
+
+  const handleSave = async () => {
+    if (!userId) return;
+
+    try {
+      const { error } = await supabase.functions.invoke('update-user-password', {
+        body: { userId, newPassword },
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: "Password has been updated successfully",
+      });
+
+      setNewPassword("");
+      onOpenChange(false);
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to update password",
+        variant: "destructive",
+      });
+    }
+  };
+
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent>
@@ -37,12 +65,12 @@ export function PasswordDialog({
               id="new-password"
               type="password"
               value={newPassword}
-              onChange={(e) => onPasswordChange(e.target.value)}
+              onChange={(e) => setNewPassword(e.target.value)}
             />
           </div>
         </div>
         <DialogFooter>
-          <Button onClick={onSave}>Save Password</Button>
+          <Button onClick={handleSave}>Save Password</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
