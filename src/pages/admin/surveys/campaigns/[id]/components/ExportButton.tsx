@@ -7,7 +7,6 @@ import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { format } from "date-fns";
 
-// Extend jsPDF type to include lastAutoTable property
 interface ExtendedJsPDF extends jsPDF {
   lastAutoTable: {
     finalY: number;
@@ -29,7 +28,7 @@ interface ExportButtonProps {
 export function ExportButton({ campaign }: ExportButtonProps) {
   const { toast } = useToast();
 
-  // Fetch responses for the campaign
+  // Fetch responses with all related data
   const { data: responses } = useQuery({
     queryKey: ["campaign-responses", campaign.id],
     queryFn: async () => {
@@ -39,7 +38,10 @@ export function ExportButton({ campaign }: ExportButtonProps) {
           id,
           response_data,
           submitted_at,
-          assignment:survey_assignments!survey_responses_assignment_id_fkey(campaign_id),
+          assignment:survey_assignments!survey_responses_assignment_id_fkey(
+            campaign_id,
+            status
+          ),
           user:profiles!survey_responses_user_id_fkey (
             first_name,
             last_name,
@@ -48,7 +50,8 @@ export function ExportButton({ campaign }: ExportButtonProps) {
             location:locations (name),
             employment_type:employment_types (name),
             user_sbus:user_sbus (
-              sbu:sbus (name)
+              sbu:sbus (name),
+              is_primary
             )
           )
         `)
@@ -63,88 +66,107 @@ export function ExportButton({ campaign }: ExportButtonProps) {
     try {
       const doc = new jsPDF() as ExtendedJsPDF;
       const pageWidth = doc.internal.pageSize.width;
+      const margin = 20;
 
-      // Title
-      doc.setFontSize(20);
-      doc.text(campaign.name, pageWidth / 2, 20, { align: "center" });
-
-      // Campaign Details
+      // Title Page
+      doc.setFontSize(24);
+      doc.text("Campaign Report", pageWidth / 2, 40, { align: "center" });
+      doc.setFontSize(16);
+      doc.text(campaign.name, pageWidth / 2, 60, { align: "center" });
       doc.setFontSize(12);
-      doc.text(`Status: ${campaign.status}`, 20, 35);
-      doc.text(`Start Date: ${format(new Date(campaign.starts_at), "PPP")}`, 20, 45);
-      if (campaign.ends_at) {
-        doc.text(`End Date: ${format(new Date(campaign.ends_at), "PPP")}`, 20, 55);
-      }
+      doc.text(format(new Date(), "PPP"), pageWidth / 2, 80, { align: "center" });
+
+      // Campaign Overview
+      doc.addPage();
+      doc.setFontSize(18);
+      doc.text("Campaign Overview", margin, 20);
+      
+      doc.setFontSize(12);
+      const overviewData = [
+        ["Status", campaign.status],
+        ["Start Date", format(new Date(campaign.starts_at), "PPP")],
+        ["End Date", format(new Date(campaign.ends_at), "PPP")],
+        ["Total Responses", responses?.length.toString() || "0"],
+        ["Completion Rate", `${calculateCompletionRate(responses)}%`],
+      ];
+
+      autoTable(doc, {
+        startY: 30,
+        head: [["Metric", "Value"]],
+        body: overviewData,
+        theme: "grid",
+        headStyles: { fillColor: [41, 128, 185] },
+      });
+
       if (campaign.description) {
-        doc.text("Description:", 20, 70);
-        doc.setFontSize(10);
+        doc.text("Description:", margin, doc.lastAutoTable.finalY + 15);
         const descriptionLines = doc.splitTextToSize(campaign.description, pageWidth - 40);
-        doc.text(descriptionLines, 20, 80);
+        doc.text(descriptionLines, margin, doc.lastAutoTable.finalY + 25);
       }
 
       // Response Statistics
-      if (responses) {
-        doc.addPage();
-        doc.setFontSize(16);
-        doc.text("Response Statistics", 20, 20);
+      doc.addPage();
+      doc.setFontSize(18);
+      doc.text("Response Statistics", margin, 20);
 
-        // Calculate statistics
-        const totalResponses = responses.length;
-        const genderStats = responses.reduce((acc: Record<string, number>, response) => {
-          const gender = response.user?.gender || "Not Specified";
-          acc[gender] = (acc[gender] || 0) + 1;
-          return acc;
-        }, {});
+      // Gender Distribution
+      const genderStats = calculateGenderDistribution(responses);
+      autoTable(doc, {
+        startY: 30,
+        head: [["Gender", "Count", "Percentage"]],
+        body: Object.entries(genderStats).map(([gender, { count, percentage }]) => [
+          gender,
+          count,
+          `${percentage.toFixed(1)}%`,
+        ]),
+        theme: "grid",
+        headStyles: { fillColor: [41, 128, 185] },
+      });
 
-        const locationStats = responses.reduce((acc: Record<string, number>, response) => {
-          const location = response.user?.location?.name || "Not Specified";
-          acc[location] = (acc[location] || 0) + 1;
-          return acc;
-        }, {});
+      // Location Distribution
+      const locationStats = calculateLocationDistribution(responses);
+      doc.text("Response by Location", margin, doc.lastAutoTable.finalY + 15);
+      autoTable(doc, {
+        startY: doc.lastAutoTable.finalY + 20,
+        head: [["Location", "Count", "Percentage"]],
+        body: Object.entries(locationStats).map(([location, { count, percentage }]) => [
+          location,
+          count,
+          `${percentage.toFixed(1)}%`,
+        ]),
+        theme: "grid",
+        headStyles: { fillColor: [41, 128, 185] },
+      });
 
-        // Add statistics tables
-        doc.setFontSize(14);
-        doc.text("Response Distribution by Gender", 20, 40);
-        autoTable(doc, {
-          startY: 50,
-          head: [["Gender", "Count", "Percentage"]],
-          body: Object.entries(genderStats).map(([gender, count]) => [
-            gender,
-            count,
-            `${((count / totalResponses) * 100).toFixed(1)}%`,
-          ]),
-        });
+      // SBU Distribution
+      const sbuStats = calculateSBUDistribution(responses);
+      doc.text("Response by Department (SBU)", margin, doc.lastAutoTable.finalY + 15);
+      autoTable(doc, {
+        startY: doc.lastAutoTable.finalY + 20,
+        head: [["Department", "Count", "Percentage"]],
+        body: Object.entries(sbuStats).map(([sbu, { count, percentage }]) => [
+          sbu,
+          count,
+          `${percentage.toFixed(1)}%`,
+        ]),
+        theme: "grid",
+        headStyles: { fillColor: [41, 128, 185] },
+      });
 
-        doc.text("Response Distribution by Location", 20, doc.lastAutoTable.finalY + 20);
-        autoTable(doc, {
-          startY: doc.lastAutoTable.finalY + 30,
-          head: [["Location", "Count", "Percentage"]],
-          body: Object.entries(locationStats).map(([location, count]) => [
-            location,
-            count,
-            `${((count / totalResponses) * 100).toFixed(1)}%`,
-          ]),
-        });
-
-        // Add response details
-        doc.addPage();
-        doc.setFontSize(16);
-        doc.text("Individual Responses", 20, 20);
-        
-        const responseRows = responses.map((response) => [
-          `${response.user?.first_name} ${response.user?.last_name}`,
-          response.user?.email,
-          format(new Date(response.submitted_at), "PPP"),
-          response.user?.location?.name || "N/A",
-          response.user?.employment_type?.name || "N/A",
-        ]);
-
-        autoTable(doc, {
-          startY: 30,
-          head: [["Name", "Email", "Submitted At", "Location", "Employment Type"]],
-          body: responseRows,
-        });
-      }
+      // Employment Type Distribution
+      const employmentStats = calculateEmploymentDistribution(responses);
+      doc.text("Response by Employment Type", margin, doc.lastAutoTable.finalY + 15);
+      autoTable(doc, {
+        startY: doc.lastAutoTable.finalY + 20,
+        head: [["Employment Type", "Count", "Percentage"]],
+        body: Object.entries(employmentStats).map(([type, { count, percentage }]) => [
+          type,
+          count,
+          `${percentage.toFixed(1)}%`,
+        ]),
+        theme: "grid",
+        headStyles: { fillColor: [41, 128, 185] },
+      });
 
       // Save the PDF
       doc.save(`${campaign.name}-Report.pdf`);
@@ -169,4 +191,67 @@ export function ExportButton({ campaign }: ExportButtonProps) {
       Export
     </Button>
   );
+}
+
+// Helper functions for calculating statistics
+function calculateCompletionRate(responses: any[] | undefined): string {
+  if (!responses?.length) return "0";
+  const completed = responses.filter(r => r.assignment?.status === "completed").length;
+  return ((completed / responses.length) * 100).toFixed(1);
+}
+
+function calculateGenderDistribution(responses: any[] | undefined) {
+  if (!responses?.length) return {};
+  const stats: Record<string, { count: number; percentage: number }> = {};
+  responses.forEach(response => {
+    const gender = response.user?.gender || "Not Specified";
+    stats[gender] = stats[gender] || { count: 0, percentage: 0 };
+    stats[gender].count++;
+  });
+  Object.values(stats).forEach(stat => {
+    stat.percentage = (stat.count / responses.length) * 100;
+  });
+  return stats;
+}
+
+function calculateLocationDistribution(responses: any[] | undefined) {
+  if (!responses?.length) return {};
+  const stats: Record<string, { count: number; percentage: number }> = {};
+  responses.forEach(response => {
+    const location = response.user?.location?.name || "Not Specified";
+    stats[location] = stats[location] || { count: 0, percentage: 0 };
+    stats[location].count++;
+  });
+  Object.values(stats).forEach(stat => {
+    stat.percentage = (stat.count / responses.length) * 100;
+  });
+  return stats;
+}
+
+function calculateSBUDistribution(responses: any[] | undefined) {
+  if (!responses?.length) return {};
+  const stats: Record<string, { count: number; percentage: number }> = {};
+  responses.forEach(response => {
+    const primarySbu = response.user?.user_sbus?.find((us: any) => us.is_primary)?.sbu?.name || "Not Specified";
+    stats[primarySbu] = stats[primarySbu] || { count: 0, percentage: 0 };
+    stats[primarySbu].count++;
+  });
+  Object.values(stats).forEach(stat => {
+    stat.percentage = (stat.count / responses.length) * 100;
+  });
+  return stats;
+}
+
+function calculateEmploymentDistribution(responses: any[] | undefined) {
+  if (!responses?.length) return {};
+  const stats: Record<string, { count: number; percentage: number }> = {};
+  responses.forEach(response => {
+    const employmentType = response.user?.employment_type?.name || "Not Specified";
+    stats[employmentType] = stats[employmentType] || { count: 0, percentage: 0 };
+    stats[employmentType].count++;
+  });
+  Object.values(stats).forEach(stat => {
+    stat.percentage = (stat.count / responses.length) * 100;
+  });
+  return stats;
 }
