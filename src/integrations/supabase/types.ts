@@ -176,7 +176,6 @@ export type Database = {
           location_id: string | null
           org_id: string | null
           profile_image_url: string | null
-          status: string
           updated_at: string
         }
         Insert: {
@@ -193,7 +192,6 @@ export type Database = {
           location_id?: string | null
           org_id?: string | null
           profile_image_url?: string | null
-          status?: string
           updated_at?: string
         }
         Update: {
@@ -210,7 +208,6 @@ export type Database = {
           location_id?: string | null
           org_id?: string | null
           profile_image_url?: string | null
-          status?: string
           updated_at?: string
         }
         Relationships: [
@@ -651,6 +648,7 @@ export type Database = {
       gender_type: "male" | "female" | "other"
       instance_status: "upcoming" | "active" | "completed"
       level_status: "active" | "inactive"
+      profile_status: "active" | "disabled"
       recurring_frequency:
         | "one_time"
         | "daily"
