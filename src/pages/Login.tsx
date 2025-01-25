@@ -11,6 +11,7 @@ import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 
 const emailLoginSchema = z.object({
   email: z.string().email("Please enter a valid email address"),
@@ -21,10 +22,15 @@ const magicLinkSchema = z.object({
   email: z.string().email("Please enter a valid email address"),
 });
 
+const forgotPasswordSchema = z.object({
+  email: z.string().email("Please enter a valid email address"),
+});
+
 export default function Login() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
+  const [forgotPasswordOpen, setForgotPasswordOpen] = useState(false);
 
   const emailPasswordForm = useForm<z.infer<typeof emailLoginSchema>>({
     resolver: zodResolver(emailLoginSchema),
@@ -36,6 +42,13 @@ export default function Login() {
 
   const magicLinkForm = useForm<z.infer<typeof magicLinkSchema>>({
     resolver: zodResolver(magicLinkSchema),
+    defaultValues: {
+      email: "",
+    },
+  });
+
+  const forgotPasswordForm = useForm<z.infer<typeof forgotPasswordSchema>>({
+    resolver: zodResolver(forgotPasswordSchema),
     defaultValues: {
       email: "",
     },
@@ -115,6 +128,34 @@ export default function Login() {
     }
   };
 
+  const onForgotPasswordSubmit = async (values: z.infer<typeof forgotPasswordSchema>) => {
+    try {
+      setIsLoading(true);
+      const { error } = await supabase.auth.resetPasswordForEmail(values.email, {
+        redirectTo: `${window.location.origin}/auth/reset-password`,
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "Reset link sent",
+        description: "Please check your email for the password reset link",
+      });
+      
+      setForgotPasswordOpen(false);
+      forgotPasswordForm.reset();
+    } catch (error: any) {
+      console.error("Password reset error:", error);
+      toast({
+        variant: "destructive",
+        title: "Failed to send reset link",
+        description: error.message || "Please try again later",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50">
       <Card className="w-full max-w-md">
@@ -170,7 +211,11 @@ export default function Login() {
                 </form>
               </Form>
               <div className="mt-4 text-center">
-                <Button variant="link" className="text-sm">
+                <Button 
+                  variant="link" 
+                  className="text-sm"
+                  onClick={() => setForgotPasswordOpen(true)}
+                >
                   Forgot your password?
                 </Button>
               </div>
@@ -204,6 +249,40 @@ export default function Login() {
           </Tabs>
         </CardContent>
       </Card>
+
+      <Dialog open={forgotPasswordOpen} onOpenChange={setForgotPasswordOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Reset your password</DialogTitle>
+            <DialogDescription>
+              Enter your email address and we'll send you a link to reset your password.
+            </DialogDescription>
+          </DialogHeader>
+          <Form {...forgotPasswordForm}>
+            <form onSubmit={forgotPasswordForm.handleSubmit(onForgotPasswordSubmit)} className="space-y-4">
+              <FormField
+                control={forgotPasswordForm.control}
+                name="email"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Email</FormLabel>
+                    <FormControl>
+                      <div className="relative">
+                        <Mail className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                        <Input className="pl-10" placeholder="Enter your email" {...field} />
+                      </div>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <Button type="submit" className="w-full" disabled={isLoading}>
+                {isLoading ? "Sending..." : "Send Reset Link"}
+              </Button>
+            </form>
+          </Form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
