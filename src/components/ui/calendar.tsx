@@ -19,9 +19,16 @@ function Calendar({
   showOutsideDays = true,
   ...props
 }: CalendarProps) {
-  const [selectedYear, setSelectedYear] = React.useState<number>(
-    props.selected ? props.selected.getFullYear() : new Date().getFullYear()
-  );
+  // Get initial year safely from props.selected
+  const getInitialYear = () => {
+    if (!props.selected) return new Date().getFullYear();
+    if (props.selected instanceof Date) return props.selected.getFullYear();
+    if (Array.isArray(props.selected) && props.selected[0]) 
+      return props.selected[0].getFullYear();
+    return new Date().getFullYear();
+  };
+
+  const [selectedYear, setSelectedYear] = React.useState<number>(getInitialYear());
   const [isYearPickerOpen, setIsYearPickerOpen] = React.useState(false);
 
   // Generate century options for quick navigation
