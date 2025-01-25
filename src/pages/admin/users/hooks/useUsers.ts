@@ -60,8 +60,7 @@ export function useUsers({ currentPage, pageSize, searchTerm, selectedSBU }: Use
       }
 
       // First get the total count
-      const countQuery = await baseQuery
-        .select('id', { count: 'exact', head: true });
+      const countQuery = await baseQuery.count();
 
       if (countQuery.error) {
         console.error("Error fetching count:", countQuery.error);
