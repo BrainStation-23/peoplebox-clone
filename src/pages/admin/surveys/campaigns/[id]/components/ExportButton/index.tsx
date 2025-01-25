@@ -5,9 +5,10 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import jsPDF from "jspdf";
 import "jspdf-autotable";
-import type { Campaign, ResponseStatistics, DemographicData } from "./types";
 import { generateCampaignOverview } from "./generators/CampaignOverview";
 import { generateResponseStatistics } from "./generators/ResponseStatistics";
+import { generateQuestionAnalysis } from "./generators/QuestionAnalysis";
+import type { Campaign, ResponseStatistics, DemographicData, Question, ResponseData } from "./types";
 
 interface ExportButtonProps {
   campaignId: string;
@@ -24,7 +25,8 @@ export function ExportButton({ campaignId }: ExportButtonProps) {
         .select(`
           *,
           survey:surveys (
-            name
+            name,
+            json_data
           )
         `)
         .eq("id", campaignId)
@@ -65,28 +67,54 @@ export function ExportButton({ campaignId }: ExportButtonProps) {
     },
   });
 
-  const { data: demographicData } = useQuery({
-    queryKey: ["demographic-data", campaignId],
+  const { data: responses } = useQuery({
+    queryKey: ["campaign-responses", campaignId],
     queryFn: async () => {
-      // Fetch all the demographic data in parallel
-      const [genderData, locationData, employmentData, sbuData] = await Promise.all([
-        fetchGenderDistribution(),
-        fetchLocationDistribution(),
-        fetchEmploymentDistribution(),
-        fetchSBUDistribution(),
-      ]);
+      const { data, error } = await supabase
+        .from("survey_responses")
+        .select(`
+          id,
+          response_data,
+          user:profiles!survey_responses_user_id_fkey (
+            first_name,
+            last_name,
+            email,
+            gender,
+            location:locations (
+              name
+            ),
+            employment_type:employment_types (
+              name
+            ),
+            user_sbus:user_sbus (
+              is_primary,
+              sbu:sbus (
+                name
+              )
+            )
+          )
+        `)
+        .eq("assignment.campaign_id", campaignId);
 
-      return {
-        gender: genderData,
-        location: locationData,
-        employmentType: employmentData,
-        sbu: sbuData,
-      } as DemographicData;
+      if (error) throw error;
+
+      return data.map(response => ({
+        id: response.id,
+        answers: response.response_data,
+        respondent: {
+          name: `${response.user.first_name || ""} ${response.user.last_name || ""}`.trim(),
+          email: response.user.email,
+          gender: response.user.gender,
+          location: response.user.location,
+          sbu: response.user.user_sbus?.find((us: any) => us.is_primary)?.sbu || null,
+          employment_type: response.user.employment_type,
+        },
+      })) as ResponseData[];
     },
   });
 
   const handleExport = async () => {
-    if (!campaign || !statistics || !demographicData) {
+    if (!campaign || !statistics || !responses) {
       toast({
         variant: "destructive",
         title: "Export failed",
@@ -104,6 +132,22 @@ export function ExportButton({ campaignId }: ExportButtonProps) {
       // Generate response statistics
       await generateResponseStatistics(doc, statistics, demographicData);
 
+      // Get questions from survey json_data
+      const surveyData = typeof campaign.survey.json_data === 'string' 
+        ? JSON.parse(campaign.survey.json_data)
+        : campaign.survey.json_data;
+
+      const questions = surveyData.pages?.flatMap(
+        (page: any) => page.elements || []
+      ).map((q: any) => ({
+        name: q.name,
+        title: q.title,
+        type: q.type,
+      })) || [];
+
+      // Generate question analysis
+      await generateQuestionAnalysis(doc, questions, responses);
+
       // Save the PDF
       doc.save(`${campaign.name}-Report.pdf`);
 
@@ -120,89 +164,6 @@ export function ExportButton({ campaignId }: ExportButtonProps) {
       });
     }
   };
-
-  // Helper functions for fetching demographic data
-  async function fetchGenderDistribution() {
-    const { data } = await supabase
-      .from("survey_assignments")
-      .select(`
-        user:profiles!survey_assignments_user_id_fkey (
-          gender
-        )
-      `)
-      .eq("campaign_id", campaignId);
-
-    const distribution = processDistribution(data?.map(d => d.user?.gender || "Not Specified") || []);
-    return distribution;
-  }
-
-  async function fetchLocationDistribution() {
-    const { data } = await supabase
-      .from("survey_assignments")
-      .select(`
-        user:profiles!survey_assignments_user_id_fkey (
-          location:locations (name)
-        )
-      `)
-      .eq("campaign_id", campaignId);
-
-    const distribution = processDistribution(
-      data?.map(d => d.user?.location?.name || "Not Specified") || []
-    );
-    return distribution;
-  }
-
-  async function fetchEmploymentDistribution() {
-    const { data } = await supabase
-      .from("survey_assignments")
-      .select(`
-        user:profiles!survey_assignments_user_id_fkey (
-          employment_type:employment_types (name)
-        )
-      `)
-      .eq("campaign_id", campaignId);
-
-    const distribution = processDistribution(
-      data?.map(d => d.user?.employment_type?.name || "Not Specified") || []
-    );
-    return distribution;
-  }
-
-  async function fetchSBUDistribution() {
-    const { data } = await supabase
-      .from("survey_assignments")
-      .select(`
-        user:profiles!survey_assignments_user_id_fkey (
-          user_sbus (
-            is_primary,
-            sbu:sbus (name)
-          )
-        )
-      `)
-      .eq("campaign_id", campaignId);
-
-    const distribution = processDistribution(
-      data?.map(d => {
-        const primarySbu = d.user?.user_sbus?.find(us => us.is_primary);
-        return primarySbu?.sbu?.name || "Not Specified";
-      }) || []
-    );
-    return distribution;
-  }
-
-  function processDistribution(items: string[]) {
-    const total = items.length;
-    const counts = items.reduce((acc, item) => {
-      acc[item] = (acc[item] || 0) + 1;
-      return acc;
-    }, {} as Record<string, number>);
-
-    return Object.entries(counts).map(([category, count]) => ({
-      category,
-      count,
-      percentage: (count / total) * 100,
-    }));
-  }
 
   return (
     <Button onClick={handleExport} variant="outline" size="sm">
