@@ -57,7 +57,17 @@ export function useResponseProcessing(campaignId: string) {
         (page: any) => page.elements || []
       ) || [];
 
-      // Then get all responses for this campaign
+      // Get the latest active instance for this campaign
+      const { data: instance } = await supabase
+        .from("campaign_instances")
+        .select("id")
+        .eq("campaign_id", campaignId)
+        .eq("status", "active")
+        .order("period_number", { ascending: false })
+        .limit(1)
+        .single();
+
+      // Then get all responses for this campaign instance
       const { data: responses } = await supabase
         .from("survey_responses")
         .select(`
@@ -70,7 +80,7 @@ export function useResponseProcessing(campaignId: string) {
             email
           )
         `)
-        .eq("campaign_instance_id", campaignId);
+        .eq("campaign_instance_id", instance?.id);
 
       if (!responses) {
         return {
