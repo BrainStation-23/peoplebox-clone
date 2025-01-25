@@ -1,9 +1,4 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { OverviewTab } from "./OverviewTab";
-import { AssignmentInstanceList } from "./AssignmentInstanceList";
-import { ResponsesTab } from "./ResponsesTab";
-import { ActivityTab } from "./ActivityTab";
-import { ReportsTab } from "./ReportsTab";
 
 export function TabPanel({ value, children }: { value: string; children: React.ReactNode }) {
   return (
@@ -13,7 +8,11 @@ export function TabPanel({ value, children }: { value: string; children: React.R
   );
 }
 
-export function CampaignTabs() {
+interface CampaignTabsProps {
+  children: React.ReactNode;
+}
+
+export function CampaignTabs({ children }: CampaignTabsProps) {
   return (
     <Tabs defaultValue="overview" className="space-y-4">
       <TabsList>
@@ -23,22 +22,7 @@ export function CampaignTabs() {
         <TabsTrigger value="activity">Activity</TabsTrigger>
         <TabsTrigger value="reports">Reports</TabsTrigger>
       </TabsList>
-
-      <TabPanel value="overview">
-        <OverviewTab />
-      </TabPanel>
-      <TabPanel value="assignments">
-        <AssignmentInstanceList />
-      </TabPanel>
-      <TabPanel value="responses">
-        <ResponsesTab />
-      </TabPanel>
-      <TabPanel value="activity">
-        <ActivityTab />
-      </TabPanel>
-      <TabPanel value="reports">
-        <ReportsTab />
-      </TabPanel>
+      {children}
     </Tabs>
   );
 }

@@ -38,9 +38,13 @@ export function useResponseProcessing(campaignId: string) {
         throw new Error("Survey not found");
       }
 
-      const surveyQuestions = campaign.survey.json_data.pages.flatMap(
+      const surveyData = typeof campaign.survey.json_data === 'string' 
+        ? JSON.parse(campaign.survey.json_data)
+        : campaign.survey.json_data;
+
+      const surveyQuestions = surveyData.pages?.flatMap(
         (page: any) => page.elements
-      );
+      ) || [];
 
       // Then get all responses for this campaign
       const { data: responses } = await supabase

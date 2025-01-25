@@ -9,6 +9,7 @@ import { OverviewTab } from "./components/OverviewTab";
 import { ResponsesTab } from "./components/ResponsesTab";
 import { ActivityTab } from "./components/ActivityTab";
 import { InstanceSelector } from "./components/InstanceSelector";
+import { ReportsTab } from "./components/ReportsTab";
 
 export default function CampaignDetailsPage() {
   const { id } = useParams();
@@ -100,7 +101,7 @@ export default function CampaignDetailsPage() {
           />
         </TabPanel>
         <TabPanel value="reports">
-          <h2>Reports Content</h2>
+          <ReportsTab campaignId={id} />
         </TabPanel>
       </CampaignTabs>
     </div>
