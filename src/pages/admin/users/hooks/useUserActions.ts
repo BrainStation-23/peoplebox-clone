@@ -14,11 +14,8 @@ export function useUserActions(refetch: () => void) {
 
   const handleDelete = async (userId: string) => {
     try {
-      const { data, error } = await supabase.functions.invoke('manage-users', {
-        body: {
-          method: 'DELETE',
-          action: { user_id: userId }
-        }
+      const { data, error } = await supabase.functions.invoke('delete-user', {
+        body: { user_id: userId }
       });
 
       if (error) {

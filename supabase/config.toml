@@ -28,3 +28,7 @@ enabled = true
 [[functions]]
 [functions.toggle-user-status]
 verify_jwt = true
+
+[[functions]]
+[functions.delete-user]
+verify_jwt = true
