@@ -19,6 +19,7 @@ import UserSurveyResponse from "./pages/user/my-surveys/[id]";
 import AdminDashboard from "./pages/admin/Dashboard";
 import AdminConfig from "./pages/admin/Config";
 import AdminProfile from "./pages/admin/Profile";
+import AdminSettings from "./pages/admin/Settings";
 import Users from "./pages/admin/users";
 import EditUserPage from "./pages/admin/users/[id]/edit";
 import MySurveysPage from "./pages/admin/my-surveys";
@@ -84,6 +85,7 @@ const App = () => (
               <Route path="employment-type" element={<EmploymentTypeConfig />} />
             </Route>
             <Route path="profile" element={<AdminProfile />} />
+            <Route path="settings" element={<AdminSettings />} />
           </Route>
           
           <Route path="/" element={<Navigate to="/login" replace />} />

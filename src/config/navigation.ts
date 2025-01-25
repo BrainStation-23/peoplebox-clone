@@ -53,4 +53,9 @@ export const navigationItems: NavigationItem[] = [
     icon: UserRound,
     path: "/admin/profile",
   },
+  {
+    title: "Settings",
+    icon: Settings2,
+    path: "/admin/settings",
+  },
 ];
