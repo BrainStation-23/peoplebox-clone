@@ -26,5 +26,5 @@ enabled = true
 enabled = true
 
 [[functions]]
-name = "toggle-user-status"
+[functions.toggle-user-status]
 verify_jwt = true
