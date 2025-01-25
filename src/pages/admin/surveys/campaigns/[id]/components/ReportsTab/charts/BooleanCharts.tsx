@@ -43,14 +43,11 @@ export function BooleanCharts({ title, data }: BooleanChartsProps) {
           <TabsContent value="bar" className="h-[300px]">
             <ChartContainer
               config={{
-                bar: {
-                  color: "var(--primary)"
-                },
                 grid: {
-                  color: "var(--border)"
-                },
-                tooltip: {
-                  color: "var(--background)"
+                  theme: {
+                    light: "var(--border)",
+                    dark: "var(--border)",
+                  },
                 },
               }}
             >
@@ -58,9 +55,13 @@ export function BooleanCharts({ title, data }: BooleanChartsProps) {
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="answer" />
                 <YAxis allowDecimals={false} />
-                <ChartTooltip content={(props) => (
-                  <ChartTooltipContent {...props} />
-                )} />
+                <ChartTooltip 
+                  cursor={false}
+                  content={({ active, payload }) => {
+                    if (!active || !payload?.length) return null;
+                    return <ChartTooltipContent active={active} payload={payload} />;
+                  }}
+                />
                 <Bar
                   dataKey="count"
                   fill="currentColor"
@@ -68,10 +69,7 @@ export function BooleanCharts({ title, data }: BooleanChartsProps) {
                   className="fill-primary"
                 >
                   {barData.map((entry, index) => (
-                    <Cell 
-                      key={`cell-${index}`}
-                      fill={COLORS[index % COLORS.length]} 
-                    />
+                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                   ))}
                 </Bar>
               </BarChart>
@@ -81,11 +79,11 @@ export function BooleanCharts({ title, data }: BooleanChartsProps) {
           <TabsContent value="pie" className="h-[300px]">
             <ChartContainer
               config={{
-                pie: {
-                  color: "var(--primary)"
-                },
-                tooltip: {
-                  color: "var(--background)"
+                grid: {
+                  theme: {
+                    light: "var(--border)",
+                    dark: "var(--border)",
+                  },
                 },
               }}
             >
@@ -106,9 +104,12 @@ export function BooleanCharts({ title, data }: BooleanChartsProps) {
                     />
                   ))}
                 </Pie>
-                <ChartTooltip content={(props) => (
-                  <ChartTooltipContent {...props} />
-                )} />
+                <ChartTooltip 
+                  content={({ active, payload }) => {
+                    if (!active || !payload?.length) return null;
+                    return <ChartTooltipContent active={active} payload={payload} />;
+                  }}
+                />
               </PieChart>
             </ChartContainer>
           </TabsContent>
