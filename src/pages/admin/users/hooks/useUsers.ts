@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { User } from "../types";
+import { User, UserSBU } from "../types";
 import { Json } from "@/integrations/supabase/types";
 
 interface UseUsersProps {
@@ -11,7 +11,22 @@ interface UseUsersProps {
 }
 
 interface SearchUsersResponse {
-  profile: Json;
+  profile: {
+    id: string;
+    email: string;
+    first_name: string | null;
+    last_name: string | null;
+    profile_image_url: string | null;
+    org_id: string | null;
+    gender: string | null;
+    date_of_birth: string | null;
+    designation: string | null;
+    status: string;
+    user_roles: {
+      role: string;
+    };
+    user_sbus: UserSBU[];
+  };
   total_count: number;
 }
 
@@ -36,21 +51,22 @@ export function useUsers({ currentPage, pageSize, searchTerm, selectedSBU }: Use
 
       // Transform the data to match the User type
       const transformedUsers = (data as SearchUsersResponse[]).map(item => {
-        const profile = item.profile as any; // temporary any to help with transformation
-        console.log("Transformed user data:", profile);
+        const profile = item.profile;
+        console.log("Raw user data:", profile);
         
         return {
           id: profile.id,
           email: profile.email,
-          first_name: profile.first_name || null,
-          last_name: profile.last_name || null,
+          first_name: profile.first_name,
+          last_name: profile.last_name,
           profile_image_url: profile.profile_image_url,
           org_id: profile.org_id,
           gender: profile.gender,
           date_of_birth: profile.date_of_birth,
           designation: profile.designation,
           status: profile.status,
-          user_roles: profile.user_roles
+          user_roles: profile.user_roles,
+          user_sbus: profile.user_sbus
         } as User;
       });
 
