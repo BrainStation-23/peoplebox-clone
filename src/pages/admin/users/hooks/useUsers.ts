@@ -43,17 +43,26 @@ export function useUsers({ currentPage, pageSize, searchTerm, selectedSBU }: Use
 
       // Apply SBU filter if selected
       if (selectedSBU !== 'all') {
-        baseQuery = baseQuery
-          .in('id', 
-            supabase
-              .from('user_sbus')
-              .select('user_id')
-              .eq('sbu_id', selectedSBU)
-          );
+        // First get the user IDs for the selected SBU
+        const { data: sbuUsers } = await supabase
+          .from('user_sbus')
+          .select('user_id')
+          .eq('sbu_id', selectedSBU);
+
+        const userIds = sbuUsers?.map(u => u.user_id) || [];
+        
+        // If no users found in the SBU, return empty result
+        if (userIds.length === 0) {
+          return { users: [], total: 0 };
+        }
+        
+        baseQuery = baseQuery.in('id', userIds);
       }
 
       // First get the total count
-      const { count, error: countError } = await baseQuery.count();
+      const { count, error: countError } = await baseQuery
+        .count()
+        .throwOnError();
 
       if (countError) {
         console.error("Error fetching count:", countError);
