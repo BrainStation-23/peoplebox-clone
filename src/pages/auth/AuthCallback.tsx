@@ -23,34 +23,37 @@ export default function AuthCallback() {
       }
 
       if (session) {
-        // Check user role
-        const { data: roleData, error: roleError } = await supabase
-          .from('user_roles')
-          .select('role')
-          .eq('user_id', session.user.id)
-          .single();
+        try {
+          // Check user role
+          const { data: roleData, error: roleError } = await supabase
+            .from('user_roles')
+            .select('role')
+            .eq('user_id', session.user.id)
+            .single();
 
-        if (roleError) {
+          if (roleError) {
+            throw roleError;
+          }
+
+          // Redirect based on role
+          if (roleData?.role === 'admin') {
+            navigate('/admin/dashboard');
+          } else {
+            navigate('/user/dashboard');
+          }
+
+          toast({
+            title: "Success",
+            description: "You have been successfully authenticated",
+          });
+        } catch (error: any) {
           toast({
             variant: "destructive",
             title: "Error",
             description: "Could not verify user role",
           });
           navigate("/login");
-          return;
         }
-
-        // Redirect based on role
-        if (roleData?.role === 'admin') {
-          navigate('/admin/dashboard');
-        } else {
-          navigate('/user/dashboard');
-        }
-
-        toast({
-          title: "Success",
-          description: "You have been successfully authenticated",
-        });
       }
     };
 
