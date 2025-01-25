@@ -1,5 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { DonutChart } from "../../ReportsTab/charts/DonutChart";
+import { DonutChart } from "@/components/shared/charts/DonutChart";
 
 type ResponseRateDonutChartProps = {
   title: string;
@@ -20,7 +20,7 @@ export function ResponseRateDonutChart({ title, data, className }: ResponseRateD
         <div className="h-[200px]">
           <DonutChart 
             data={data} 
-            colors={["#3b82f6", "#ef4444", "#22c55e", "#eab308"]} 
+            colors={["#3b82f6", "#22c55e", "#eab308", "#ef4444"]} 
           />
         </div>
         <div className="mt-4 grid grid-cols-2 gap-4">
