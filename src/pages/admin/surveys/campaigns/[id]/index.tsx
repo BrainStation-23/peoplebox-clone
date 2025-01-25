@@ -59,6 +59,28 @@ export default function CampaignDetailsPage() {
     },
   });
 
+  const { data: statusData } = useQuery({
+    queryKey: ["status-distribution", id, selectedInstanceId],
+    queryFn: async () => {
+      const { data: assignments } = await supabase
+        .from("survey_assignments")
+        .select("status")
+        .eq("campaign_id", id);
+
+      if (!assignments) return [];
+
+      const distribution = assignments.reduce((acc: Record<string, number>, curr) => {
+        acc[curr.status] = (acc[curr.status] || 0) + 1;
+        return acc;
+      }, {});
+
+      return Object.entries(distribution).map(([name, value]) => ({
+        name,
+        value,
+      }));
+    },
+  });
+
   if (!id) return null;
 
   return (
@@ -66,6 +88,8 @@ export default function CampaignDetailsPage() {
       <CampaignHeader 
         campaign={campaign} 
         isLoading={isLoadingCampaign}
+        statusData={statusData}
+        completionRate={campaign?.completion_rate}
       />
 
       <div className="flex justify-end">
