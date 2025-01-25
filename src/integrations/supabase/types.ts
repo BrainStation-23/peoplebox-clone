@@ -176,6 +176,7 @@ export type Database = {
           location_id: string | null
           org_id: string | null
           profile_image_url: string | null
+          status: Database["public"]["Enums"]["profile_status"]
           updated_at: string
         }
         Insert: {
@@ -192,6 +193,7 @@ export type Database = {
           location_id?: string | null
           org_id?: string | null
           profile_image_url?: string | null
+          status?: Database["public"]["Enums"]["profile_status"]
           updated_at?: string
         }
         Update: {
@@ -208,6 +210,7 @@ export type Database = {
           location_id?: string | null
           org_id?: string | null
           profile_image_url?: string | null
+          status?: Database["public"]["Enums"]["profile_status"]
           updated_at?: string
         }
         Relationships: [
