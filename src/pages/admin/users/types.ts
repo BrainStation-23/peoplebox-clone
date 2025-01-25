@@ -16,6 +16,7 @@ export interface User {
   designation?: string | null;
   location?: string | null;
   employment_type?: string | null;
+  status: 'active' | 'disabled';
   user_roles: {
     role: UserRole;
   };
