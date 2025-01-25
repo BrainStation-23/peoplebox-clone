@@ -19,9 +19,15 @@ export function NpsChart({ data }: NpsChartProps) {
     return "#22c55e"; // Green for promoters
   };
 
+  const chartConfig = {
+    detractor: { color: "#ef4444" },
+    passive: { color: "#eab308" },
+    promoter: { color: "#22c55e" },
+  };
+
   return (
     <div className="h-[240px] w-full">
-      <ResponsiveContainer width="100%" height="100%">
+      <ChartContainer config={chartConfig}>
         <BarChart data={data} margin={{ top: 20, right: 30, left: 20, bottom: 20 }}>
           <CartesianGrid strokeDasharray="3 3" />
           <XAxis dataKey="rating" />
@@ -44,7 +50,7 @@ export function NpsChart({ data }: NpsChartProps) {
             ))}
           </Bar>
         </BarChart>
-      </ResponsiveContainer>
+      </ChartContainer>
     </div>
   );
 }

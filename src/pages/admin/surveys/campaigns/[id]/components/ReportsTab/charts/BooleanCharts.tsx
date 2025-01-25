@@ -26,6 +26,10 @@ export function BooleanCharts({ data }: BooleanChartsProps) {
   ];
 
   const COLORS = ["#22c55e", "#ef4444"];
+  const chartConfig = {
+    yes: { color: "#22c55e" },
+    no: { color: "#ef4444" },
+  };
 
   return (
     <Tabs defaultValue="bar" className="w-full">
@@ -36,7 +40,7 @@ export function BooleanCharts({ data }: BooleanChartsProps) {
 
       <TabsContent value="bar" className="w-full">
         <div className="h-[240px] w-full">
-          <ResponsiveContainer width="100%" height="100%">
+          <ChartContainer config={chartConfig}>
             <BarChart data={barData} margin={{ top: 20, right: 30, left: 20, bottom: 20 }}>
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis dataKey="answer" />
@@ -59,13 +63,13 @@ export function BooleanCharts({ data }: BooleanChartsProps) {
                 ))}
               </Bar>
             </BarChart>
-          </ResponsiveContainer>
+          </ChartContainer>
         </div>
       </TabsContent>
 
       <TabsContent value="pie" className="w-full">
         <div className="h-[240px] w-full">
-          <ResponsiveContainer width="100%" height="100%">
+          <ChartContainer config={chartConfig}>
             <PieChart>
               <Pie
                 data={pieData}
@@ -90,7 +94,7 @@ export function BooleanCharts({ data }: BooleanChartsProps) {
                 }}
               />
             </PieChart>
-          </ResponsiveContainer>
+          </ChartContainer>
         </div>
       </TabsContent>
     </Tabs>
