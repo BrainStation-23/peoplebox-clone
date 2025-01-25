@@ -7,6 +7,13 @@ import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { format } from "date-fns";
 
+// Extend jsPDF type to include lastAutoTable property
+interface ExtendedJsPDF extends jsPDF {
+  lastAutoTable: {
+    finalY: number;
+  };
+}
+
 interface ExportButtonProps {
   campaign: {
     id: string;
@@ -53,7 +60,7 @@ export function ExportButton({ campaign }: ExportButtonProps) {
 
   const handleExport = async () => {
     try {
-      const doc = new jsPDF();
+      const doc = new jsPDF() as ExtendedJsPDF;
       const pageWidth = doc.internal.pageSize.width;
 
       // Title
