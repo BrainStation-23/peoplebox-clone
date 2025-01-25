@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
+import { MoreHorizontal } from "lucide-react";
 import { User } from "../../types";
 import { TableContainer } from "./TableContainer";
 import { TablePagination } from "./TablePagination";
@@ -11,6 +12,14 @@ import { exportUsers } from "../../utils/exportUsers";
 import { usePasswordManagement } from "../../hooks/usePasswordManagement";
 import { useUserFilters } from "../../hooks/useUserFilters";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { useToast } from "@/hooks/use-toast";
 
 interface UserTableProps {
   users: User[];
@@ -41,7 +50,9 @@ export default function UserTable({
 }: UserTableProps) {
   const [userToEdit, setUserToEdit] = useState<User | null>(null);
   const [isImportDialogOpen, setIsImportDialogOpen] = useState(false);
+  const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
   const queryClient = useQueryClient();
+  const { toast } = useToast();
 
   const {
     isPasswordDialogOpen,
@@ -68,9 +79,68 @@ export default function UserTable({
 
   const totalPages = Math.ceil(total / pageSize);
 
+  const handleSelectAll = (checked: boolean) => {
+    if (checked) {
+      setSelectedUsers(filteredUsers.map(user => user.id));
+    } else {
+      setSelectedUsers([]);
+    }
+  };
+
+  const handleSelectUser = (userId: string, checked: boolean) => {
+    if (checked) {
+      setSelectedUsers(prev => [...prev, userId]);
+    } else {
+      setSelectedUsers(prev => prev.filter(id => id !== userId));
+    }
+  };
+
+  const handleBulkDelete = async () => {
+    try {
+      for (const userId of selectedUsers) {
+        await onDelete(userId);
+      }
+      toast({
+        title: "Success",
+        description: `Successfully deleted ${selectedUsers.length} users`,
+      });
+      setSelectedUsers([]);
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to delete selected users",
+        variant: "destructive",
+      });
+    }
+  };
+
   return (
     <div className="space-y-4">
-      <div className="flex justify-end mb-4">
+      <div className="flex justify-between items-center mb-4">
+        <div className="flex items-center gap-2">
+          {selectedUsers.length > 0 && (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="sm">
+                  Bulk Actions <MoreHorizontal className="ml-2 h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent>
+                <DropdownMenuItem
+                  className="text-destructive"
+                  onClick={handleBulkDelete}
+                >
+                  Delete Selected
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
+          {selectedUsers.length > 0 && (
+            <span className="text-sm text-muted-foreground">
+              {selectedUsers.length} selected
+            </span>
+          )}
+        </div>
         <Select value={pageSize.toString()} onValueChange={(value) => onPageSizeChange(Number(value))}>
           <SelectTrigger className="w-[180px]">
             <SelectValue placeholder="Select page size" />
@@ -91,6 +161,9 @@ export default function UserTable({
           onDelete={onDelete}
           onPasswordChange={handlePasswordChange}
           isLoading={isLoading}
+          selectedUsers={selectedUsers}
+          onSelectAll={handleSelectAll}
+          onSelectUser={handleSelectUser}
         />
       </div>
 

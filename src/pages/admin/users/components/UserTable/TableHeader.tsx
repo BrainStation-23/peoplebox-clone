@@ -1,20 +1,31 @@
-import {
-  TableHead,
-  TableHeader as ShadcnTableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Checkbox } from "@/components/ui/checkbox";
 
-export function UsersTableHeader() {
+interface UsersTableHeaderProps {
+  onSelectAll: (checked: boolean) => void;
+  allSelected: boolean;
+  someSelected: boolean;
+}
+
+export function UsersTableHeader({ onSelectAll, allSelected, someSelected }: UsersTableHeaderProps) {
   return (
-    <ShadcnTableHeader>
+    <TableHeader>
       <TableRow>
+        <TableHead className="w-[50px]">
+          <Checkbox
+            checked={allSelected}
+            className="translate-y-[2px]"
+            onCheckedChange={onSelectAll}
+            data-state={someSelected ? "indeterminate" : allSelected ? "checked" : "unchecked"}
+          />
+        </TableHead>
         <TableHead>Name</TableHead>
         <TableHead>Email</TableHead>
-        <TableHead>Org ID</TableHead>
-        <TableHead>Is Admin</TableHead>
+        <TableHead>Organization ID</TableHead>
+        <TableHead>Admin</TableHead>
         <TableHead>Primary SBU</TableHead>
-        <TableHead className="w-[200px]">Actions</TableHead>
+        <TableHead className="text-right">Actions</TableHead>
       </TableRow>
-    </ShadcnTableHeader>
+    </TableHeader>
   );
 }

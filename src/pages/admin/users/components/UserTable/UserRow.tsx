@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Switch } from "@/components/ui/switch";
 import { TableCell, TableRow } from "@/components/ui/table";
+import { Checkbox } from "@/components/ui/checkbox";
 import { User } from "../../types";
 import UserActions from "./UserActions";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -12,9 +13,18 @@ interface UserRowProps {
   onEdit: (user: User) => void;
   onDelete: (userId: string) => void;
   onPasswordChange: (userId: string) => void;
+  selected: boolean;
+  onSelect: (userId: string, checked: boolean) => void;
 }
 
-export function UserRow({ user, onEdit, onDelete, onPasswordChange }: UserRowProps) {
+export function UserRow({ 
+  user, 
+  onEdit, 
+  onDelete, 
+  onPasswordChange,
+  selected,
+  onSelect
+}: UserRowProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -47,6 +57,13 @@ export function UserRow({ user, onEdit, onDelete, onPasswordChange }: UserRowPro
   return (
     <TableRow key={user.id}>
       <TableCell>
+        <Checkbox
+          checked={selected}
+          onCheckedChange={(checked) => onSelect(user.id, checked as boolean)}
+          className="translate-y-[2px]"
+        />
+      </TableCell>
+      <TableCell>
         {user.first_name || user.last_name
           ? `${user.first_name || ""} ${user.last_name || ""}`
           : "N/A"}
@@ -67,6 +84,7 @@ export function UserRow({ user, onEdit, onDelete, onPasswordChange }: UserRowPro
       <TableCell>
         <UserActions
           user={user}
+          onEdit={onEdit}
           onDelete={onDelete}
           onPasswordChange={onPasswordChange}
         />

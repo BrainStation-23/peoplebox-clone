@@ -10,6 +10,9 @@ interface TableContainerProps {
   onDelete: (userId: string) => void;
   onPasswordChange: (userId: string) => void;
   isLoading?: boolean;
+  selectedUsers: string[];
+  onSelectAll: (checked: boolean) => void;
+  onSelectUser: (userId: string, checked: boolean) => void;
 }
 
 export function TableContainer({ 
@@ -17,7 +20,10 @@ export function TableContainer({
   onEdit, 
   onDelete, 
   onPasswordChange,
-  isLoading
+  isLoading,
+  selectedUsers,
+  onSelectAll,
+  onSelectUser
 }: TableContainerProps) {
   if (isLoading) {
     return (
@@ -37,7 +43,11 @@ export function TableContainer({
 
   return (
     <Table>
-      <UsersTableHeader />
+      <UsersTableHeader 
+        onSelectAll={onSelectAll}
+        allSelected={users.length > 0 && users.every(user => selectedUsers.includes(user.id))}
+        someSelected={users.length > 0 && users.some(user => selectedUsers.includes(user.id))}
+      />
       <TableBody>
         {users.map((user) => (
           <UserRow
@@ -46,6 +56,8 @@ export function TableContainer({
             onEdit={onEdit}
             onDelete={onDelete}
             onPasswordChange={onPasswordChange}
+            selected={selectedUsers.includes(user.id)}
+            onSelect={onSelectUser}
           />
         ))}
       </TableBody>
