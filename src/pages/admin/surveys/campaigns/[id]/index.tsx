@@ -101,7 +101,10 @@ export default function CampaignDetailsPage() {
           />
         </TabPanel>
         <TabPanel value="reports">
-          <ReportsTab campaignId={id} />
+          <ReportsTab 
+            campaignId={id} 
+            instanceId={selectedInstanceId}
+          />
         </TabPanel>
       </CampaignTabs>
     </div>

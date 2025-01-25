@@ -5,6 +5,7 @@ import { NpsChart } from "./charts/NpsChart";
 
 interface ReportsTabProps {
   campaignId: string;
+  instanceId?: string;
 }
 
 type ProcessedAnswerData = {
@@ -12,8 +13,8 @@ type ProcessedAnswerData = {
   rating: Array<{ rating: number; count: number }>;
 };
 
-export function ReportsTab({ campaignId }: ReportsTabProps) {
-  const { data, isLoading } = useResponseProcessing(campaignId);
+export function ReportsTab({ campaignId, instanceId }: ReportsTabProps) {
+  const { data, isLoading } = useResponseProcessing(campaignId, instanceId);
 
   if (isLoading) {
     return <div>Loading...</div>;

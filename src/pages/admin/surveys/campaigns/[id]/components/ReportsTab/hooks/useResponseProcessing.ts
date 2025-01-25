@@ -28,9 +28,9 @@ interface ProcessedData {
   responses: ProcessedResponse[];
 }
 
-export function useResponseProcessing(campaignId: string) {
+export function useResponseProcessing(campaignId: string, instanceId?: string) {
   return useQuery<ProcessedData>({
-    queryKey: ["campaign-report", campaignId],
+    queryKey: ["campaign-report", campaignId, instanceId],
     queryFn: async () => {
       // First get the survey details and its questions
       const { data: campaign } = await supabase
@@ -57,18 +57,8 @@ export function useResponseProcessing(campaignId: string) {
         (page: any) => page.elements || []
       ) || [];
 
-      // Get the latest active instance for this campaign
-      const { data: instance } = await supabase
-        .from("campaign_instances")
-        .select("id")
-        .eq("campaign_id", campaignId)
-        .eq("status", "active")
-        .order("period_number", { ascending: false })
-        .limit(1)
-        .single();
-
-      // Then get all responses for this campaign instance
-      const { data: responses } = await supabase
+      // Build the query for responses
+      let query = supabase
         .from("survey_responses")
         .select(`
           id,
@@ -79,8 +69,14 @@ export function useResponseProcessing(campaignId: string) {
             last_name,
             email
           )
-        `)
-        .eq("campaign_instance_id", instance?.id);
+        `);
+
+      // If instanceId is provided, filter by it
+      if (instanceId) {
+        query = query.eq("campaign_instance_id", instanceId);
+      }
+
+      const { data: responses } = await query;
 
       if (!responses) {
         return {
