@@ -47,6 +47,20 @@ export async function fetchCampaignStatistics(campaignId: string) {
 }
 
 export async function fetchResponses(campaignId: string): Promise<ResponseData[]> {
+  const { data: campaign } = await supabase
+    .from("survey_campaigns")
+    .select(`
+      survey:surveys (
+        json_data
+      )
+    `)
+    .eq("id", campaignId)
+    .single();
+
+  const surveyQuestions = campaign?.survey?.json_data?.pages?.flatMap(
+    (page: any) => page.elements || []
+  ) || [];
+
   const { data, error } = await supabase
     .from("survey_responses")
     .select(`
@@ -75,18 +89,35 @@ export async function fetchResponses(campaignId: string): Promise<ResponseData[]
 
   if (error) throw error;
 
-  return data.map(response => ({
-    id: response.id,
-    answers: response.response_data,
-    respondent: {
-      name: `${response.user.first_name || ""} ${response.user.last_name || ""}`.trim(),
-      email: response.user.email,
-      gender: response.user.gender,
-      location: response.user.location,
-      sbu: response.user.user_sbus?.find((us: any) => us.is_primary)?.sbu || null,
-      employment_type: response.user.employment_type,
-    },
-  }));
+  return data.map(response => {
+    // Transform response_data into the expected format
+    const answers: Record<string, { question: string; answer: any; questionType: string }> = {};
+    
+    // Process each question and its answer
+    surveyQuestions.forEach((question: any) => {
+      const answer = response.response_data[question.name];
+      if (answer !== undefined) {
+        answers[question.name] = {
+          question: question.title || question.name,
+          answer: answer,
+          questionType: question.type,
+        };
+      }
+    });
+
+    return {
+      id: response.id,
+      answers,
+      respondent: {
+        name: `${response.user.first_name || ""} ${response.user.last_name || ""}`.trim(),
+        email: response.user.email,
+        gender: response.user.gender,
+        location: response.user.location,
+        sbu: response.user.user_sbus?.find((us: any) => us.is_primary)?.sbu || null,
+        employment_type: response.user.employment_type,
+      },
+    };
+  });
 }
 
 export function processDemographicData(responses: ResponseData[]) {
