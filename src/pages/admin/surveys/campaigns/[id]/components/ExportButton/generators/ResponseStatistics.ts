@@ -5,7 +5,7 @@ import { createPieChartConfig, createBarChartConfig, addChartToPDF } from "../ut
 import type { ResponseStatistics, DemographicData } from "../types";
 
 export async function generateResponseStatistics(
-  doc: jsPdf,
+  doc: jsPDF,
   statistics: ResponseStatistics,
   demographicData: DemographicData
 ) {
