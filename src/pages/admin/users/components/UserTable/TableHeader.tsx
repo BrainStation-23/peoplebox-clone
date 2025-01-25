@@ -23,6 +23,7 @@ export function UsersTableHeader({ onSelectAll, allSelected, someSelected }: Use
         <TableHead>Email</TableHead>
         <TableHead>Organization ID</TableHead>
         <TableHead>Admin</TableHead>
+        <TableHead>Status</TableHead>
         <TableHead>Primary SBU</TableHead>
         <TableHead className="text-right">Actions</TableHead>
       </TableRow>

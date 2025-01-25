@@ -54,6 +54,34 @@ export function UserRow({
     },
   });
 
+  const toggleStatusMutation = useMutation({
+    mutationFn: async ({ userId, isActive }: { userId: string; isActive: boolean }) => {
+      const { error } = await supabase.functions.invoke('toggle-user-status', {
+        body: { 
+          userId,
+          status: isActive ? 'active' : 'disabled'
+        }
+      });
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["users"] });
+      toast({
+        title: "Success",
+        description: "User status updated successfully",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: "Failed to update user status",
+        variant: "destructive",
+      });
+      console.error("Error updating user status:", error);
+    },
+  });
+
   return (
     <TableRow key={user.id}>
       <TableCell>
@@ -75,6 +103,14 @@ export function UserRow({
           checked={user.user_roles.role === "admin"}
           onCheckedChange={(checked) =>
             updateRoleMutation.mutate({ userId: user.id, isAdmin: checked })
+          }
+        />
+      </TableCell>
+      <TableCell>
+        <Switch
+          checked={user.status === "active"}
+          onCheckedChange={(checked) =>
+            toggleStatusMutation.mutate({ userId: user.id, isActive: checked })
           }
         />
       </TableCell>
