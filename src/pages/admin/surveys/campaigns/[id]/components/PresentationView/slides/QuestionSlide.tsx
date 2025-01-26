@@ -40,7 +40,10 @@ export function QuestionSlide({ campaign, isActive, questionName, questionTitle,
 
     switch (questionType) {
       case "boolean": {
-        const answers = responses.map((r) => r.response_data[questionName]?.answer);
+        const answers = responses
+          .filter(r => r.response_data && r.response_data[questionName])
+          .map(r => r.response_data[questionName].answer);
+        
         return {
           type: 'boolean',
           data: {
@@ -52,13 +55,17 @@ export function QuestionSlide({ campaign, isActive, questionName, questionTitle,
 
       case "nps":
       case "rating": {
-        const answers = responses.map((r) => r.response_data[questionName]?.answer);
+        const answers = responses
+          .filter(r => r.response_data && r.response_data[questionName])
+          .map(r => r.response_data[questionName].answer);
+        
         const ratingCounts = new Array(11).fill(0);
         answers.forEach((rating) => {
           if (typeof rating === "number" && rating >= 0 && rating <= 10) {
             ratingCounts[rating]++;
           }
         });
+        
         return {
           type: 'rating',
           data: ratingCounts.map((count, rating) => ({ rating, count }))
@@ -69,7 +76,7 @@ export function QuestionSlide({ campaign, isActive, questionName, questionTitle,
       case "comment": {
         const wordFrequency: Record<string, number> = {};
         responses.forEach((response) => {
-          const answer = response.response_data[questionName]?.answer;
+          const answer = response.response_data?.[questionName]?.answer;
           if (typeof answer === "string") {
             const words = answer
               .toLowerCase()
