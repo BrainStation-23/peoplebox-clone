@@ -30,6 +30,7 @@ export function PendingRespondents({ campaignId, instanceId }: Props) {
   const { toast } = useToast();
   const [sendingReminders, setSendingReminders] = useState<Record<string, boolean>>({});
   const [selectedRespondents, setSelectedRespondents] = useState<Set<string>>(new Set());
+  const [isSendingBulkReminders, setIsSendingBulkReminders] = useState(false);
 
   const { data: pendingRespondents, isLoading } = useQuery({
     queryKey: ["pending-respondents", campaignId, instanceId],
@@ -122,6 +123,63 @@ export function PendingRespondents({ campaignId, instanceId }: Props) {
     }
   };
 
+  const handleBulkSendReminders = async () => {
+    if (!pendingRespondents) return;
+    
+    setIsSendingBulkReminders(true);
+    const selectedUsers = pendingRespondents.filter(r => selectedRespondents.has(r.id));
+    let successCount = 0;
+    let errorCount = 0;
+
+    for (const respondent of selectedUsers) {
+      if (!canSendReminder(respondent.last_reminder_sent)) {
+        errorCount++;
+        continue;
+      }
+
+      try {
+        const { data: assignment } = await supabase
+          .from("survey_assignments")
+          .select("due_date, survey:surveys(name)")
+          .eq("id", respondent.assignment_id)
+          .single();
+
+        if (!assignment) {
+          errorCount++;
+          continue;
+        }
+
+        const response = await supabase.functions.invoke("send-survey-reminder", {
+          body: {
+            assignmentId: respondent.assignment_id,
+            surveyName: assignment.survey.name,
+            dueDate: assignment.due_date,
+            recipientEmail: respondent.email,
+            recipientName: `${respondent.first_name || ''} ${respondent.last_name || ''}`.trim() || 'Participant',
+          },
+        });
+
+        if (response.error) {
+          errorCount++;
+        } else {
+          successCount++;
+        }
+      } catch (error) {
+        console.error("Error sending reminder to", respondent.email, error);
+        errorCount++;
+      }
+    }
+
+    toast({
+      title: "Bulk Reminder Operation Complete",
+      description: `Successfully sent ${successCount} reminders. ${errorCount} failed.`,
+      variant: errorCount > 0 ? "destructive" : "default",
+    });
+
+    setIsSendingBulkReminders(false);
+    setSelectedRespondents(new Set());
+  };
+
   const handleCopyPublicLink = async (token: string) => {
     const publicUrl = `${window.location.origin}/public/survey/${token}`;
     try {
@@ -174,18 +232,32 @@ export function PendingRespondents({ campaignId, instanceId }: Props) {
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle>Pending Respondents</CardTitle>
-        {pendingRespondents && pendingRespondents.length > 0 && (
-          <div className="flex items-center gap-2">
-            <Checkbox 
-              checked={isAllSelected}
-              onClick={toggleSelectAll}
-              aria-label="Select all respondents"
-            />
-            <span className="text-sm text-muted-foreground">
-              {selectedCount} of {pendingRespondents.length} selected
-            </span>
-          </div>
-        )}
+        <div className="flex items-center gap-4">
+          {selectedCount > 0 && (
+            <Button
+              variant="outline"
+              onClick={handleBulkSendReminders}
+              disabled={isSendingBulkReminders}
+            >
+              <Mail className="w-4 h-4 mr-2" />
+              {isSendingBulkReminders 
+                ? "Sending Reminders..." 
+                : `Send Reminders (${selectedCount})`}
+            </Button>
+          )}
+          {pendingRespondents && pendingRespondents.length > 0 && (
+            <div className="flex items-center gap-2">
+              <Checkbox 
+                checked={isAllSelected}
+                onClick={toggleSelectAll}
+                aria-label="Select all respondents"
+              />
+              <span className="text-sm text-muted-foreground">
+                {selectedCount} of {pendingRespondents.length} selected
+              </span>
+            </div>
+          )}
+        </div>
       </CardHeader>
       <CardContent>
         <ScrollArea className="h-[400px] pr-4">
