@@ -1,4 +1,4 @@
-import { Power, Pencil, Trash2 } from "lucide-react";
+import { Power, Pencil, Trash2, ArrowUpDown } from "lucide-react";
 import {
   Table,
   TableBody,
@@ -33,6 +33,8 @@ interface EmployeeRoleTableProps {
   onDelete: (id: string) => void;
   onToggleStatus: (id: string, newStatus: 'active' | 'inactive') => void;
   isLoading?: boolean;
+  sortOrder: 'asc' | 'desc';
+  onSort: () => void;
 }
 
 export function EmployeeRoleTable({ 
@@ -40,14 +42,21 @@ export function EmployeeRoleTable({
   onEdit, 
   onDelete,
   onToggleStatus,
-  isLoading 
+  isLoading,
+  sortOrder,
+  onSort
 }: EmployeeRoleTableProps) {
   return (
     <div className="rounded-md border">
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead>Name</TableHead>
+            <TableHead>
+              <Button variant="ghost" onClick={onSort} className="h-8 p-0">
+                Name
+                <ArrowUpDown className="ml-2 h-4 w-4" />
+              </Button>
+            </TableHead>
             <TableHead>Status</TableHead>
             <TableHead>Actions</TableHead>
           </TableRow>

@@ -17,16 +17,17 @@ import { EmployeeRoleTable } from "./components/EmployeeRoleTable";
 export default function EmployeeRoleConfig() {
   const [selectedRole, setSelectedRole] = useState<any>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
   const { data: employeeRoles, isLoading } = useQuery({
-    queryKey: ['employee-roles'],
+    queryKey: ['employee-roles', sortOrder],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('employee_roles')
         .select('*')
-        .order('created_at', { ascending: false });
+        .order('name', { ascending: sortOrder === 'asc' });
       
       if (error) throw error;
       return data;
@@ -165,6 +166,10 @@ export default function EmployeeRoleConfig() {
     toggleStatusMutation.mutate({ id, newStatus });
   };
 
+  const handleSort = () => {
+    setSortOrder(current => current === 'asc' ? 'desc' : 'asc');
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -197,6 +202,8 @@ export default function EmployeeRoleConfig() {
         onDelete={handleDelete}
         onToggleStatus={handleToggleStatus}
         isLoading={isLoading}
+        sortOrder={sortOrder}
+        onSort={handleSort}
       />
     </div>
   );
