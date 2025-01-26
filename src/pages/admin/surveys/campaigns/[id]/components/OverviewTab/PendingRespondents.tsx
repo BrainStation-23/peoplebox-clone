@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
-import { Mail } from "lucide-react";
+import { Mail, Link2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useState } from "react";
 
@@ -17,6 +17,7 @@ type Respondent = {
   };
   assignment_id: string;
   last_reminder_sent: string | null;
+  public_access_token: string;
 };
 
 type Props = {
@@ -37,6 +38,7 @@ export function PendingRespondents({ campaignId, instanceId }: Props) {
           id,
           last_reminder_sent,
           due_date,
+          public_access_token,
           user:profiles!survey_assignments_user_id_fkey (
             id,
             email,
@@ -69,6 +71,7 @@ export function PendingRespondents({ campaignId, instanceId }: Props) {
           primary_sbu: primarySbu ? { name: primarySbu.sbu.name } : undefined,
           assignment_id: assignment.id,
           last_reminder_sent: assignment.last_reminder_sent,
+          public_access_token: assignment.public_access_token,
         };
       });
     },
@@ -118,6 +121,23 @@ export function PendingRespondents({ campaignId, instanceId }: Props) {
     }
   };
 
+  const handleCopyPublicLink = async (token: string) => {
+    const publicUrl = `${window.location.origin}/public/survey/${token}`;
+    try {
+      await navigator.clipboard.writeText(publicUrl);
+      toast({
+        title: "Link Copied",
+        description: "Public survey link has been copied to clipboard",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to copy link to clipboard",
+        variant: "destructive",
+      });
+    }
+  };
+
   const canSendReminder = (lastReminderSent: string | null) => {
     if (!lastReminderSent) return true;
     const hoursSinceLastReminder = (Date.now() - new Date(lastReminderSent).getTime()) / (1000 * 60 * 60);
@@ -153,15 +173,25 @@ export function PendingRespondents({ campaignId, instanceId }: Props) {
                     </p>
                   )}
                 </div>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => handleSendReminder(respondent)}
-                  disabled={sendingReminders[respondent.id] || !canSendReminder(respondent.last_reminder_sent)}
-                >
-                  <Mail className="w-4 h-4 mr-2" />
-                  {sendingReminders[respondent.id] ? "Sending..." : "Send Reminder"}
-                </Button>
+                <div className="flex gap-2">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => handleCopyPublicLink(respondent.public_access_token)}
+                  >
+                    <Link2 className="w-4 h-4 mr-2" />
+                    Copy Link
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => handleSendReminder(respondent)}
+                    disabled={sendingReminders[respondent.id] || !canSendReminder(respondent.last_reminder_sent)}
+                  >
+                    <Mail className="w-4 h-4 mr-2" />
+                    {sendingReminders[respondent.id] ? "Sending..." : "Send Reminder"}
+                  </Button>
+                </div>
               </div>
             ))}
             {(!pendingRespondents || pendingRespondents.length === 0) && (
