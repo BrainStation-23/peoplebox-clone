@@ -159,6 +159,12 @@ export function PendingRespondents({ campaignId, instanceId }: Props) {
     setSelectedRespondents(newSelected);
   };
 
+  const canSendReminder = (lastReminderSent: string | null) => {
+    if (!lastReminderSent) return true;
+    const hoursSinceLastReminder = (Date.now() - new Date(lastReminderSent).getTime()) / (1000 * 60 * 60);
+    return hoursSinceLastReminder >= 24;
+  };
+
   const isAllSelected = pendingRespondents?.length === selectedRespondents.size;
   const selectedCount = selectedRespondents.size;
 
