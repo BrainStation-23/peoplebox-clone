@@ -7,6 +7,7 @@ interface DueDateInfoProps {
   daysRemaining: number | null;
   isOverdue: boolean;
   isDueSoon: boolean;
+  isPending: boolean;
 }
 
 export default function DueDateInfo({
@@ -14,6 +15,7 @@ export default function DueDateInfo({
   daysRemaining,
   isOverdue,
   isDueSoon,
+  isPending,
 }: DueDateInfoProps) {
   return (
     <div className="flex items-center justify-between text-sm text-muted-foreground">
@@ -21,8 +23,8 @@ export default function DueDateInfo({
         <Calendar className="h-4 w-4" />
         {dueDate ? (
           <span className={cn(
-            isOverdue && "text-destructive",
-            isDueSoon && "text-yellow-500"
+            isPending && isOverdue && "text-destructive",
+            isPending && isDueSoon && "text-yellow-500"
           )}>
             Due: {format(new Date(dueDate), "PPP")}
           </span>
@@ -33,7 +35,7 @@ export default function DueDateInfo({
       {daysRemaining !== null && !isOverdue && (
         <div className="flex items-center gap-2">
           <Clock className="h-4 w-4" />
-          <span className={isDueSoon ? "text-yellow-500" : ""}>
+          <span className={isPending && isDueSoon ? "text-yellow-500" : ""}>
             {daysRemaining} days remaining
           </span>
         </div>
