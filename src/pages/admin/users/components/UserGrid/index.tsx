@@ -1,5 +1,6 @@
 import { User } from "../../types";
 import { UserCard } from "../UserCard";
+import { cn } from "@/lib/utils";
 
 interface UserGridProps {
   users: User[];
@@ -24,26 +25,33 @@ export function UserGrid({
 }: UserGridProps) {
   if (users.length === 0) {
     return (
-      <div className="text-center py-8 text-muted-foreground">
+      <div className="text-center py-8 text-muted-foreground animate-fade-in">
         No users found. Try adjusting your search criteria.
       </div>
     );
   }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 animate-fade-in">
       {users.map((user) => (
-        <UserCard
+        <div 
           key={user.id}
-          user={user}
-          selected={selectedUsers.includes(user.id)}
-          onSelect={onSelectUser}
-          onEdit={onEdit}
-          onDelete={onDelete}
-          onPasswordChange={onPasswordChange}
-          onRoleToggle={onRoleToggle}
-          onStatusToggle={onStatusToggle}
-        />
+          className={cn(
+            "transition-all duration-300",
+            "animate-fade-in"
+          )}
+        >
+          <UserCard
+            user={user}
+            selected={selectedUsers.includes(user.id)}
+            onSelect={onSelectUser}
+            onEdit={onEdit}
+            onDelete={onDelete}
+            onPasswordChange={onPasswordChange}
+            onRoleToggle={onRoleToggle}
+            onStatusToggle={onStatusToggle}
+          />
+        </div>
       ))}
     </div>
   );

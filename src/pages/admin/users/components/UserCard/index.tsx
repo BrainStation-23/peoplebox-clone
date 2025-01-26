@@ -2,7 +2,7 @@ import { User } from "../../types";
 import { Switch } from "@/components/ui/switch";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
-import { MoreHorizontal, User as UserIcon } from "lucide-react";
+import { MoreHorizontal, User as UserIcon, Loader } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -12,6 +12,7 @@ import {
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
 
 interface UserCardProps {
   user: User;
@@ -39,19 +40,26 @@ export function UserCard({
   const primarySbu = user.user_sbus?.find((sbu) => sbu.is_primary)?.sbu.name;
 
   return (
-    <Card className={`relative ${selected ? 'ring-2 ring-primary' : ''}`}>
-      <div className="absolute top-4 right-4">
+    <Card 
+      className={cn(
+        "relative transition-all duration-200 hover:shadow-md",
+        selected ? 'ring-2 ring-primary scale-[1.02]' : '',
+        !isActive && 'opacity-75'
+      )}
+    >
+      <div className="absolute top-4 right-4 z-10">
         <Checkbox
           checked={selected}
           onCheckedChange={(checked) => onSelect(user.id, checked as boolean)}
+          className="transition-transform duration-200 hover:scale-110"
         />
       </div>
       
       <CardHeader className="space-y-4">
         <div className="flex items-start gap-4">
-          <Avatar className="h-12 w-12">
+          <Avatar className="h-12 w-12 ring-2 ring-background transition-transform duration-200 hover:scale-110">
             <AvatarImage src={user.profile_image_url || undefined} />
-            <AvatarFallback>
+            <AvatarFallback className="bg-primary/10">
               {user.first_name?.[0]}
               {user.last_name?.[0]}
             </AvatarFallback>
@@ -62,7 +70,7 @@ export function UserCard({
             </h3>
             <p className="text-sm text-muted-foreground">{user.email}</p>
             {user.org_id && (
-              <Badge variant="outline" className="mt-1">
+              <Badge variant="outline" className="mt-1 animate-fade-in">
                 {user.org_id}
               </Badge>
             )}
@@ -77,6 +85,7 @@ export function UserCard({
             <Switch
               checked={isAdmin}
               onCheckedChange={(checked) => onRoleToggle(user.id, checked)}
+              className="transition-opacity duration-200 hover:opacity-80"
             />
           </div>
           <div className="flex items-center justify-between">
@@ -84,11 +93,12 @@ export function UserCard({
             <Switch
               checked={isActive}
               onCheckedChange={(checked) => onStatusToggle(user.id, checked)}
+              className="transition-opacity duration-200 hover:opacity-80"
             />
           </div>
         </div>
 
-        <div className="space-y-2">
+        <div className="space-y-2 animate-fade-in">
           {primarySbu && (
             <div className="flex justify-between text-sm">
               <span className="text-muted-foreground">Primary SBU</span>
@@ -119,20 +129,29 @@ export function UserCard({
       <CardFooter className="justify-end">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="h-8 w-8 p-0">
+            <Button 
+              variant="ghost" 
+              className="h-8 w-8 p-0 transition-transform duration-200 hover:scale-110"
+            >
               <span className="sr-only">Open menu</span>
               <MoreHorizontal className="h-4 w-4" />
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={() => onEdit(user)}>
+          <DropdownMenuContent align="end" className="animate-fade-in">
+            <DropdownMenuItem 
+              onClick={() => onEdit(user)}
+              className="cursor-pointer"
+            >
               Edit
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => onPasswordChange(user.id)}>
+            <DropdownMenuItem 
+              onClick={() => onPasswordChange(user.id)}
+              className="cursor-pointer"
+            >
               Change Password
             </DropdownMenuItem>
             <DropdownMenuItem
-              className="text-destructive"
+              className="text-destructive cursor-pointer"
               onClick={() => onDelete(user.id)}
             >
               Delete
