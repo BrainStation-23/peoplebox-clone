@@ -29,6 +29,14 @@ export interface CampaignData {
   ends_at: string | null;
   completion_rate: number;
   survey: SurveyData;
+  instance?: {
+    id: string;
+    period_number: number;
+    starts_at: string;
+    ends_at: string;
+    status: string;
+    completion_rate: number;
+  };
 }
 
 export interface SlideProps {

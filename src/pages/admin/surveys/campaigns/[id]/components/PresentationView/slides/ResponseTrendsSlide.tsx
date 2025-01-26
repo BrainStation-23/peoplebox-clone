@@ -7,9 +7,9 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 
 export function ResponseTrendsSlide({ campaign, isActive }: SlideProps) {
   const { data: trendsData } = useQuery({
-    queryKey: ["response-trends", campaign.id],
+    queryKey: ["response-trends", campaign.id, campaign.instance?.id],
     queryFn: async () => {
-      const { data: responses } = await supabase
+      const query = supabase
         .from("survey_responses")
         .select(`
           created_at,
@@ -17,8 +17,14 @@ export function ResponseTrendsSlide({ campaign, isActive }: SlideProps) {
             campaign_id
           )
         `)
-        .eq("assignment.campaign_id", campaign.id)
-        .order("created_at");
+        .eq("assignment.campaign_id", campaign.id);
+
+      // Add instance filter if an instance is selected
+      if (campaign.instance) {
+        query.eq("campaign_instance_id", campaign.instance.id);
+      }
+
+      const { data: responses } = await query.order("created_at");
 
       if (!responses) return [];
 
@@ -45,7 +51,14 @@ export function ResponseTrendsSlide({ campaign, isActive }: SlideProps) {
       )}
     >
       <div className="h-full flex flex-col">
-        <h2 className="text-3xl font-bold text-gray-900 mb-8">Response Trends</h2>
+        <h2 className="text-3xl font-bold text-gray-900 mb-8">
+          Response Trends
+          {campaign.instance && (
+            <span className="text-lg font-normal text-gray-600 ml-2">
+              (Period {campaign.instance.period_number})
+            </span>
+          )}
+        </h2>
         <div className="flex-1">
           <ResponsiveContainer width="100%" height={400}>
             <LineChart data={trendsData}>

@@ -10,15 +10,17 @@ import { CompletionRateSlide } from "./slides/CompletionRateSlide";
 import { ResponseDistributionSlide } from "./slides/ResponseDistributionSlide";
 import { ResponseTrendsSlide } from "./slides/ResponseTrendsSlide";
 import { cn } from "@/lib/utils";
+import { InstanceSelector } from "../InstanceSelector";
 
 export default function PresentationView() {
   const { id } = useParams();
   const navigate = useNavigate();
   const [currentSlide, setCurrentSlide] = useState(0);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [selectedInstanceId, setSelectedInstanceId] = useState<string>();
 
   const { data: campaign } = useQuery({
-    queryKey: ["campaign", id],
+    queryKey: ["campaign", id, selectedInstanceId],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("survey_campaigns")
@@ -40,8 +42,20 @@ export default function PresentationView() {
         .single();
 
       if (error) throw error;
+
+      // Fetch instance data if an instance is selected
+      let instanceData = null;
+      if (selectedInstanceId) {
+        const { data: instance, error: instanceError } = await supabase
+          .from("campaign_instances")
+          .select("*")
+          .eq("id", selectedInstanceId)
+          .single();
+
+        if (instanceError) throw instanceError;
+        instanceData = instance;
+      }
       
-      // Ensure the data matches our CampaignData type
       const typedData: CampaignData = {
         id: data.id,
         name: data.name,
@@ -54,7 +68,8 @@ export default function PresentationView() {
           name: data.survey.name,
           description: data.survey.description,
           json_data: data.survey.json_data
-        }
+        },
+        instance: instanceData
       };
 
       return typedData;
@@ -115,6 +130,15 @@ export default function PresentationView() {
           <ArrowLeft className="h-4 w-4 mr-2" />
           Back to Campaign
         </Button>
+      </div>
+
+      {/* Instance Selector */}
+      <div className="absolute top-4 left-1/2 -translate-x-1/2 z-10">
+        <InstanceSelector
+          campaignId={id!}
+          selectedInstanceId={selectedInstanceId}
+          onInstanceSelect={setSelectedInstanceId}
+        />
       </div>
 
       <div className="relative h-full overflow-hidden">
