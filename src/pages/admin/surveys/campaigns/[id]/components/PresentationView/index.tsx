@@ -9,6 +9,7 @@ import { TitleSlide } from "./slides/TitleSlide";
 import { CompletionRateSlide } from "./slides/CompletionRateSlide";
 import { ResponseDistributionSlide } from "./slides/ResponseDistributionSlide";
 import { ResponseTrendsSlide } from "./slides/ResponseTrendsSlide";
+import { QuestionSlide } from "./slides/QuestionSlide";
 import { cn } from "@/lib/utils";
 import { InstanceSelector } from "../InstanceSelector";
 
@@ -56,25 +57,18 @@ export default function PresentationView() {
         instanceData = instance;
       }
       
-      const typedData: CampaignData = {
-        id: data.id,
-        name: data.name,
-        description: data.description,
-        starts_at: data.starts_at,
-        ends_at: data.ends_at,
-        completion_rate: data.completion_rate || 0,
-        survey: {
-          id: data.survey.id,
-          name: data.survey.name,
-          description: data.survey.description,
-          json_data: data.survey.json_data
-        },
+      return {
+        ...data,
         instance: instanceData
       };
-
-      return typedData;
     },
   });
+
+  const surveyQuestions = campaign?.survey.json_data.pages?.flatMap(
+    (page: any) => page.elements || []
+  ) || [];
+
+  const totalSlides = 4 + surveyQuestions.length; // Base slides + question slides
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -89,7 +83,7 @@ export default function PresentationView() {
 
     document.addEventListener("keydown", handleKeyDown);
     return () => document.removeEventListener("keydown", handleKeyDown);
-  }, []);
+  }, [totalSlides]);
 
   const toggleFullscreen = () => {
     if (!document.fullscreenElement) {
@@ -102,8 +96,6 @@ export default function PresentationView() {
   };
 
   if (!campaign) return null;
-
-  const totalSlides = 4;
 
   const nextSlide = () => {
     setCurrentSlide((prev) => Math.min(totalSlides - 1, prev + 1));
@@ -196,6 +188,18 @@ export default function PresentationView() {
             <CompletionRateSlide campaign={campaign} isActive={currentSlide === 1} />
             <ResponseDistributionSlide campaign={campaign} isActive={currentSlide === 2} />
             <ResponseTrendsSlide campaign={campaign} isActive={currentSlide === 3} />
+            
+            {/* Question Slides */}
+            {surveyQuestions.map((question: any, index: number) => (
+              <QuestionSlide
+                key={question.name}
+                campaign={campaign}
+                isActive={currentSlide === index + 4}
+                questionName={question.name}
+                questionTitle={question.title}
+                questionType={question.type}
+              />
+            ))}
           </div>
         </div>
       </div>
