@@ -48,6 +48,7 @@ export default function PublicSurveyPage() {
         try {
           const responseData = {
             assignment_id: assignment.id,
+            user_id: assignment.user_id, // Use the assigned user's ID
             response_data: sender.data,
             submitted_at: new Date().toISOString(),
           };
