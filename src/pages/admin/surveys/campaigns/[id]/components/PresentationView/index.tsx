@@ -59,14 +59,18 @@ export default function PresentationView() {
       
       return {
         ...data,
-        instance: instanceData
-      };
+        instance: instanceData,
+        survey: {
+          ...data.survey,
+          json_data: data.survey.json_data as SurveyJsonData
+        }
+      } as CampaignData;
     },
   });
 
-  const surveyQuestions = (campaign?.survey.json_data as SurveyJsonData).pages?.flatMap(
+  const surveyQuestions = (campaign?.survey.json_data.pages || []).flatMap(
     (page) => page.elements || []
-  ) || [];
+  );
 
   const totalSlides = 4 + surveyQuestions.length; // Base slides + question slides
 
@@ -190,7 +194,7 @@ export default function PresentationView() {
             <ResponseTrendsSlide campaign={campaign} isActive={currentSlide === 3} />
             
             {/* Question Slides */}
-            {surveyQuestions.map((question: any, index: number) => (
+            {surveyQuestions.map((question, index) => (
               <QuestionSlide
                 key={question.name}
                 campaign={campaign}
