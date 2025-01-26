@@ -4,9 +4,11 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
+  FormDescription,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Select,
   SelectContent,
@@ -17,6 +19,7 @@ import {
 import { Card } from "@/components/ui/card";
 import { UseFormReturn } from "react-hook-form";
 import { CampaignFormData } from "./CampaignForm";
+import { EyeOff } from "lucide-react";
 
 interface BasicInfoFormProps {
   form: UseFormReturn<CampaignFormData>;
@@ -79,6 +82,29 @@ export function BasicInfoForm({ form, surveys }: BasicInfoFormProps) {
                 </SelectContent>
               </Select>
               <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="anonymous"
+          render={({ field }) => (
+            <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
+              <FormControl>
+                <Checkbox
+                  checked={field.value}
+                  onCheckedChange={field.onChange}
+                />
+              </FormControl>
+              <div className="space-y-1 leading-none">
+                <FormLabel className="flex items-center gap-2">
+                  Anonymous Responses <EyeOff className="h-4 w-4 text-muted-foreground" />
+                </FormLabel>
+                <FormDescription>
+                  When enabled, responses will be collected anonymously. Respondent information will not be stored with their answers.
+                </FormDescription>
+              </div>
             </FormItem>
           )}
         />
