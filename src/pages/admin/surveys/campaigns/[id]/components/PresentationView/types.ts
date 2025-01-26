@@ -1,8 +1,13 @@
 import { Json } from "@/integrations/supabase/types";
 
-export interface SurveyPage {
+export interface SurveyQuestion {
   name: string;
-  elements: any[];
+  title: string;
+  type: string;
+}
+
+export interface SurveyPage {
+  elements?: SurveyQuestion[];
 }
 
 export interface SurveyJsonData {

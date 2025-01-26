@@ -37,16 +37,23 @@ export default function PresentationView() {
 
       if (error) throw error;
 
-      // Ensure json_data is properly parsed and typed
-      const parsedData = {
+      // Parse and validate json_data
+      const jsonData = typeof data.survey.json_data === 'string' 
+        ? JSON.parse(data.survey.json_data)
+        : data.survey.json_data;
+
+      // Ensure the data has the required structure
+      if (!jsonData || !Array.isArray(jsonData.pages)) {
+        throw new Error('Invalid survey data structure');
+      }
+
+      const parsedData: CampaignData = {
         ...data,
         survey: {
           ...data.survey,
-          json_data: typeof data.survey.json_data === 'string' 
-            ? JSON.parse(data.survey.json_data) as SurveyJsonData
-            : data.survey.json_data as SurveyJsonData
+          json_data: jsonData as SurveyJsonData
         }
-      } as CampaignData;
+      };
 
       return parsedData;
     },
