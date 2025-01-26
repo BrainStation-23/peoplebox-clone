@@ -1,11 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { ProcessedResponse, Question } from "../../ReportsTab/hooks/useResponseProcessing";
-
-interface ProcessedData {
-  questions: Question[];
-  responses: ProcessedResponse[];
-}
+import { ProcessedData, ProcessedResponse, Question } from "../types/responses";
 
 export function usePresentationResponses(campaignId: string, instanceId?: string) {
   return useQuery<ProcessedData>({
@@ -89,7 +84,7 @@ export function usePresentationResponses(campaignId: string, instanceId?: string
           const answer = response.response_data[question.name];
           answers[question.name] = {
             question: question.title,
-            answer: answer?.answer,
+            answer: answer,
             questionType: question.type,
           };
         });

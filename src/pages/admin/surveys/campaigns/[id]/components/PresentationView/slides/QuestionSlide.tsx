@@ -4,6 +4,7 @@ import { BooleanCharts } from "../../ReportsTab/charts/BooleanCharts";
 import { NpsChart } from "../../ReportsTab/charts/NpsChart";
 import { WordCloud } from "../../ReportsTab/charts/WordCloud";
 import { usePresentationResponses } from "../hooks/usePresentationResponses";
+import { QuestionResponseData } from "../types/responses";
 
 interface QuestionSlideProps extends SlideProps {
   questionName: string;
@@ -20,7 +21,7 @@ export function QuestionSlide({
 }: QuestionSlideProps) {
   const { data } = usePresentationResponses(campaign.id, campaign.instance?.id);
   
-  const processAnswers = () => {
+  const processAnswers = (): QuestionResponseData | null => {
     if (!data?.responses) return null;
 
     const responses = data.responses;
