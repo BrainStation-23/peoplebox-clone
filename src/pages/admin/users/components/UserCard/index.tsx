@@ -1,8 +1,9 @@
+import { memo } from "react";
 import { User } from "../../types";
 import { Switch } from "@/components/ui/switch";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
-import { MoreHorizontal, User as UserIcon, Loader } from "lucide-react";
+import { MoreHorizontal, User as UserIcon } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -25,7 +26,7 @@ interface UserCardProps {
   onStatusToggle: (userId: string, isActive: boolean) => void;
 }
 
-export function UserCard({
+export const UserCard = memo(function UserCard({
   user,
   selected,
   onSelect,
@@ -42,7 +43,7 @@ export function UserCard({
   return (
     <Card 
       className={cn(
-        "relative transition-all duration-200 hover:shadow-md",
+        "relative transition-all duration-200 hover:shadow-md will-change-transform",
         selected ? 'ring-2 ring-primary scale-[1.02]' : '',
         !isActive && 'opacity-75'
       )}
@@ -70,7 +71,7 @@ export function UserCard({
             </h3>
             <p className="text-sm text-muted-foreground">{user.email}</p>
             {user.org_id && (
-              <Badge variant="outline" className="mt-1 animate-fade-in">
+              <Badge variant="outline" className="mt-1">
                 {user.org_id}
               </Badge>
             )}
@@ -98,7 +99,7 @@ export function UserCard({
           </div>
         </div>
 
-        <div className="space-y-2 animate-fade-in">
+        <div className="space-y-2">
           {primarySbu && (
             <div className="flex justify-between text-sm">
               <span className="text-muted-foreground">Primary SBU</span>
@@ -137,7 +138,7 @@ export function UserCard({
               <MoreHorizontal className="h-4 w-4" />
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="animate-fade-in">
+          <DropdownMenuContent align="end">
             <DropdownMenuItem 
               onClick={() => onEdit(user)}
               className="cursor-pointer"
@@ -161,4 +162,4 @@ export function UserCard({
       </CardFooter>
     </Card>
   );
-}
+});
