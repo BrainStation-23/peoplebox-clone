@@ -18,15 +18,15 @@ export interface SurveyData {
   id: string;
   name: string;
   description?: string | null;
-  json_data: SurveyJsonData;
+  json_data: Json;
 }
 
 export interface CampaignData {
   id: string;
   name: string;
-  description: string;
+  description: string | null;
   starts_at: string;
-  ends_at: string;
+  ends_at: string | null;
   completion_rate: number;
   survey: SurveyData;
 }

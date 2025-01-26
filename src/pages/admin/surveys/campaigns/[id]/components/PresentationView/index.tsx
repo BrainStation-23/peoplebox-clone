@@ -40,7 +40,24 @@ export default function PresentationView() {
         .single();
 
       if (error) throw error;
-      return data;
+      
+      // Ensure the data matches our CampaignData type
+      const typedData: CampaignData = {
+        id: data.id,
+        name: data.name,
+        description: data.description,
+        starts_at: data.starts_at,
+        ends_at: data.ends_at,
+        completion_rate: data.completion_rate || 0,
+        survey: {
+          id: data.survey.id,
+          name: data.survey.name,
+          description: data.survey.description,
+          json_data: data.survey.json_data
+        }
+      };
+
+      return typedData;
     },
   });
 
@@ -71,7 +88,7 @@ export default function PresentationView() {
 
   if (!campaign) return null;
 
-  const totalSlides = 4; // Updated for new slides
+  const totalSlides = 4;
 
   const nextSlide = () => {
     setCurrentSlide((prev) => Math.min(totalSlides - 1, prev + 1));
