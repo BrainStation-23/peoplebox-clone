@@ -4,9 +4,11 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight, ArrowLeft, Fullscreen } from "lucide-react";
-import { CampaignData, SurveyJsonData } from "./types";
+import { CampaignData } from "./types";
 import { TitleSlide } from "./slides/TitleSlide";
-import { StatusDistributionSlide } from "./slides/StatusDistributionSlide";
+import { CompletionRateSlide } from "./slides/CompletionRateSlide";
+import { ResponseDistributionSlide } from "./slides/ResponseDistributionSlide";
+import { ResponseTrendsSlide } from "./slides/ResponseTrendsSlide";
 import { cn } from "@/lib/utils";
 
 export default function PresentationView() {
@@ -38,24 +40,7 @@ export default function PresentationView() {
         .single();
 
       if (error) throw error;
-
-      const jsonData = typeof data.survey.json_data === 'string' 
-        ? JSON.parse(data.survey.json_data)
-        : data.survey.json_data;
-
-      if (!jsonData || !Array.isArray(jsonData.pages)) {
-        throw new Error('Invalid survey data structure');
-      }
-
-      const parsedData: CampaignData = {
-        ...data,
-        survey: {
-          ...data.survey,
-          json_data: jsonData as SurveyJsonData
-        }
-      };
-
-      return parsedData;
+      return data;
     },
   });
 
@@ -86,7 +71,7 @@ export default function PresentationView() {
 
   if (!campaign) return null;
 
-  const totalSlides = 2;
+  const totalSlides = 4; // Updated for new slides
 
   const nextSlide = () => {
     setCurrentSlide((prev) => Math.min(totalSlides - 1, prev + 1));
@@ -167,7 +152,9 @@ export default function PresentationView() {
         <div className="h-full p-8">
           <div className="max-w-6xl mx-auto h-full">
             <TitleSlide campaign={campaign} isActive={currentSlide === 0} />
-            <StatusDistributionSlide campaign={campaign} isActive={currentSlide === 1} />
+            <CompletionRateSlide campaign={campaign} isActive={currentSlide === 1} />
+            <ResponseDistributionSlide campaign={campaign} isActive={currentSlide === 2} />
+            <ResponseTrendsSlide campaign={campaign} isActive={currentSlide === 3} />
           </div>
         </div>
       </div>
