@@ -1,39 +1,49 @@
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3'
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.38.4'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
-Deno.serve(async (req) => {
+serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
+    return new Response(null, { headers: corsHeaders })
   }
 
   try {
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-    );
+    )
 
-    const { user_id } = await req.json();
-    console.log('Attempting to delete user:', user_id);
+    const { user_id } = await req.json()
 
     if (!user_id) {
       throw new Error('User ID is required');
     }
 
-    // First, check if the user exists
-    const { data: userData, error: userError } = await supabaseClient.auth.admin.getUserById(user_id);
-    
-    if (userError || !userData.user) {
-      console.error('Error finding user:', userError);
+    // Check if user exists
+    const { data: user, error: userError } = await supabaseClient.auth.admin.getUserById(user_id);
+
+    if (userError || !user) {
+      console.error('Error fetching user:', userError);
       throw new Error('User not found');
     }
 
-    // Manual cleanup of database records first
     console.log('Starting manual database cleanup...');
+
+    // Delete surveys created by the user
+    const { error: surveysError } = await supabaseClient
+      .from('surveys')
+      .delete()
+      .eq('created_by', user_id);
+    
+    if (surveysError) {
+      console.error('Error deleting surveys:', surveysError);
+      throw surveysError;
+    }
 
     // Delete user_roles
     const { error: rolesError } = await supabaseClient
@@ -139,21 +149,18 @@ Deno.serve(async (req) => {
       throw deleteError;
     }
 
-    console.log('Successfully deleted user:', user_id);
-
     return new Response(
       JSON.stringify({ 
-        message: 'User deleted successfully',
-        userId: user_id 
+        message: 'User deleted successfully'
       }),
       { 
-        headers: { 
+        headers: {
           ...corsHeaders,
-          'Content-Type': 'application/json'
-        } 
-      }
-    );
-
+          'Content-Type': 'application/json',
+        },
+        status: 200,
+      },
+    )
   } catch (error) {
     console.error('Function error:', error);
     return new Response(
@@ -161,12 +168,12 @@ Deno.serve(async (req) => {
         error: error.message || 'Error deleting user'
       }),
       { 
-        status: 400,
-        headers: { 
+        headers: {
           ...corsHeaders,
-          'Content-Type': 'application/json'
-        }
-      }
-    );
+          'Content-Type': 'application/json',
+        },
+        status: 400,
+      },
+    )
   }
-});
+})
