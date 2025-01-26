@@ -32,13 +32,110 @@ Deno.serve(async (req) => {
       throw new Error('User not found');
     }
 
-    // Delete from auth.users (this will trigger the cascade delete function)
-    const { error: deleteError } = await supabaseClient.auth.admin.deleteUser(
-      user_id
-    );
+    // Manual cleanup of database records first
+    console.log('Starting manual database cleanup...');
+
+    // Delete user_roles
+    const { error: rolesError } = await supabaseClient
+      .from('user_roles')
+      .delete()
+      .eq('user_id', user_id);
+    
+    if (rolesError) {
+      console.error('Error deleting user roles:', rolesError);
+      throw rolesError;
+    }
+
+    // Delete user_sbus
+    const { error: sbusError } = await supabaseClient
+      .from('user_sbus')
+      .delete()
+      .eq('user_id', user_id);
+    
+    if (sbusError) {
+      console.error('Error deleting user sbus:', sbusError);
+      throw sbusError;
+    }
+
+    // Delete user_supervisors
+    const { error: supervisorsError } = await supabaseClient
+      .from('user_supervisors')
+      .delete()
+      .or(`user_id.eq.${user_id},supervisor_id.eq.${user_id}`);
+    
+    if (supervisorsError) {
+      console.error('Error deleting user supervisors:', supervisorsError);
+      throw supervisorsError;
+    }
+
+    // Delete survey_assignments
+    const { error: assignmentsError } = await supabaseClient
+      .from('survey_assignments')
+      .delete()
+      .eq('user_id', user_id);
+    
+    if (assignmentsError) {
+      console.error('Error deleting survey assignments:', assignmentsError);
+      throw assignmentsError;
+    }
+
+    // Delete survey_responses
+    const { error: responsesError } = await supabaseClient
+      .from('survey_responses')
+      .delete()
+      .eq('user_id', user_id);
+    
+    if (responsesError) {
+      console.error('Error deleting survey responses:', responsesError);
+      throw responsesError;
+    }
+
+    // Update SBUs where user is head
+    const { error: sbusHeadError } = await supabaseClient
+      .from('sbus')
+      .update({ head_id: null })
+      .eq('head_id', user_id);
+    
+    if (sbusHeadError) {
+      console.error('Error updating sbus head:', sbusHeadError);
+      throw sbusHeadError;
+    }
+
+    // Update profile to remove foreign key references
+    const { error: profileUpdateError } = await supabaseClient
+      .from('profiles')
+      .update({
+        employee_role_id: null,
+        employee_type_id: null,
+        employment_type_id: null,
+        level_id: null,
+        location_id: null
+      })
+      .eq('id', user_id);
+    
+    if (profileUpdateError) {
+      console.error('Error updating profile:', profileUpdateError);
+      throw profileUpdateError;
+    }
+
+    // Delete profile
+    const { error: profileError } = await supabaseClient
+      .from('profiles')
+      .delete()
+      .eq('id', user_id);
+    
+    if (profileError) {
+      console.error('Error deleting profile:', profileError);
+      throw profileError;
+    }
+
+    console.log('Database cleanup completed successfully');
+
+    // Finally, delete from auth.users
+    const { error: deleteError } = await supabaseClient.auth.admin.deleteUser(user_id);
 
     if (deleteError) {
-      console.error('Error deleting user:', deleteError);
+      console.error('Error deleting auth user:', deleteError);
       throw deleteError;
     }
 
@@ -61,7 +158,7 @@ Deno.serve(async (req) => {
     console.error('Function error:', error);
     return new Response(
       JSON.stringify({ 
-        error: error.message || 'Database error deleting user'
+        error: error.message || 'Error deleting user'
       }),
       { 
         status: 400,
