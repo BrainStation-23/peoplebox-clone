@@ -351,6 +351,7 @@ export type Database = {
       }
       survey_campaigns: {
         Row: {
+          anonymous: boolean
           campaign_type: string
           completion_rate: number | null
           created_at: string
@@ -371,6 +372,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          anonymous?: boolean
           campaign_type?: string
           completion_rate?: number | null
           created_at?: string
@@ -391,6 +393,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          anonymous?: boolean
           campaign_type?: string
           completion_rate?: number | null
           created_at?: string
