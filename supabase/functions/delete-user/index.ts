@@ -34,7 +34,30 @@ serve(async (req) => {
 
     console.log('Starting manual database cleanup...');
 
-    // Delete surveys created by the user
+    // 1. First handle survey-related tables
+    // Delete survey responses
+    const { error: responsesError } = await supabaseClient
+      .from('survey_responses')
+      .delete()
+      .eq('user_id', user_id);
+    
+    if (responsesError) {
+      console.error('Error deleting survey responses:', responsesError);
+      throw responsesError;
+    }
+
+    // Delete survey assignments
+    const { error: assignmentsError } = await supabaseClient
+      .from('survey_assignments')
+      .delete()
+      .eq('user_id', user_id);
+    
+    if (assignmentsError) {
+      console.error('Error deleting survey assignments:', assignmentsError);
+      throw assignmentsError;
+    }
+
+    // Delete surveys created by user
     const { error: surveysError } = await supabaseClient
       .from('surveys')
       .delete()
@@ -45,6 +68,18 @@ serve(async (req) => {
       throw surveysError;
     }
 
+    // Delete survey campaigns created by user
+    const { error: campaignsError } = await supabaseClient
+      .from('survey_campaigns')
+      .delete()
+      .eq('created_by', user_id);
+    
+    if (campaignsError) {
+      console.error('Error deleting survey campaigns:', campaignsError);
+      throw campaignsError;
+    }
+
+    // 2. Handle user relationships
     // Delete user_roles
     const { error: rolesError } = await supabaseClient
       .from('user_roles')
@@ -67,7 +102,7 @@ serve(async (req) => {
       throw sbusError;
     }
 
-    // Delete user_supervisors
+    // Delete user_supervisors where user is either supervisor or supervisee
     const { error: supervisorsError } = await supabaseClient
       .from('user_supervisors')
       .delete()
@@ -76,28 +111,6 @@ serve(async (req) => {
     if (supervisorsError) {
       console.error('Error deleting user supervisors:', supervisorsError);
       throw supervisorsError;
-    }
-
-    // Delete survey_assignments
-    const { error: assignmentsError } = await supabaseClient
-      .from('survey_assignments')
-      .delete()
-      .eq('user_id', user_id);
-    
-    if (assignmentsError) {
-      console.error('Error deleting survey assignments:', assignmentsError);
-      throw assignmentsError;
-    }
-
-    // Delete survey_responses
-    const { error: responsesError } = await supabaseClient
-      .from('survey_responses')
-      .delete()
-      .eq('user_id', user_id);
-    
-    if (responsesError) {
-      console.error('Error deleting survey responses:', responsesError);
-      throw responsesError;
     }
 
     // Update SBUs where user is head
@@ -111,7 +124,7 @@ serve(async (req) => {
       throw sbusHeadError;
     }
 
-    // Update profile to remove foreign key references
+    // 3. Update profile to remove foreign key references
     const { error: profileUpdateError } = await supabaseClient
       .from('profiles')
       .update({
@@ -139,15 +152,15 @@ serve(async (req) => {
       throw profileError;
     }
 
-    console.log('Database cleanup completed successfully');
-
-    // Finally, delete from auth.users
+    // Finally, delete the auth user
     const { error: deleteError } = await supabaseClient.auth.admin.deleteUser(user_id);
 
     if (deleteError) {
       console.error('Error deleting auth user:', deleteError);
       throw deleteError;
     }
+
+    console.log('User deletion completed successfully');
 
     return new Response(
       JSON.stringify({ 
