@@ -284,6 +284,7 @@ export type Database = {
           id: string
           is_organization_wide: boolean | null
           last_reminder_sent: string | null
+          public_access_token: string | null
           status: Database["public"]["Enums"]["assignment_status"] | null
           survey_id: string
           updated_at: string | null
@@ -297,6 +298,7 @@ export type Database = {
           id?: string
           is_organization_wide?: boolean | null
           last_reminder_sent?: string | null
+          public_access_token?: string | null
           status?: Database["public"]["Enums"]["assignment_status"] | null
           survey_id: string
           updated_at?: string | null
@@ -310,6 +312,7 @@ export type Database = {
           id?: string
           is_organization_wide?: boolean | null
           last_reminder_sent?: string | null
+          public_access_token?: string | null
           status?: Database["public"]["Enums"]["assignment_status"] | null
           survey_id?: string
           updated_at?: string | null
