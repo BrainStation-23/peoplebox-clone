@@ -1,10 +1,9 @@
-import { SlideProps, QuestionResponseData } from "../types";
+import { SlideProps } from "../types";
 import { cn } from "@/lib/utils";
 import { BooleanCharts } from "../../ReportsTab/charts/BooleanCharts";
 import { NpsChart } from "../../ReportsTab/charts/NpsChart";
 import { WordCloud } from "../../ReportsTab/charts/WordCloud";
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { usePresentationResponses } from "../hooks/usePresentationResponses";
 
 interface QuestionSlideProps extends SlideProps {
   questionName: string;
@@ -12,37 +11,25 @@ interface QuestionSlideProps extends SlideProps {
   questionType: string;
 }
 
-export function QuestionSlide({ campaign, isActive, questionName, questionTitle, questionType }: QuestionSlideProps) {
-  const { data: responses } = useQuery({
-    queryKey: ["question-responses", campaign.id, campaign.instance?.id, questionName],
-    queryFn: async () => {
-      const query = supabase
-        .from("survey_responses")
-        .select(`
-          response_data,
-          assignment:survey_assignments!inner(
-            campaign_id
-          )
-        `)
-        .eq("assignment.campaign_id", campaign.id);
+export function QuestionSlide({ 
+  campaign, 
+  isActive, 
+  questionName, 
+  questionTitle, 
+  questionType 
+}: QuestionSlideProps) {
+  const { data } = usePresentationResponses(campaign.id, campaign.instance?.id);
+  
+  const processAnswers = () => {
+    if (!data?.responses) return null;
 
-      if (campaign.instance) {
-        query.eq("campaign_instance_id", campaign.instance.id);
-      }
-
-      const { data } = await query;
-      return data || [];
-    },
-  });
-
-  const processAnswers = (): QuestionResponseData | null => {
-    if (!responses) return null;
+    const responses = data.responses;
 
     switch (questionType) {
       case "boolean": {
         const answers = responses
-          .filter(r => r.response_data && r.response_data[questionName])
-          .map(r => r.response_data[questionName].answer);
+          .filter(r => r.answers[questionName]?.answer !== undefined)
+          .map(r => r.answers[questionName].answer);
         
         return {
           type: 'boolean',
@@ -56,8 +43,8 @@ export function QuestionSlide({ campaign, isActive, questionName, questionTitle,
       case "nps":
       case "rating": {
         const answers = responses
-          .filter(r => r.response_data && r.response_data[questionName])
-          .map(r => r.response_data[questionName].answer);
+          .filter(r => typeof r.answers[questionName]?.answer === 'number')
+          .map(r => r.answers[questionName].answer);
         
         const ratingCounts = new Array(11).fill(0);
         answers.forEach((rating) => {
@@ -76,7 +63,7 @@ export function QuestionSlide({ campaign, isActive, questionName, questionTitle,
       case "comment": {
         const wordFrequency: Record<string, number> = {};
         responses.forEach((response) => {
-          const answer = response.response_data?.[questionName]?.answer;
+          const answer = response.answers[questionName]?.answer;
           if (typeof answer === "string") {
             const words = answer
               .toLowerCase()
