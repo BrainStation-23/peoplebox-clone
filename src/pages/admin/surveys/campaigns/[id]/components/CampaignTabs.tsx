@@ -10,15 +10,16 @@ export function TabPanel({ value, children }: { value: string; children: React.R
 
 interface CampaignTabsProps {
   children: React.ReactNode;
+  isAnonymous?: boolean;
 }
 
-export function CampaignTabs({ children }: CampaignTabsProps) {
+export function CampaignTabs({ children, isAnonymous }: CampaignTabsProps) {
   return (
     <Tabs defaultValue="overview" className="space-y-4">
       <TabsList>
         <TabsTrigger value="overview">Overview</TabsTrigger>
         <TabsTrigger value="assignments">Assignments</TabsTrigger>
-        <TabsTrigger value="responses">Responses</TabsTrigger>
+        {!isAnonymous && <TabsTrigger value="responses">Responses</TabsTrigger>}
         <TabsTrigger value="activity">Activity</TabsTrigger>
         <TabsTrigger value="reports">Reports</TabsTrigger>
       </TabsList>
