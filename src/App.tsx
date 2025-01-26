@@ -32,7 +32,7 @@ import PreviewSurveyPage from "./pages/admin/surveys/[id]/preview";
 import CampaignsPage from "./pages/admin/surveys/campaigns";
 import CampaignFormPage from "./pages/admin/surveys/campaigns/CampaignFormPage";
 import CampaignDetailsPage from "./pages/admin/surveys/campaigns/[id]";
-import PresentationView from "./pages/admin/surveys/campaigns/[id]/components/PresentationView";
+import PresentationView from "./pages/admin/surveys/campaigns/[id]/components/PresentationView/index";
 import PlatformConfigLayout from "./components/layouts/PlatformConfigLayout";
 import SBUsConfig from "./pages/admin/config/sbus";
 import SBUDetails from "./pages/admin/config/sbus/[id]";
