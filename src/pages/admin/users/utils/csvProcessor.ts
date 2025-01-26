@@ -34,6 +34,7 @@ async function getLevelId(levelName?: string): Promise<string | null> {
     .from("levels")
     .select("id")
     .eq("name", levelName)
+    .eq("status", "active")
     .maybeSingle();
 
   return data?.id || null;
@@ -56,6 +57,32 @@ async function getEmploymentTypeId(typeName?: string): Promise<string | null> {
 
   const { data } = await supabase
     .from("employment_types")
+    .select("id")
+    .eq("name", typeName)
+    .eq("status", "active")
+    .maybeSingle();
+
+  return data?.id || null;
+}
+
+async function getEmployeeRoleId(roleName?: string): Promise<string | null> {
+  if (!roleName) return null;
+
+  const { data } = await supabase
+    .from("employee_roles")
+    .select("id")
+    .eq("name", roleName)
+    .eq("status", "active")
+    .maybeSingle();
+
+  return data?.id || null;
+}
+
+async function getEmployeeTypeId(typeName?: string): Promise<string | null> {
+  if (!typeName) return null;
+
+  const { data } = await supabase
+    .from("employee_types")
     .select("id")
     .eq("name", typeName)
     .eq("status", "active")
