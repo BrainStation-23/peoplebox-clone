@@ -26,6 +26,11 @@ interface SearchUsersResponse {
     date_of_birth: string | null;
     designation: string | null;
     status: string;
+    level: string | null;
+    location: string | null;
+    employment_type: string | null;
+    employee_role: string | null;
+    employee_type: string | null;
     user_roles: {
       role: string;
     };
@@ -102,6 +107,11 @@ export function useUsers({
           date_of_birth: profile.date_of_birth,
           designation: profile.designation,
           status: profile.status,
+          level: profile.level,
+          location: profile.location,
+          employment_type: profile.employment_type,
+          employee_role: profile.employee_role,
+          employee_type: profile.employee_type,
           user_roles: profile.user_roles,
           user_sbus: profile.user_sbus
         } as User;
