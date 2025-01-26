@@ -24,7 +24,15 @@ Deno.serve(async (req) => {
       throw new Error('User ID is required');
     }
 
-    // Delete from auth.users (this will cascade to profiles due to FK constraint)
+    // First, check if the user exists
+    const { data: userData, error: userError } = await supabaseClient.auth.admin.getUserById(user_id);
+    
+    if (userError || !userData.user) {
+      console.error('Error finding user:', userError);
+      throw new Error('User not found');
+    }
+
+    // Delete from auth.users (this will trigger the cascade delete function)
     const { error: deleteError } = await supabaseClient.auth.admin.deleteUser(
       user_id
     );
@@ -53,7 +61,7 @@ Deno.serve(async (req) => {
     console.error('Function error:', error);
     return new Response(
       JSON.stringify({ 
-        error: error.message 
+        error: error.message || 'Database error deleting user'
       }),
       { 
         status: 400,
