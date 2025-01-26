@@ -1,4 +1,3 @@
-// ... Similar changes as employee-type/index.tsx, updating the query to include sorting
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -12,21 +11,21 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { useToast } from "@/components/ui/use-toast";
-import { EmploymentTypeForm } from "./components/EmploymentTypeForm";
-import { EmploymentTypeTable } from "./components/EmploymentTypeTable";
+import { EmployeeRoleForm } from "./components/EmployeeRoleForm";
+import { EmployeeRoleTable } from "./components/EmployeeRoleTable";
 
-export default function EmploymentTypeConfig() {
-  const [selectedType, setSelectedType] = useState<any>(null);
+export default function EmployeeRoleConfig() {
+  const [selectedRole, setSelectedRole] = useState<any>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
-  const { data: employmentTypes, isLoading } = useQuery({
-    queryKey: ['employment-types', sortOrder],
+  const { data: employeeRoles, isLoading } = useQuery({
+    queryKey: ['employee-roles', sortOrder],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('employment_types')
+        .from('employee_roles')
         .select('*')
         .order('name', { ascending: sortOrder === 'asc' });
       
@@ -38,7 +37,7 @@ export default function EmploymentTypeConfig() {
   const createMutation = useMutation({
     mutationFn: async (values: { name: string }) => {
       const { data, error } = await supabase
-        .from('employment_types')
+        .from('employee_roles')
         .insert([{ name: values.name }])
         .select()
         .single();
@@ -47,17 +46,17 @@ export default function EmploymentTypeConfig() {
       return data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['employment-types'] });
+      queryClient.invalidateQueries({ queryKey: ['employee-roles'] });
       setIsDialogOpen(false);
       toast({
         title: "Success",
-        description: "Employment type created successfully",
+        description: "Employee role created successfully",
       });
     },
     onError: (error) => {
       toast({
         title: "Error",
-        description: "Failed to create employment type",
+        description: "Failed to create employee role",
         variant: "destructive",
       });
     },
@@ -66,7 +65,7 @@ export default function EmploymentTypeConfig() {
   const updateMutation = useMutation({
     mutationFn: async ({ id, name }: { id: string; name: string }) => {
       const { data, error } = await supabase
-        .from('employment_types')
+        .from('employee_roles')
         .update({ name })
         .eq('id', id)
         .select()
@@ -76,18 +75,18 @@ export default function EmploymentTypeConfig() {
       return data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['employment-types'] });
+      queryClient.invalidateQueries({ queryKey: ['employee-roles'] });
       setIsDialogOpen(false);
-      setSelectedType(null);
+      setSelectedRole(null);
       toast({
         title: "Success",
-        description: "Employment type updated successfully",
+        description: "Employee role updated successfully",
       });
     },
     onError: (error) => {
       toast({
         title: "Error",
-        description: "Failed to update employment type",
+        description: "Failed to update employee role",
         variant: "destructive",
       });
     },
@@ -96,23 +95,23 @@ export default function EmploymentTypeConfig() {
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
       const { error } = await supabase
-        .from('employment_types')
+        .from('employee_roles')
         .delete()
         .eq('id', id);
       
       if (error) throw error;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['employment-types'] });
+      queryClient.invalidateQueries({ queryKey: ['employee-roles'] });
       toast({
         title: "Success",
-        description: "Employment type deleted successfully",
+        description: "Employee role deleted successfully",
       });
     },
     onError: (error) => {
       toast({
         title: "Error",
-        description: "Failed to delete employment type",
+        description: "Failed to delete employee role",
         variant: "destructive",
       });
     },
@@ -121,7 +120,7 @@ export default function EmploymentTypeConfig() {
   const toggleStatusMutation = useMutation({
     mutationFn: async ({ id, newStatus }: { id: string; newStatus: 'active' | 'inactive' }) => {
       const { data, error } = await supabase
-        .from('employment_types')
+        .from('employee_roles')
         .update({ status: newStatus })
         .eq('id', id)
         .select()
@@ -131,31 +130,31 @@ export default function EmploymentTypeConfig() {
       return data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['employment-types'] });
+      queryClient.invalidateQueries({ queryKey: ['employee-roles'] });
       toast({
         title: "Success",
-        description: "Employment type status updated successfully",
+        description: "Employee role status updated successfully",
       });
     },
     onError: (error) => {
       toast({
         title: "Error",
-        description: "Failed to update employment type status",
+        description: "Failed to update employee role status",
         variant: "destructive",
       });
     },
   });
 
   const handleSubmit = (values: { name: string }) => {
-    if (selectedType) {
-      updateMutation.mutate({ id: selectedType.id, name: values.name });
+    if (selectedRole) {
+      updateMutation.mutate({ id: selectedRole.id, name: values.name });
     } else {
       createMutation.mutate(values);
     }
   };
 
-  const handleEdit = (type: any) => {
-    setSelectedType(type);
+  const handleEdit = (role: any) => {
+    setSelectedRole(role);
     setIsDialogOpen(true);
   };
 
@@ -174,31 +173,31 @@ export default function EmploymentTypeConfig() {
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h2 className="text-3xl font-bold tracking-tight">Employment Types</h2>
+        <h2 className="text-3xl font-bold tracking-tight">Employee Roles</h2>
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
             <Button>
               <Plus className="mr-2 h-4 w-4" />
-              Add Employment Type
+              Add Employee Role
             </Button>
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>
               <DialogTitle>
-                {selectedType ? "Edit Employment Type" : "Add Employment Type"}
+                {selectedRole ? "Edit Employee Role" : "Add Employee Role"}
               </DialogTitle>
             </DialogHeader>
-            <EmploymentTypeForm
+            <EmployeeRoleForm
               onSubmit={handleSubmit}
-              initialValues={selectedType}
-              submitLabel={selectedType ? "Update Employment Type" : "Create Employment Type"}
+              initialValues={selectedRole}
+              submitLabel={selectedRole ? "Update Employee Role" : "Create Employee Role"}
             />
           </DialogContent>
         </Dialog>
       </div>
 
-      <EmploymentTypeTable
-        employmentTypes={employmentTypes || []}
+      <EmployeeRoleTable
+        employeeRoles={employeeRoles || []}
         onEdit={handleEdit}
         onDelete={handleDelete}
         onToggleStatus={handleToggleStatus}

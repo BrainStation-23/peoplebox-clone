@@ -3,9 +3,10 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
-import { Mail } from "lucide-react";
+import { Mail, Link2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useState } from "react";
+import { Checkbox } from "@/components/ui/checkbox";
 
 type Respondent = {
   id: string;
@@ -17,6 +18,7 @@ type Respondent = {
   };
   assignment_id: string;
   last_reminder_sent: string | null;
+  public_access_token: string;
 };
 
 type Props = {
@@ -27,6 +29,8 @@ type Props = {
 export function PendingRespondents({ campaignId, instanceId }: Props) {
   const { toast } = useToast();
   const [sendingReminders, setSendingReminders] = useState<Record<string, boolean>>({});
+  const [selectedRespondents, setSelectedRespondents] = useState<Set<string>>(new Set());
+  const [isSendingBulkReminders, setIsSendingBulkReminders] = useState(false);
 
   const { data: pendingRespondents, isLoading } = useQuery({
     queryKey: ["pending-respondents", campaignId, instanceId],
@@ -37,6 +41,7 @@ export function PendingRespondents({ campaignId, instanceId }: Props) {
           id,
           last_reminder_sent,
           due_date,
+          public_access_token,
           user:profiles!survey_assignments_user_id_fkey (
             id,
             email,
@@ -58,7 +63,6 @@ export function PendingRespondents({ campaignId, instanceId }: Props) {
 
       if (error) throw error;
 
-      // Transform the data
       return assignments.map((assignment): Respondent => {
         const primarySbu = assignment.user.user_sbus?.find(us => us.is_primary);
         return {
@@ -69,6 +73,7 @@ export function PendingRespondents({ campaignId, instanceId }: Props) {
           primary_sbu: primarySbu ? { name: primarySbu.sbu.name } : undefined,
           assignment_id: assignment.id,
           last_reminder_sent: assignment.last_reminder_sent,
+          public_access_token: assignment.public_access_token,
         };
       });
     },
@@ -118,18 +123,141 @@ export function PendingRespondents({ campaignId, instanceId }: Props) {
     }
   };
 
+  const handleBulkSendReminders = async () => {
+    if (!pendingRespondents) return;
+    
+    setIsSendingBulkReminders(true);
+    const selectedUsers = pendingRespondents.filter(r => selectedRespondents.has(r.id));
+    let successCount = 0;
+    let errorCount = 0;
+
+    for (const respondent of selectedUsers) {
+      if (!canSendReminder(respondent.last_reminder_sent)) {
+        errorCount++;
+        continue;
+      }
+
+      try {
+        const { data: assignment } = await supabase
+          .from("survey_assignments")
+          .select("due_date, survey:surveys(name)")
+          .eq("id", respondent.assignment_id)
+          .single();
+
+        if (!assignment) {
+          errorCount++;
+          continue;
+        }
+
+        const response = await supabase.functions.invoke("send-survey-reminder", {
+          body: {
+            assignmentId: respondent.assignment_id,
+            surveyName: assignment.survey.name,
+            dueDate: assignment.due_date,
+            recipientEmail: respondent.email,
+            recipientName: `${respondent.first_name || ''} ${respondent.last_name || ''}`.trim() || 'Participant',
+          },
+        });
+
+        if (response.error) {
+          errorCount++;
+        } else {
+          successCount++;
+        }
+      } catch (error) {
+        console.error("Error sending reminder to", respondent.email, error);
+        errorCount++;
+      }
+    }
+
+    toast({
+      title: "Bulk Reminder Operation Complete",
+      description: `Successfully sent ${successCount} reminders. ${errorCount} failed.`,
+      variant: errorCount > 0 ? "destructive" : "default",
+    });
+
+    setIsSendingBulkReminders(false);
+    setSelectedRespondents(new Set());
+  };
+
+  const handleCopyPublicLink = async (token: string) => {
+    const publicUrl = `${window.location.origin}/public/survey/${token}`;
+    try {
+      await navigator.clipboard.writeText(publicUrl);
+      toast({
+        title: "Link Copied",
+        description: "Public survey link has been copied to clipboard",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to copy link to clipboard",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const toggleSelectAll = () => {
+    if (!pendingRespondents) return;
+    
+    if (selectedRespondents.size === pendingRespondents.length) {
+      setSelectedRespondents(new Set());
+    } else {
+      setSelectedRespondents(new Set(pendingRespondents.map(r => r.id)));
+    }
+  };
+
+  const toggleRespondent = (id: string) => {
+    const newSelected = new Set(selectedRespondents);
+    if (newSelected.has(id)) {
+      newSelected.delete(id);
+    } else {
+      newSelected.add(id);
+    }
+    setSelectedRespondents(newSelected);
+  };
+
   const canSendReminder = (lastReminderSent: string | null) => {
     if (!lastReminderSent) return true;
     const hoursSinceLastReminder = (Date.now() - new Date(lastReminderSent).getTime()) / (1000 * 60 * 60);
     return hoursSinceLastReminder >= 24;
   };
 
+  const isAllSelected = pendingRespondents?.length === selectedRespondents.size;
+  const selectedCount = selectedRespondents.size;
+
   if (isLoading) return <div>Loading...</div>;
 
   return (
     <Card>
-      <CardHeader>
+      <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle>Pending Respondents</CardTitle>
+        <div className="flex items-center gap-4">
+          {selectedCount > 0 && (
+            <Button
+              variant="outline"
+              onClick={handleBulkSendReminders}
+              disabled={isSendingBulkReminders}
+            >
+              <Mail className="w-4 h-4 mr-2" />
+              {isSendingBulkReminders 
+                ? "Sending Reminders..." 
+                : `Send Reminders (${selectedCount})`}
+            </Button>
+          )}
+          {pendingRespondents && pendingRespondents.length > 0 && (
+            <div className="flex items-center gap-2">
+              <Checkbox 
+                checked={isAllSelected}
+                onClick={toggleSelectAll}
+                aria-label="Select all respondents"
+              />
+              <span className="text-sm text-muted-foreground">
+                {selectedCount} of {pendingRespondents.length} selected
+              </span>
+            </div>
+          )}
+        </div>
       </CardHeader>
       <CardContent>
         <ScrollArea className="h-[400px] pr-4">
@@ -139,29 +267,46 @@ export function PendingRespondents({ campaignId, instanceId }: Props) {
                 key={respondent.id}
                 className="flex items-center justify-between p-2 border rounded-lg"
               >
-                <div>
-                  <p className="font-medium">
-                    {respondent.first_name} {respondent.last_name}
-                  </p>
-                  <p className="text-sm text-gray-500">{respondent.email}</p>
-                  {respondent.primary_sbu && (
-                    <p className="text-sm text-gray-500">{respondent.primary_sbu.name}</p>
-                  )}
-                  {respondent.last_reminder_sent && (
-                    <p className="text-xs text-gray-400">
-                      Last reminder: {new Date(respondent.last_reminder_sent).toLocaleString()}
+                <div className="flex items-center gap-4">
+                  <Checkbox 
+                    checked={selectedRespondents.has(respondent.id)}
+                    onClick={() => toggleRespondent(respondent.id)}
+                    aria-label={`Select ${respondent.first_name} ${respondent.last_name}`}
+                  />
+                  <div>
+                    <p className="font-medium">
+                      {respondent.first_name} {respondent.last_name}
                     </p>
-                  )}
+                    <p className="text-sm text-gray-500">{respondent.email}</p>
+                    {respondent.primary_sbu && (
+                      <p className="text-sm text-gray-500">{respondent.primary_sbu.name}</p>
+                    )}
+                    {respondent.last_reminder_sent && (
+                      <p className="text-xs text-gray-400">
+                        Last reminder: {new Date(respondent.last_reminder_sent).toLocaleString()}
+                      </p>
+                    )}
+                  </div>
                 </div>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => handleSendReminder(respondent)}
-                  disabled={sendingReminders[respondent.id] || !canSendReminder(respondent.last_reminder_sent)}
-                >
-                  <Mail className="w-4 h-4 mr-2" />
-                  {sendingReminders[respondent.id] ? "Sending..." : "Send Reminder"}
-                </Button>
+                <div className="flex gap-2">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => handleCopyPublicLink(respondent.public_access_token)}
+                  >
+                    <Link2 className="w-4 h-4 mr-2" />
+                    Copy Link
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => handleSendReminder(respondent)}
+                    disabled={sendingReminders[respondent.id] || !canSendReminder(respondent.last_reminder_sent)}
+                  >
+                    <Mail className="w-4 h-4 mr-2" />
+                    {sendingReminders[respondent.id] ? "Sending..." : "Send Reminder"}
+                  </Button>
+                </div>
               </div>
             ))}
             {(!pendingRespondents || pendingRespondents.length === 0) && (

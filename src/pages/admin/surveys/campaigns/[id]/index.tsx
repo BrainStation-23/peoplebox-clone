@@ -20,7 +20,7 @@ export default function CampaignDetailsPage() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("survey_campaigns")
-        .select("*")
+        .select("*, anonymous")
         .eq("id", id)
         .single();
 
@@ -66,6 +66,7 @@ export default function CampaignDetailsPage() {
       <CampaignHeader 
         campaign={campaign} 
         isLoading={isLoadingCampaign}
+        selectedInstanceId={selectedInstanceId}
       />
 
       <div className="flex justify-end">
@@ -76,7 +77,7 @@ export default function CampaignDetailsPage() {
         />
       </div>
 
-      <CampaignTabs>
+      <CampaignTabs isAnonymous={campaign?.anonymous}>
         <TabPanel value="overview">
           <OverviewTab 
             campaignId={id} 
@@ -91,9 +92,11 @@ export default function CampaignDetailsPage() {
             surveyId={campaign?.survey_id}
           />
         </TabPanel>
-        <TabPanel value="responses">
-          <ResponsesTab instanceId={selectedInstanceId} />
-        </TabPanel>
+        {!campaign?.anonymous && (
+          <TabPanel value="responses">
+            <ResponsesTab instanceId={selectedInstanceId} />
+          </TabPanel>
+        )}
         <TabPanel value="activity">
           <ActivityTab 
             campaignId={id}

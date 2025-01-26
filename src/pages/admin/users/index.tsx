@@ -4,13 +4,24 @@ import { User } from "./types";
 import { useUsers } from "./hooks/useUsers";
 import { useUserActions } from "./hooks/useUserActions";
 import { useSBUs } from "./hooks/useSBUs";
-import UserTable from "./components/UserTable";
+import { useFilterOptions } from "./hooks/useFilterOptions";
+import { UserGrid } from "./components/UserGrid";
 import CreateUserDialog from "./components/CreateUserDialog";
 import EditUserDialog from "./components/EditUserDialog";
 import { SearchFilters } from "./components/UserTable/SearchFilters";
 import { ImportDialog } from "./components/ImportDialog";
 import { ExportProgress } from "./components/UserTable/ExportProgress";
 import { exportUsers } from "./utils/exportUsers";
+import { Button } from "@/components/ui/button";
+import { Power, MoreHorizontal } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger
+} from "@/components/ui/dropdown-menu";
+import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 export default function UsersPage() {
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
@@ -20,7 +31,13 @@ export default function UsersPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedSBU, setSelectedSBU] = useState("all");
+  const [selectedLevel, setSelectedLevel] = useState("all");
+  const [selectedLocation, setSelectedLocation] = useState("all");
+  const [selectedEmploymentType, setSelectedEmploymentType] = useState("all");
+  const [selectedEmployeeRole, setSelectedEmployeeRole] = useState("all");
+  const [selectedEmployeeType, setSelectedEmployeeType] = useState("all");
   const [pageSize, setPageSize] = useState(10);
+  const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
   const [exportProgress, setExportProgress] = useState({
     isOpen: false,
     processed: 0,
@@ -32,16 +49,30 @@ export default function UsersPage() {
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [debouncedSearch, selectedSBU, pageSize]);
+  }, [debouncedSearch, selectedSBU, selectedLevel, selectedLocation, 
+      selectedEmploymentType, selectedEmployeeRole, selectedEmployeeType, pageSize]);
 
   const { data, isLoading, refetch } = useUsers({
     currentPage,
     pageSize,
     searchTerm: debouncedSearch,
     selectedSBU,
+    selectedLevel,
+    selectedLocation,
+    selectedEmploymentType,
+    selectedEmployeeRole,
+    selectedEmployeeType
   });
 
   const { data: sbus = [] } = useSBUs();
+  const { 
+    levels,
+    locations,
+    employmentTypes,
+    employeeRoles,
+    employeeTypes,
+    isLoading: isLoadingFilters
+  } = useFilterOptions();
   const { handleCreateSuccess, handleDelete } = useUserActions(refetch);
 
   const handleExport = async () => {
@@ -68,7 +99,6 @@ export default function UsersPage() {
         isComplete: true,
       }));
 
-      // Auto close after 2 seconds on success
       setTimeout(() => {
         setExportProgress(prev => ({
           ...prev,
@@ -83,29 +113,57 @@ export default function UsersPage() {
     }
   };
 
-  const handlePageChange = (page: number) => {
-    setCurrentPage(page);
+  const handleBulkDelete = async () => {
+    try {
+      for (const userId of selectedUsers) {
+        await handleDelete(userId);
+      }
+      toast.success(`Successfully deleted ${selectedUsers.length} users`);
+      setSelectedUsers([]);
+    } catch (error) {
+      toast.error("Failed to delete selected users");
+    }
   };
 
-  const handlePageSizeChange = (size: number) => {
-    setPageSize(size);
+  const handleBulkStatusToggle = async () => {
+    try {
+      const { data: firstUser } = await supabase
+        .from('profiles')
+        .select('status')
+        .eq('id', selectedUsers[0])
+        .single();
+
+      const newStatus = firstUser?.status === 'active' ? 'disabled' : 'active';
+
+      const { error } = await supabase
+        .from('profiles')
+        .update({ status: newStatus })
+        .in('id', selectedUsers);
+
+      if (error) throw error;
+
+      refetch();
+      
+      toast.success(
+        `Successfully ${newStatus === 'active' ? 'activated' : 'deactivated'} ${selectedUsers.length} users`
+      );
+      
+      setSelectedUsers([]);
+    } catch (error) {
+      console.error('Error toggling status:', error);
+      toast.error("Failed to update user status");
+    }
   };
 
-  const handleImportComplete = () => {
-    refetch();
-    setIsImportDialogOpen(false);
-  };
+  const totalPages = Math.ceil((data?.total || 0) / pageSize);
 
   return (
     <div className="container mx-auto py-6 space-y-4">
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-bold">Users</h1>
-        <button
-          onClick={() => setIsCreateDialogOpen(true)}
-          className="bg-primary text-primary-foreground hover:bg-primary/90 px-4 py-2 rounded-md"
-        >
+        <Button onClick={() => setIsCreateDialogOpen(true)}>
           Add User
-        </button>
+        </Button>
       </div>
 
       <div className="space-y-4">
@@ -113,29 +171,77 @@ export default function UsersPage() {
           searchTerm={searchTerm}
           setSearchTerm={setSearchTerm}
           selectedSBU={selectedSBU}
+          selectedLevel={selectedLevel}
+          selectedLocation={selectedLocation}
+          selectedEmploymentType={selectedEmploymentType}
+          selectedEmployeeRole={selectedEmployeeRole}
+          selectedEmployeeType={selectedEmployeeType}
           setSelectedSBU={setSelectedSBU}
+          setSelectedLevel={setSelectedLevel}
+          setSelectedLocation={setSelectedLocation}
+          setSelectedEmploymentType={setSelectedEmploymentType}
+          setSelectedEmployeeRole={setSelectedEmployeeRole}
+          setSelectedEmployeeType={setSelectedEmployeeType}
           onExport={handleExport}
           onImport={() => setIsImportDialogOpen(true)}
           sbus={sbus}
+          levels={levels}
+          locations={locations}
+          employmentTypes={employmentTypes}
+          employeeRoles={employeeRoles}
+          employeeTypes={employeeTypes}
           totalResults={data?.total}
-          isSearching={isLoading}
+          isSearching={isLoading || isLoadingFilters}
         />
 
-        <div className="relative">
-          <UserTable
-            users={data?.users || []}
-            isLoading={isLoading}
-            page={currentPage}
-            pageSize={pageSize}
-            total={data?.total || 0}
-            onPageChange={handlePageChange}
-            onDelete={handleDelete}
-            searchTerm={searchTerm}
-            setSearchTerm={setSearchTerm}
-            selectedSBU={selectedSBU}
-            onPageSizeChange={handlePageSizeChange}
-          />
-        </div>
+        {selectedUsers.length > 0 && (
+          <div className="flex items-center gap-2">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="sm">
+                  Bulk Actions <MoreHorizontal className="ml-2 h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent>
+                <DropdownMenuItem onClick={handleBulkStatusToggle}>
+                  <Power className="mr-2 h-4 w-4" />
+                  Toggle Status
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  className="text-destructive"
+                  onClick={handleBulkDelete}
+                >
+                  Delete Selected
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+            <span className="text-sm text-muted-foreground">
+              {selectedUsers.length} selected
+            </span>
+          </div>
+        )}
+
+        <UserGrid
+          users={data?.users || []}
+          selectedUsers={selectedUsers}
+          onSelectUser={(userId, checked) => {
+            if (checked) {
+              setSelectedUsers(prev => [...prev, userId]);
+            } else {
+              setSelectedUsers(prev => prev.filter(id => id !== userId));
+            }
+          }}
+          onEdit={setSelectedUser}
+          onDelete={handleDelete}
+          onPasswordChange={() => {}}
+          onRoleToggle={() => {}}
+          onStatusToggle={() => {}}
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={setCurrentPage}
+          pageSize={pageSize}
+          onPageSizeChange={setPageSize}
+        />
       </div>
 
       <CreateUserDialog
@@ -146,14 +252,17 @@ export default function UsersPage() {
 
       <EditUserDialog
         user={selectedUser}
-        open={isEditDialogOpen}
-        onOpenChange={setIsEditDialogOpen}
+        open={!!selectedUser}
+        onOpenChange={(open) => !open && setSelectedUser(null)}
       />
 
       <ImportDialog
         open={isImportDialogOpen}
         onOpenChange={setIsImportDialogOpen}
-        onImportComplete={handleImportComplete}
+        onImportComplete={() => {
+          refetch();
+          setIsImportDialogOpen(false);
+        }}
       />
 
       <ExportProgress

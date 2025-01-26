@@ -1,4 +1,3 @@
-// ... Similar changes as employee-type/EmployeeTypeTable.tsx, adding the sort button
 import { Power, Pencil, Trash2, ArrowUpDown } from "lucide-react";
 import {
   Table,
@@ -22,15 +21,15 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 
-interface EmploymentType {
+interface EmployeeRole {
   id: string;
   name: string;
   status: 'active' | 'inactive';
 }
 
-interface EmploymentTypeTableProps {
-  employmentTypes: EmploymentType[];
-  onEdit: (employmentType: EmploymentType) => void;
+interface EmployeeRoleTableProps {
+  employeeRoles: EmployeeRole[];
+  onEdit: (employeeRole: EmployeeRole) => void;
   onDelete: (id: string) => void;
   onToggleStatus: (id: string, newStatus: 'active' | 'inactive') => void;
   isLoading?: boolean;
@@ -38,15 +37,15 @@ interface EmploymentTypeTableProps {
   onSort: () => void;
 }
 
-export function EmploymentTypeTable({ 
-  employmentTypes, 
+export function EmployeeRoleTable({ 
+  employeeRoles, 
   onEdit, 
   onDelete,
   onToggleStatus,
   isLoading,
   sortOrder,
   onSort
-}: EmploymentTypeTableProps) {
+}: EmployeeRoleTableProps) {
   return (
     <div className="rounded-md border">
       <Table>
@@ -63,12 +62,12 @@ export function EmploymentTypeTable({
           </TableRow>
         </TableHeader>
         <TableBody>
-          {employmentTypes?.map((type) => (
-            <TableRow key={type.id}>
-              <TableCell>{type.name}</TableCell>
+          {employeeRoles?.map((role) => (
+            <TableRow key={role.id}>
+              <TableCell>{role.name}</TableCell>
               <TableCell>
-                <Badge variant={type.status === 'active' ? "success" : "secondary"}>
-                  {type.status}
+                <Badge variant={role.status === 'active' ? "success" : "secondary"}>
+                  {role.status}
                 </Badge>
               </TableCell>
               <TableCell>
@@ -76,14 +75,14 @@ export function EmploymentTypeTable({
                   <Button
                     variant="ghost"
                     size="icon"
-                    onClick={() => onToggleStatus(type.id, type.status === 'active' ? 'inactive' : 'active')}
+                    onClick={() => onToggleStatus(role.id, role.status === 'active' ? 'inactive' : 'active')}
                   >
                     <Power className="h-4 w-4" />
                   </Button>
                   <Button
                     variant="ghost"
                     size="icon"
-                    onClick={() => onEdit(type)}
+                    onClick={() => onEdit(role)}
                   >
                     <Pencil className="h-4 w-4" />
                   </Button>
@@ -95,15 +94,15 @@ export function EmploymentTypeTable({
                     </AlertDialogTrigger>
                     <AlertDialogContent>
                       <AlertDialogHeader>
-                        <AlertDialogTitle>Delete Employment Type</AlertDialogTitle>
+                        <AlertDialogTitle>Delete Employee Role</AlertDialogTitle>
                         <AlertDialogDescription>
-                          Are you sure you want to delete {type.name}? This action cannot be undone.
+                          Are you sure you want to delete {role.name}? This action cannot be undone.
                         </AlertDialogDescription>
                       </AlertDialogHeader>
                       <AlertDialogFooter>
                         <AlertDialogCancel>Cancel</AlertDialogCancel>
                         <AlertDialogAction
-                          onClick={() => onDelete(type.id)}
+                          onClick={() => onDelete(role.id)}
                           className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                         >
                           Delete
@@ -115,10 +114,10 @@ export function EmploymentTypeTable({
               </TableCell>
             </TableRow>
           ))}
-          {!isLoading && (!employmentTypes || employmentTypes.length === 0) && (
+          {!isLoading && (!employeeRoles || employeeRoles.length === 0) && (
             <TableRow>
               <TableCell colSpan={3} className="text-center">
-                No employment types found
+                No employee roles found
               </TableCell>
             </TableRow>
           )}

@@ -8,7 +8,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { CalendarDateTime } from "@/components/ui/calendar-datetime";
 import { useToast } from "@/hooks/use-toast";
 import { Calendar, Check, Edit2, Play, X } from "lucide-react";
-import { format } from "date-fns";
+import { format, isValid } from "date-fns";
 import {
   Select,
   SelectContent,
@@ -29,9 +29,10 @@ interface CampaignHeaderProps {
     ends_at: string;
   } | undefined;
   isLoading: boolean;
+  selectedInstanceId?: string;
 }
 
-export function CampaignHeader({ campaign, isLoading }: CampaignHeaderProps) {
+export function CampaignHeader({ campaign, isLoading, selectedInstanceId }: CampaignHeaderProps) {
   const { id } = useParams();
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -90,7 +91,20 @@ export function CampaignHeader({ campaign, isLoading }: CampaignHeaderProps) {
   };
 
   const handlePresent = () => {
-    navigate(`/admin/surveys/campaigns/${id}/present`);
+    if (!selectedInstanceId) {
+      toast({
+        variant: "destructive",
+        title: "No instance selected",
+        description: "Please select an instance before starting the presentation.",
+      });
+      return;
+    }
+    navigate(`/admin/surveys/campaigns/${id}/present?instance=${selectedInstanceId}`);
+  };
+
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return isValid(date) ? format(date, 'MMM d, yyyy HH:mm') : 'Invalid date';
   };
 
   if (isLoading) {
@@ -193,7 +207,7 @@ export function CampaignHeader({ campaign, isLoading }: CampaignHeaderProps) {
         )}
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
           <Calendar className="h-4 w-4" />
-          {format(new Date(campaign.created_at), 'MMM d, yyyy')}
+          {formatDate(campaign.created_at)}
         </div>
       </div>
 
@@ -217,8 +231,8 @@ export function CampaignHeader({ campaign, isLoading }: CampaignHeaderProps) {
           </div>
         ) : (
           <div className="flex gap-4 text-sm text-muted-foreground">
-            <span>Starts: {format(new Date(campaign.starts_at), 'MMM d, yyyy HH:mm')}</span>
-            <span>Ends: {format(new Date(campaign.ends_at), 'MMM d, yyyy HH:mm')}</span>
+            <span>Starts: {formatDate(campaign.starts_at)}</span>
+            <span>Ends: {formatDate(campaign.ends_at)}</span>
           </div>
         )}
       </div>

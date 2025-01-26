@@ -77,13 +77,14 @@ export default function SurveyCard({ assignment, onSelect }: SurveyCardProps) {
   const daysRemaining = effectiveDueDate ? getDaysRemaining(effectiveDueDate) : null;
   const isOverdue = daysRemaining !== null && daysRemaining < 0;
   const isDueSoon = daysRemaining !== null && daysRemaining <= 3 && daysRemaining > 0;
+  const isPending = assignment.status === 'pending';
 
   return (
     <Card 
       className={cn(
         "cursor-pointer hover:bg-accent/50 transition-colors",
-        isOverdue && "border-destructive",
-        isDueSoon && "border-yellow-500"
+        isPending && isOverdue && "border-destructive",
+        isPending && isDueSoon && "border-yellow-500"
       )}
       onClick={() => onSelect(assignment.id)}
     >
@@ -92,7 +93,7 @@ export default function SurveyCard({ assignment, onSelect }: SurveyCardProps) {
           <div className="space-y-1">
             <CardTitle className="text-lg flex items-center gap-2">
               {assignment.campaign?.name || assignment.survey.name}
-              {(isOverdue || isDueSoon) && (
+              {isPending && (isOverdue || isDueSoon) && (
                 <AlertCircle 
                   className={cn(
                     "h-5 w-5",
@@ -118,6 +119,7 @@ export default function SurveyCard({ assignment, onSelect }: SurveyCardProps) {
           daysRemaining={daysRemaining}
           isOverdue={isOverdue}
           isDueSoon={isDueSoon}
+          isPending={isPending}
         />
       </CardContent>
     </Card>

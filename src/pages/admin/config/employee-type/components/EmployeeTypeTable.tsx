@@ -1,4 +1,3 @@
-// ... Similar changes as employee-type/EmployeeTypeTable.tsx, adding the sort button
 import { Power, Pencil, Trash2, ArrowUpDown } from "lucide-react";
 import {
   Table,
@@ -22,15 +21,15 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 
-interface EmploymentType {
+interface EmployeeType {
   id: string;
   name: string;
   status: 'active' | 'inactive';
 }
 
-interface EmploymentTypeTableProps {
-  employmentTypes: EmploymentType[];
-  onEdit: (employmentType: EmploymentType) => void;
+interface EmployeeTypeTableProps {
+  employeeTypes: EmployeeType[];
+  onEdit: (employeeType: EmployeeType) => void;
   onDelete: (id: string) => void;
   onToggleStatus: (id: string, newStatus: 'active' | 'inactive') => void;
   isLoading?: boolean;
@@ -38,15 +37,15 @@ interface EmploymentTypeTableProps {
   onSort: () => void;
 }
 
-export function EmploymentTypeTable({ 
-  employmentTypes, 
+export function EmployeeTypeTable({ 
+  employeeTypes, 
   onEdit, 
   onDelete,
   onToggleStatus,
   isLoading,
   sortOrder,
   onSort
-}: EmploymentTypeTableProps) {
+}: EmployeeTypeTableProps) {
   return (
     <div className="rounded-md border">
       <Table>
@@ -63,7 +62,7 @@ export function EmploymentTypeTable({
           </TableRow>
         </TableHeader>
         <TableBody>
-          {employmentTypes?.map((type) => (
+          {employeeTypes?.map((type) => (
             <TableRow key={type.id}>
               <TableCell>{type.name}</TableCell>
               <TableCell>
@@ -95,7 +94,7 @@ export function EmploymentTypeTable({
                     </AlertDialogTrigger>
                     <AlertDialogContent>
                       <AlertDialogHeader>
-                        <AlertDialogTitle>Delete Employment Type</AlertDialogTitle>
+                        <AlertDialogTitle>Delete Employee Type</AlertDialogTitle>
                         <AlertDialogDescription>
                           Are you sure you want to delete {type.name}? This action cannot be undone.
                         </AlertDialogDescription>
@@ -115,10 +114,10 @@ export function EmploymentTypeTable({
               </TableCell>
             </TableRow>
           ))}
-          {!isLoading && (!employmentTypes || employmentTypes.length === 0) && (
+          {!isLoading && (!employeeTypes || employeeTypes.length === 0) && (
             <TableRow>
               <TableCell colSpan={3} className="text-center">
-                No employment types found
+                No employee types found
               </TableCell>
             </TableRow>
           )}

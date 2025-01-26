@@ -1,20 +1,40 @@
 import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, ChevronRight } from "lucide-react";
-import { CampaignData, SurveyJsonData } from "./types";
+import { ChevronLeft, ChevronRight, ArrowLeft, Fullscreen } from "lucide-react";
+import { CampaignData } from "./types";
 import { TitleSlide } from "./slides/TitleSlide";
-import { StatusDistributionSlide } from "./slides/StatusDistributionSlide";
+import { CompletionRateSlide } from "./slides/CompletionRateSlide";
+import { ResponseDistributionSlide } from "./slides/ResponseDistributionSlide";
+import { ResponseTrendsSlide } from "./slides/ResponseTrendsSlide";
+import { QuestionSlide } from "./slides/QuestionSlide";
+import { cn } from "@/lib/utils";
+import { useToast } from "@/hooks/use-toast";
 
 export default function PresentationView() {
   const { id } = useParams();
+  const [searchParams] = useSearchParams();
+  const instanceId = searchParams.get('instance');
+  const navigate = useNavigate();
+  const { toast } = useToast();
   const [currentSlide, setCurrentSlide] = useState(0);
   const [isFullscreen, setIsFullscreen] = useState(false);
 
+  useEffect(() => {
+    if (!instanceId) {
+      toast({
+        title: "No instance selected",
+        description: "Please select an instance from the campaign page",
+        variant: "destructive",
+      });
+      navigate(`/admin/surveys/campaigns/${id}`);
+    }
+  }, [instanceId, id, navigate, toast]);
+
   const { data: campaign } = useQuery({
-    queryKey: ["campaign", id],
+    queryKey: ["campaign", id, instanceId],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("survey_campaigns")
@@ -37,27 +57,32 @@ export default function PresentationView() {
 
       if (error) throw error;
 
-      // Parse and validate json_data
-      const jsonData = typeof data.survey.json_data === 'string' 
-        ? JSON.parse(data.survey.json_data)
-        : data.survey.json_data;
+      // Fetch instance data
+      const { data: instance, error: instanceError } = await supabase
+        .from("campaign_instances")
+        .select("*")
+        .eq("id", instanceId)
+        .single();
 
-      // Ensure the data has the required structure
-      if (!jsonData || !Array.isArray(jsonData.pages)) {
-        throw new Error('Invalid survey data structure');
-      }
-
-      const parsedData: CampaignData = {
+      if (instanceError) throw instanceError;
+      
+      return {
         ...data,
+        instance,
         survey: {
           ...data.survey,
-          json_data: jsonData as SurveyJsonData
+          json_data: data.survey.json_data
         }
-      };
-
-      return parsedData;
+      } as CampaignData;
     },
+    enabled: !!id && !!instanceId,
   });
+
+  const surveyQuestions = (campaign?.survey.json_data.pages || []).flatMap(
+    (page) => page.elements || []
+  );
+
+  const totalSlides = 4 + surveyQuestions.length;
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -72,7 +97,7 @@ export default function PresentationView() {
 
     document.addEventListener("keydown", handleKeyDown);
     return () => document.removeEventListener("keydown", handleKeyDown);
-  }, []);
+  }, [totalSlides]);
 
   const toggleFullscreen = () => {
     if (!document.fullscreenElement) {
@@ -86,8 +111,6 @@ export default function PresentationView() {
 
   if (!campaign) return null;
 
-  const totalSlides = 2; // Update this as you add more slides
-
   const nextSlide = () => {
     setCurrentSlide((prev) => Math.min(totalSlides - 1, prev + 1));
   };
@@ -96,13 +119,40 @@ export default function PresentationView() {
     setCurrentSlide((prev) => Math.max(0, prev - 1));
   };
 
+  const handleBack = () => {
+    navigate(`/admin/surveys/campaigns/${id}`);
+  };
+
   return (
-    <div className="fixed inset-0 bg-background">
+    <div className="h-full bg-background relative">
+      <div className="absolute top-4 left-4 z-10">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={handleBack}
+          className="bg-white/80 hover:bg-white/90 backdrop-blur-sm border border-gray-200"
+        >
+          <ArrowLeft className="h-4 w-4 mr-2" />
+          Back to Campaign
+        </Button>
+      </div>
+
       <div className="relative h-full overflow-hidden">
-        {/* Navigation Controls */}
+        <div className="absolute top-0 left-0 w-full h-1 bg-gray-200">
+          <div 
+            className="h-full bg-primary transition-all duration-300 ease-in-out"
+            style={{ width: `${((currentSlide + 1) / totalSlides) * 100}%` }}
+          />
+        </div>
+
         <div className="absolute top-4 right-4 z-10 space-x-2">
-          <Button variant="outline" size="sm" onClick={toggleFullscreen}>
-            {isFullscreen ? "Exit Fullscreen" : "Enter Fullscreen"}
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={toggleFullscreen}
+            className="bg-white/80 hover:bg-white/90 backdrop-blur-sm border border-gray-200"
+          >
+            <Fullscreen className="h-4 w-4" />
           </Button>
         </div>
 
@@ -112,6 +162,10 @@ export default function PresentationView() {
             size="icon"
             onClick={previousSlide}
             disabled={currentSlide === 0}
+            className={cn(
+              "bg-white/80 hover:bg-white/90 backdrop-blur-sm border border-gray-200",
+              "disabled:opacity-50 disabled:cursor-not-allowed"
+            )}
           >
             <ChevronLeft className="h-4 w-4" />
           </Button>
@@ -120,15 +174,33 @@ export default function PresentationView() {
             size="icon"
             onClick={nextSlide}
             disabled={currentSlide === totalSlides - 1}
+            className={cn(
+              "bg-white/80 hover:bg-white/90 backdrop-blur-sm border border-gray-200",
+              "disabled:opacity-50 disabled:cursor-not-allowed"
+            )}
           >
             <ChevronRight className="h-4 w-4" />
           </Button>
         </div>
 
-        {/* Slides */}
-        <div className="h-full">
-          <TitleSlide campaign={campaign} isActive={currentSlide === 0} />
-          <StatusDistributionSlide campaign={campaign} isActive={currentSlide === 1} />
+        <div className="h-full p-8">
+          <div className="max-w-6xl mx-auto h-full">
+            <TitleSlide campaign={campaign} isActive={currentSlide === 0} />
+            <CompletionRateSlide campaign={campaign} isActive={currentSlide === 1} />
+            <ResponseDistributionSlide campaign={campaign} isActive={currentSlide === 2} />
+            <ResponseTrendsSlide campaign={campaign} isActive={currentSlide === 3} />
+            
+            {surveyQuestions.map((question, index) => (
+              <QuestionSlide
+                key={question.name}
+                campaign={campaign}
+                isActive={currentSlide === index + 4}
+                questionName={question.name}
+                questionTitle={question.title}
+                questionType={question.type}
+              />
+            ))}
+          </div>
         </div>
       </div>
     </div>

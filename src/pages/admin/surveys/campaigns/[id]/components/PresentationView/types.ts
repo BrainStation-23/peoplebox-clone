@@ -11,7 +11,7 @@ export interface SurveyPage {
 }
 
 export interface SurveyJsonData {
-  pages: SurveyPage[];
+  pages?: SurveyPage[];
 }
 
 export interface SurveyData {
@@ -24,14 +24,27 @@ export interface SurveyData {
 export interface CampaignData {
   id: string;
   name: string;
-  description: string;
+  description: string | null;
   starts_at: string;
-  ends_at: string;
+  ends_at: string | null;
   completion_rate: number;
   survey: SurveyData;
+  instance?: {
+    id: string;
+    period_number: number;
+    starts_at: string;
+    ends_at: string;
+    status: string;
+    completion_rate: number;
+  };
 }
 
 export interface SlideProps {
   campaign: CampaignData;
   isActive: boolean;
 }
+
+export type QuestionResponseData = 
+  | { type: 'boolean'; data: { yes: number; no: number; } }
+  | { type: 'rating'; data: { rating: number; count: number; }[] }
+  | { type: 'text'; data: { text: string; value: number; }[] };

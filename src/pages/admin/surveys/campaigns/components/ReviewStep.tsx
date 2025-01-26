@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
 import { CampaignPreview } from "./CampaignPreview";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { AlertTriangle, Calendar, CheckCircle, FileText, Users } from "lucide-react";
+import { AlertTriangle, Calendar, CheckCircle, FileText, Users, EyeOff } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 
@@ -46,6 +46,19 @@ export function ReviewStep({ form, surveys, isReadyToProceed, onReadyToProceedCh
             <div>
               <h4 className="font-medium">Selected Survey</h4>
               <p className="text-muted-foreground">{selectedSurvey?.name}</p>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <h4 className="font-medium">Response Collection:</h4>
+              <Badge variant={values.anonymous ? "default" : "secondary"} className="flex items-center gap-1">
+                {values.anonymous ? (
+                  <>
+                    Anonymous <EyeOff className="h-3 w-3" />
+                  </>
+                ) : (
+                  "Identified"
+                )}
+              </Badge>
             </div>
           </CardContent>
         </Card>

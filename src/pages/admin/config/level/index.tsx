@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ArrowLeft, Plus } from "lucide-react";
+import { ArrowLeft, Plus, ArrowUpDown } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -39,25 +39,17 @@ import { Switch } from "@/components/ui/switch";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 const formSchema = z.object({
   name: z.string().min(1, "Name is required"),
 });
 
-type Level = {
-  id: string;
-  name: string;
-  status: "active" | "inactive";
-  created_at: string;
-  updated_at: string;
-};
-
 export default function LevelConfig() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [isCreateOpen, setIsCreateOpen] = useState(false);
-  const [editingLevel, setEditingLevel] = useState<Level | null>(null);
+  const [editingLevel, setEditingLevel] = useState<any>(null);
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -67,15 +59,15 @@ export default function LevelConfig() {
   });
 
   const { data: levels, isLoading } = useQuery({
-    queryKey: ["levels"],
+    queryKey: ["levels", sortOrder],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("levels")
         .select("*")
-        .order("created_at", { ascending: false });
+        .order("name", { ascending: sortOrder === 'asc' });
 
       if (error) throw error;
-      return data as Level[];
+      return data;
     },
   });
 
@@ -160,6 +152,10 @@ export default function LevelConfig() {
     }
   };
 
+  const handleSort = () => {
+    setSortOrder(current => current === 'asc' ? 'desc' : 'asc');
+  };
+
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
@@ -216,7 +212,12 @@ export default function LevelConfig() {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Name</TableHead>
+              <TableHead>
+                <Button variant="ghost" onClick={handleSort} className="h-8 p-0">
+                  Name
+                  <ArrowUpDown className="ml-2 h-4 w-4" />
+                </Button>
+              </TableHead>
               <TableHead>Status</TableHead>
               <TableHead>Created At</TableHead>
               <TableHead className="text-right">Actions</TableHead>

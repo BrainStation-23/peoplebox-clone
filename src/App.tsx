@@ -10,6 +10,10 @@ import AdminLayout from "./components/layouts/AdminLayout";
 import UserLayout from "./components/layouts/UserLayout";
 import Dashboard from "./pages/Dashboard";
 
+// Public pages
+import PublicSurveyPage from "./pages/public/Survey";
+import ThankYouPage from "./pages/public/ThankYou";
+
 // User pages
 import UserDashboard from "./pages/user/Dashboard";
 import UserProfile from "./pages/user/Profile";
@@ -32,7 +36,7 @@ import PreviewSurveyPage from "./pages/admin/surveys/[id]/preview";
 import CampaignsPage from "./pages/admin/surveys/campaigns";
 import CampaignFormPage from "./pages/admin/surveys/campaigns/CampaignFormPage";
 import CampaignDetailsPage from "./pages/admin/surveys/campaigns/[id]";
-import PresentationView from "./pages/admin/surveys/campaigns/[id]/components/PresentationView";
+import PresentationView from "./pages/admin/surveys/campaigns/[id]/components/PresentationView/index";
 import PlatformConfigLayout from "./components/layouts/PlatformConfigLayout";
 import SBUsConfig from "./pages/admin/config/sbus";
 import SBUDetails from "./pages/admin/config/sbus/[id]";
@@ -40,6 +44,8 @@ import EmailConfig from "./pages/admin/config/email";
 import LevelConfig from "./pages/admin/config/level";
 import LocationConfig from "./pages/admin/config/location";
 import EmploymentTypeConfig from "./pages/admin/config/employment-type";
+import EmployeeTypeConfig from "./pages/admin/config/employee-type";
+import EmployeeRoleConfig from "./pages/admin/config/employee-role";
 
 const queryClient = new QueryClient();
 
@@ -53,6 +59,10 @@ const App = () => (
           <Route path="/login" element={<Login />} />
           <Route path="/auth/callback" element={<AuthCallback />} />
           <Route path="/auth/reset-password" element={<ResetPassword />} />
+          
+          {/* Public routes */}
+          <Route path="/public/survey/:token" element={<PublicSurveyPage />} />
+          <Route path="/public/survey/:token/thank-you" element={<ThankYouPage />} />
           
           {/* User routes */}
           <Route path="/user" element={<UserLayout />}>
@@ -88,6 +98,8 @@ const App = () => (
               <Route path="level" element={<LevelConfig />} />
               <Route path="location" element={<LocationConfig />} />
               <Route path="employment-type" element={<EmploymentTypeConfig />} />
+              <Route path="employee-type" element={<EmployeeTypeConfig />} />
+              <Route path="employee-role" element={<EmployeeRoleConfig />} />
             </Route>
             <Route path="profile" element={<AdminProfile />} />
             <Route path="settings" element={<AdminSettings />} />

@@ -23,18 +23,14 @@ const campaignSchema = z.object({
   instance_end_time: z.string().optional(),
   ends_at: z.date().optional(),
   status: z.string().default("draft"),
+  anonymous: z.boolean().default(false),
 });
 
 export type CampaignFormData = z.infer<typeof campaignSchema>;
 
-interface Survey {
-  id: string;
-  name: string;
-}
-
 interface CampaignFormProps {
   onSubmit: (data: CampaignFormData) => void;
-  surveys: Survey[];
+  surveys: { id: string; name: string; }[];
   defaultValues?: Partial<CampaignFormData>;
   currentStep: number;
   onStepComplete: (step: number) => void;
@@ -62,6 +58,7 @@ export function CampaignForm({
       instance_duration_days: 7,
       instance_end_time: "17:00",
       status: "draft",
+      anonymous: false,
       ...defaultValues,
     },
   });

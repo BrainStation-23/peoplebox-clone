@@ -1,5 +1,5 @@
 import { Outlet, Link, useLocation } from "react-router-dom";
-import { Database, Mail, Layers, MapPin, Briefcase } from "lucide-react";
+import { Database, Mail, Layers, MapPin, Briefcase, UserRound, Shield } from "lucide-react";
 import {
   NavigationMenu,
   NavigationMenuList,
@@ -33,6 +33,16 @@ const navigationItems = [
     title: "Employment Type",
     icon: Briefcase,
     path: "/admin/config/employment-type",
+  },
+  {
+    title: "Employee Type",
+    icon: UserRound,
+    path: "/admin/config/employee-type",
+  },
+  {
+    title: "Employee Role",
+    icon: Shield,
+    path: "/admin/config/employee-role",
   },
 ];
 
