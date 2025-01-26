@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight, ArrowLeft, Fullscreen } from "lucide-react";
-import { CampaignData } from "./types";
+import { CampaignData, SurveyJsonData } from "./types";
 import { TitleSlide } from "./slides/TitleSlide";
 import { CompletionRateSlide } from "./slides/CompletionRateSlide";
 import { ResponseDistributionSlide } from "./slides/ResponseDistributionSlide";
@@ -64,8 +64,8 @@ export default function PresentationView() {
     },
   });
 
-  const surveyQuestions = campaign?.survey.json_data.pages?.flatMap(
-    (page: any) => page.elements || []
+  const surveyQuestions = (campaign?.survey.json_data as SurveyJsonData).pages?.flatMap(
+    (page) => page.elements || []
   ) || [];
 
   const totalSlides = 4 + surveyQuestions.length; // Base slides + question slides

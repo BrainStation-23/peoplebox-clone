@@ -1,4 +1,4 @@
-import { SlideProps } from "../types";
+import { SlideProps, QuestionResponseData } from "../types";
 import { cn } from "@/lib/utils";
 import { BooleanCharts } from "../../ReportsTab/charts/BooleanCharts";
 import { NpsChart } from "../../ReportsTab/charts/NpsChart";
@@ -35,15 +35,18 @@ export function QuestionSlide({ campaign, isActive, questionName, questionTitle,
     },
   });
 
-  const processAnswers = () => {
+  const processAnswers = (): QuestionResponseData | null => {
     if (!responses) return null;
 
     switch (questionType) {
       case "boolean": {
         const answers = responses.map((r) => r.response_data[questionName]?.answer);
         return {
-          yes: answers.filter((a) => a === true).length,
-          no: answers.filter((a) => a === false).length,
+          type: 'boolean',
+          data: {
+            yes: answers.filter((a) => a === true).length,
+            no: answers.filter((a) => a === false).length,
+          }
         };
       }
 
@@ -56,7 +59,10 @@ export function QuestionSlide({ campaign, isActive, questionName, questionTitle,
             ratingCounts[rating]++;
           }
         });
-        return ratingCounts.map((count, rating) => ({ rating, count }));
+        return {
+          type: 'rating',
+          data: ratingCounts.map((count, rating) => ({ rating, count }))
+        };
       }
 
       case "text":
@@ -77,10 +83,13 @@ export function QuestionSlide({ campaign, isActive, questionName, questionTitle,
           }
         });
 
-        return Object.entries(wordFrequency)
-          .map(([text, value]) => ({ text, value }))
-          .sort((a, b) => b.value - a.value)
-          .slice(0, 50);
+        return {
+          type: 'text',
+          data: Object.entries(wordFrequency)
+            .map(([text, value]) => ({ text, value }))
+            .sort((a, b) => b.value - a.value)
+            .slice(0, 50)
+        };
       }
 
       default:
@@ -114,14 +123,14 @@ export function QuestionSlide({ campaign, isActive, questionName, questionTitle,
         <div className="flex-1 flex items-center justify-center">
           {processedData && (
             <div className="w-full max-w-3xl">
-              {questionType === "boolean" && (
-                <BooleanCharts data={processedData} />
+              {processedData.type === "boolean" && (
+                <BooleanCharts data={processedData.data} />
               )}
-              {(questionType === "nps" || questionType === "rating") && (
-                <NpsChart data={processedData} />
+              {processedData.type === "rating" && (
+                <NpsChart data={processedData.data} />
               )}
-              {(questionType === "text" || questionType === "comment") && (
-                <WordCloud words={processedData} />
+              {processedData.type === "text" && (
+                <WordCloud words={processedData.data} />
               )}
             </div>
           )}

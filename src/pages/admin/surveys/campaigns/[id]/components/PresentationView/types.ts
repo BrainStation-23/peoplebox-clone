@@ -11,14 +11,14 @@ export interface SurveyPage {
 }
 
 export interface SurveyJsonData {
-  pages: SurveyPage[];
+  pages?: SurveyPage[];
 }
 
 export interface SurveyData {
   id: string;
   name: string;
   description?: string | null;
-  json_data: Json;
+  json_data: SurveyJsonData;
 }
 
 export interface CampaignData {
@@ -43,3 +43,8 @@ export interface SlideProps {
   campaign: CampaignData;
   isActive: boolean;
 }
+
+export type QuestionResponseData = 
+  | { type: 'boolean'; data: { yes: number; no: number; } }
+  | { type: 'rating'; data: { rating: number; count: number; }[] }
+  | { type: 'text'; data: { text: string; value: number; }[] };
