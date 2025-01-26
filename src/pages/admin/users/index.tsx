@@ -239,6 +239,8 @@ export default function UsersPage() {
           currentPage={currentPage}
           totalPages={totalPages}
           onPageChange={setCurrentPage}
+          pageSize={pageSize}
+          onPageSizeChange={setPageSize}
         />
       </div>
 
