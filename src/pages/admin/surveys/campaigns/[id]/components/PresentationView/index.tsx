@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { CampaignData } from "./types";
+import { CampaignData, SurveyJsonData } from "./types";
 import { TitleSlide } from "./slides/TitleSlide";
 import { StatusDistributionSlide } from "./slides/StatusDistributionSlide";
 
@@ -36,7 +36,19 @@ export default function PresentationView() {
         .single();
 
       if (error) throw error;
-      return data as CampaignData;
+
+      // Ensure json_data is properly parsed and typed
+      const parsedData = {
+        ...data,
+        survey: {
+          ...data.survey,
+          json_data: typeof data.survey.json_data === 'string' 
+            ? JSON.parse(data.survey.json_data) as SurveyJsonData
+            : data.survey.json_data as SurveyJsonData
+        }
+      } as CampaignData;
+
+      return parsedData;
     },
   });
 
