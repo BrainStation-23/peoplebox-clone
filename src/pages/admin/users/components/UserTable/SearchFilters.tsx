@@ -1,8 +1,8 @@
-import { Search, Upload, Download, X, Filter } from "lucide-react";
+import { Search, Upload, Download, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
+import { FilterPanel } from "./FilterPanel";
 
 interface SearchFiltersProps {
   searchTerm: string;
@@ -107,113 +107,27 @@ export function SearchFilters({
         </div>
       </div>
 
-      <div className="flex flex-wrap gap-4">
-        <div className="flex items-center gap-2">
-          <Filter className="h-4 w-4 text-muted-foreground" />
-          <span className="text-sm font-medium">Filters:</span>
-        </div>
-
-        <Select value={selectedSBU} onValueChange={setSelectedSBU}>
-          <SelectTrigger className="w-[200px]">
-            <SelectValue placeholder="Filter by SBU" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All SBUs</SelectItem>
-            {sbus.map((sbu) => (
-              <SelectItem key={sbu.id} value={sbu.id}>
-                {sbu.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-
-        <Select value={selectedLevel} onValueChange={setSelectedLevel}>
-          <SelectTrigger className="w-[200px]">
-            <SelectValue placeholder="Filter by Level" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Levels</SelectItem>
-            {levels.map((level) => (
-              <SelectItem key={level.id} value={level.id}>
-                {level.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-
-        <Select value={selectedLocation} onValueChange={setSelectedLocation}>
-          <SelectTrigger className="w-[200px]">
-            <SelectValue placeholder="Filter by Location" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Locations</SelectItem>
-            {locations.map((location) => (
-              <SelectItem key={location.id} value={location.id}>
-                {location.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-
-        <Select value={selectedEmploymentType} onValueChange={setSelectedEmploymentType}>
-          <SelectTrigger className="w-[200px]">
-            <SelectValue placeholder="Filter by Employment Type" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Employment Types</SelectItem>
-            {employmentTypes.map((type) => (
-              <SelectItem key={type.id} value={type.id}>
-                {type.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-
-        <Select value={selectedEmployeeRole} onValueChange={setSelectedEmployeeRole}>
-          <SelectTrigger className="w-[200px]">
-            <SelectValue placeholder="Filter by Employee Role" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Employee Roles</SelectItem>
-            {employeeRoles.map((role) => (
-              <SelectItem key={role.id} value={role.id}>
-                {role.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-
-        <Select value={selectedEmployeeType} onValueChange={setSelectedEmployeeType}>
-          <SelectTrigger className="w-[200px]">
-            <SelectValue placeholder="Filter by Employee Type" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Employee Types</SelectItem>
-            {employeeTypes.map((type) => (
-              <SelectItem key={type.id} value={type.id}>
-                {type.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-
-        <div className="flex gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => addFilter('status', 'active')}
-          >
-            Active Users
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => addFilter('role', 'admin')}
-          >
-            Admins
-          </Button>
-        </div>
-      </div>
+      <FilterPanel
+        selectedSBU={selectedSBU}
+        selectedLevel={selectedLevel}
+        selectedLocation={selectedLocation}
+        selectedEmploymentType={selectedEmploymentType}
+        selectedEmployeeRole={selectedEmployeeRole}
+        selectedEmployeeType={selectedEmployeeType}
+        setSelectedSBU={setSelectedSBU}
+        setSelectedLevel={setSelectedLevel}
+        setSelectedLocation={setSelectedLocation}
+        setSelectedEmploymentType={setSelectedEmploymentType}
+        setSelectedEmployeeRole={setSelectedEmployeeRole}
+        setSelectedEmployeeType={setSelectedEmployeeType}
+        addFilter={addFilter}
+        sbus={sbus}
+        levels={levels}
+        locations={locations}
+        employmentTypes={employmentTypes}
+        employeeRoles={employeeRoles}
+        employeeTypes={employeeTypes}
+      />
     </div>
   );
 }
