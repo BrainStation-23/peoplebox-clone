@@ -1,27 +1,40 @@
 import { useEffect, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight, ArrowLeft, Fullscreen } from "lucide-react";
-import { CampaignData, SurveyJsonData } from "./types";
+import { CampaignData } from "./types";
 import { TitleSlide } from "./slides/TitleSlide";
 import { CompletionRateSlide } from "./slides/CompletionRateSlide";
 import { ResponseDistributionSlide } from "./slides/ResponseDistributionSlide";
 import { ResponseTrendsSlide } from "./slides/ResponseTrendsSlide";
 import { QuestionSlide } from "./slides/QuestionSlide";
 import { cn } from "@/lib/utils";
-import { InstanceSelector } from "../InstanceSelector";
+import { useToast } from "@/hooks/use-toast";
 
 export default function PresentationView() {
   const { id } = useParams();
+  const [searchParams] = useSearchParams();
+  const instanceId = searchParams.get('instance');
   const navigate = useNavigate();
+  const { toast } = useToast();
   const [currentSlide, setCurrentSlide] = useState(0);
   const [isFullscreen, setIsFullscreen] = useState(false);
-  const [selectedInstanceId, setSelectedInstanceId] = useState<string>();
+
+  useEffect(() => {
+    if (!instanceId) {
+      toast({
+        title: "No instance selected",
+        description: "Please select an instance from the campaign page",
+        variant: "destructive",
+      });
+      navigate(`/admin/surveys/campaigns/${id}`);
+    }
+  }, [instanceId, id, navigate, toast]);
 
   const { data: campaign } = useQuery({
-    queryKey: ["campaign", id, selectedInstanceId],
+    queryKey: ["campaign", id, instanceId],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("survey_campaigns")
@@ -44,35 +57,32 @@ export default function PresentationView() {
 
       if (error) throw error;
 
-      // Fetch instance data if an instance is selected
-      let instanceData = null;
-      if (selectedInstanceId) {
-        const { data: instance, error: instanceError } = await supabase
-          .from("campaign_instances")
-          .select("*")
-          .eq("id", selectedInstanceId)
-          .single();
+      // Fetch instance data
+      const { data: instance, error: instanceError } = await supabase
+        .from("campaign_instances")
+        .select("*")
+        .eq("id", instanceId)
+        .single();
 
-        if (instanceError) throw instanceError;
-        instanceData = instance;
-      }
+      if (instanceError) throw instanceError;
       
       return {
         ...data,
-        instance: instanceData,
+        instance,
         survey: {
           ...data.survey,
-          json_data: data.survey.json_data as SurveyJsonData
+          json_data: data.survey.json_data
         }
       } as CampaignData;
     },
+    enabled: !!id && !!instanceId,
   });
 
   const surveyQuestions = (campaign?.survey.json_data.pages || []).flatMap(
     (page) => page.elements || []
   );
 
-  const totalSlides = 4 + surveyQuestions.length; // Base slides + question slides
+  const totalSlides = 4 + surveyQuestions.length;
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -115,7 +125,6 @@ export default function PresentationView() {
 
   return (
     <div className="h-full bg-background relative">
-      {/* Back Button */}
       <div className="absolute top-4 left-4 z-10">
         <Button
           variant="outline"
@@ -128,17 +137,7 @@ export default function PresentationView() {
         </Button>
       </div>
 
-      {/* Instance Selector */}
-      <div className="absolute top-4 left-1/2 -translate-x-1/2 z-10">
-        <InstanceSelector
-          campaignId={id!}
-          selectedInstanceId={selectedInstanceId}
-          onInstanceSelect={setSelectedInstanceId}
-        />
-      </div>
-
       <div className="relative h-full overflow-hidden">
-        {/* Progress Bar */}
         <div className="absolute top-0 left-0 w-full h-1 bg-gray-200">
           <div 
             className="h-full bg-primary transition-all duration-300 ease-in-out"
@@ -146,7 +145,6 @@ export default function PresentationView() {
           />
         </div>
 
-        {/* Navigation Controls */}
         <div className="absolute top-4 right-4 z-10 space-x-2">
           <Button 
             variant="outline" 
@@ -185,7 +183,6 @@ export default function PresentationView() {
           </Button>
         </div>
 
-        {/* Slides Container */}
         <div className="h-full p-8">
           <div className="max-w-6xl mx-auto h-full">
             <TitleSlide campaign={campaign} isActive={currentSlide === 0} />
@@ -193,7 +190,6 @@ export default function PresentationView() {
             <ResponseDistributionSlide campaign={campaign} isActive={currentSlide === 2} />
             <ResponseTrendsSlide campaign={campaign} isActive={currentSlide === 3} />
             
-            {/* Question Slides */}
             {surveyQuestions.map((question, index) => (
               <QuestionSlide
                 key={question.name}

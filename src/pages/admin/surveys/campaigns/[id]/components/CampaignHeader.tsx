@@ -90,7 +90,7 @@ export function CampaignHeader({ campaign, isLoading }: CampaignHeaderProps) {
   };
 
   const handlePresent = () => {
-    navigate(`/admin/surveys/campaigns/${id}/present`);
+    navigate(`/admin/surveys/campaigns/${id}/present?instance=${selectedInstanceId}`);
   };
 
   const formatDate = (dateString: string) => {
