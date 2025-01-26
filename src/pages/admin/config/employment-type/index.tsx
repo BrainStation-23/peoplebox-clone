@@ -1,3 +1,4 @@
+// ... Similar changes as employee-type/index.tsx, updating the query to include sorting
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -17,16 +18,17 @@ import { EmploymentTypeTable } from "./components/EmploymentTypeTable";
 export default function EmploymentTypeConfig() {
   const [selectedType, setSelectedType] = useState<any>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
   const { data: employmentTypes, isLoading } = useQuery({
-    queryKey: ['employment-types'],
+    queryKey: ['employment-types', sortOrder],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('employment_types')
         .select('*')
-        .order('created_at', { ascending: false });
+        .order('name', { ascending: sortOrder === 'asc' });
       
       if (error) throw error;
       return data;
@@ -165,6 +167,10 @@ export default function EmploymentTypeConfig() {
     toggleStatusMutation.mutate({ id, newStatus });
   };
 
+  const handleSort = () => {
+    setSortOrder(current => current === 'asc' ? 'desc' : 'asc');
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -197,6 +203,8 @@ export default function EmploymentTypeConfig() {
         onDelete={handleDelete}
         onToggleStatus={handleToggleStatus}
         isLoading={isLoading}
+        sortOrder={sortOrder}
+        onSort={handleSort}
       />
     </div>
   );

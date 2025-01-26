@@ -1,4 +1,5 @@
-import { ExternalLink, Eye, Pencil, Trash2, Power } from "lucide-react";
+// ... Similar changes as employee-type/EmployeeTypeTable.tsx, adding the sort button
+import { Power, Pencil, Trash2, ArrowUpDown } from "lucide-react";
 import {
   Table,
   TableBody,
@@ -33,6 +34,8 @@ interface EmploymentTypeTableProps {
   onDelete: (id: string) => void;
   onToggleStatus: (id: string, newStatus: 'active' | 'inactive') => void;
   isLoading?: boolean;
+  sortOrder: 'asc' | 'desc';
+  onSort: () => void;
 }
 
 export function EmploymentTypeTable({ 
@@ -40,14 +43,21 @@ export function EmploymentTypeTable({
   onEdit, 
   onDelete,
   onToggleStatus,
-  isLoading 
+  isLoading,
+  sortOrder,
+  onSort
 }: EmploymentTypeTableProps) {
   return (
     <div className="rounded-md border">
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead>Name</TableHead>
+            <TableHead>
+              <Button variant="ghost" onClick={onSort} className="h-8 p-0">
+                Name
+                <ArrowUpDown className="ml-2 h-4 w-4" />
+              </Button>
+            </TableHead>
             <TableHead>Status</TableHead>
             <TableHead>Actions</TableHead>
           </TableRow>
@@ -79,10 +89,7 @@ export function EmploymentTypeTable({
                   </Button>
                   <AlertDialog>
                     <AlertDialogTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                      >
+                      <Button variant="ghost" size="icon">
                         <Trash2 className="h-4 w-4" />
                       </Button>
                     </AlertDialogTrigger>
