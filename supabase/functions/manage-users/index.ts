@@ -89,6 +89,40 @@ async function getLocationId(supabaseClient: any, locationName: string) {
   return data?.id;
 }
 
+async function getEmployeeRoleId(supabaseClient: any, roleName: string) {
+  if (!roleName?.trim()) return null;
+
+  const { data, error } = await supabaseClient
+    .from('employee_roles')
+    .select('id')
+    .eq('name', roleName)
+    .eq('status', 'active')
+    .single();
+  
+  if (error) {
+    console.error('Error finding employee role:', roleName, error);
+    return null;
+  }
+  return data?.id;
+}
+
+async function getEmployeeTypeId(supabaseClient: any, typeName: string) {
+  if (!typeName?.trim()) return null;
+
+  const { data, error } = await supabaseClient
+    .from('employee_types')
+    .select('id')
+    .eq('name', typeName)
+    .eq('status', 'active')
+    .single();
+  
+  if (error) {
+    console.error('Error finding employee type:', typeName, error);
+    return null;
+  }
+  return data?.id;
+}
+
 async function getSBUIds(supabaseClient: any, sbuNames: string) {
   if (!sbuNames?.trim()) return [];
 
@@ -118,6 +152,14 @@ async function handleUserRelationships(supabaseClient: any, userId: string, user
       user.employee_type ? getEmployeeTypeId(supabaseClient, user.employee_type) : null
     ]);
 
+    console.log('Retrieved IDs:', {
+      levelId,
+      employmentTypeId,
+      locationId,
+      employeeRoleId,
+      employeeTypeId
+    });
+
     // Update profile with all fields, converting empty strings to null
     const { error: updateProfileError } = await supabaseClient
       .from('profiles')
@@ -137,6 +179,7 @@ async function handleUserRelationships(supabaseClient: any, userId: string, user
       .eq('id', userId);
 
     if (updateProfileError) {
+      console.error('Error updating profile:', updateProfileError);
       throw updateProfileError;
     }
 
@@ -162,6 +205,7 @@ async function handleUserRelationships(supabaseClient: any, userId: string, user
           .insert(sbuAssignments);
 
         if (sbuError) {
+          console.error('Error assigning SBUs:', sbuError);
           throw sbuError;
         }
       }
