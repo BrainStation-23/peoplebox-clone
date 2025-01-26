@@ -26,7 +26,7 @@ interface SurveyJsonData {
 interface SurveyData {
   id: string;
   name: string;
-  description: string | null;
+  description?: string | null;  // Made optional to match DB schema
   json_data: SurveyJsonData;
 }
 
@@ -64,6 +64,7 @@ export default function PresentationView() {
           survey:surveys (
             id,
             name,
+            description,
             json_data
           )
         `)
