@@ -716,18 +716,36 @@ export type Database = {
         }
         Returns: boolean
       }
-      search_users: {
-        Args: {
-          search_text: string
-          page_number: number
-          page_size: number
-          sbu_filter?: string
-        }
-        Returns: {
-          profile: Json
-          total_count: number
-        }[]
-      }
+      search_users:
+        | {
+            Args: {
+              search_text: string
+              page_number: number
+              page_size: number
+              sbu_filter?: string
+            }
+            Returns: {
+              profile: Json
+              total_count: number
+            }[]
+          }
+        | {
+            Args: {
+              search_text: string
+              page_number: number
+              page_size: number
+              sbu_filter?: string
+              level_filter?: string
+              location_filter?: string
+              employment_type_filter?: string
+              employee_role_filter?: string
+              employee_type_filter?: string
+            }
+            Returns: {
+              profile: Json
+              total_count: number
+            }[]
+          }
     }
     Enums: {
       assignment_status: "pending" | "completed" | "expired"

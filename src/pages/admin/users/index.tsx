@@ -4,6 +4,7 @@ import { User } from "./types";
 import { useUsers } from "./hooks/useUsers";
 import { useUserActions } from "./hooks/useUserActions";
 import { useSBUs } from "./hooks/useSBUs";
+import { useFilterOptions } from "./hooks/useFilterOptions";
 import UserTable from "./components/UserTable";
 import CreateUserDialog from "./components/CreateUserDialog";
 import EditUserDialog from "./components/EditUserDialog";
@@ -20,6 +21,11 @@ export default function UsersPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedSBU, setSelectedSBU] = useState("all");
+  const [selectedLevel, setSelectedLevel] = useState("all");
+  const [selectedLocation, setSelectedLocation] = useState("all");
+  const [selectedEmploymentType, setSelectedEmploymentType] = useState("all");
+  const [selectedEmployeeRole, setSelectedEmployeeRole] = useState("all");
+  const [selectedEmployeeType, setSelectedEmployeeType] = useState("all");
   const [pageSize, setPageSize] = useState(10);
   const [exportProgress, setExportProgress] = useState({
     isOpen: false,
@@ -32,16 +38,30 @@ export default function UsersPage() {
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [debouncedSearch, selectedSBU, pageSize]);
+  }, [debouncedSearch, selectedSBU, selectedLevel, selectedLocation, 
+      selectedEmploymentType, selectedEmployeeRole, selectedEmployeeType, pageSize]);
 
   const { data, isLoading, refetch } = useUsers({
     currentPage,
     pageSize,
     searchTerm: debouncedSearch,
     selectedSBU,
+    selectedLevel,
+    selectedLocation,
+    selectedEmploymentType,
+    selectedEmployeeRole,
+    selectedEmployeeType
   });
 
   const { data: sbus = [] } = useSBUs();
+  const { 
+    levels,
+    locations,
+    employmentTypes,
+    employeeRoles,
+    employeeTypes,
+    isLoading: isLoadingFilters
+  } = useFilterOptions();
   const { handleCreateSuccess, handleDelete } = useUserActions(refetch);
 
   const handleExport = async () => {
@@ -68,7 +88,6 @@ export default function UsersPage() {
         isComplete: true,
       }));
 
-      // Auto close after 2 seconds on success
       setTimeout(() => {
         setExportProgress(prev => ({
           ...prev,
@@ -113,12 +132,27 @@ export default function UsersPage() {
           searchTerm={searchTerm}
           setSearchTerm={setSearchTerm}
           selectedSBU={selectedSBU}
+          selectedLevel={selectedLevel}
+          selectedLocation={selectedLocation}
+          selectedEmploymentType={selectedEmploymentType}
+          selectedEmployeeRole={selectedEmployeeRole}
+          selectedEmployeeType={selectedEmployeeType}
           setSelectedSBU={setSelectedSBU}
+          setSelectedLevel={setSelectedLevel}
+          setSelectedLocation={setSelectedLocation}
+          setSelectedEmploymentType={setSelectedEmploymentType}
+          setSelectedEmployeeRole={setSelectedEmployeeRole}
+          setSelectedEmployeeType={setSelectedEmployeeType}
           onExport={handleExport}
           onImport={() => setIsImportDialogOpen(true)}
           sbus={sbus}
+          levels={levels}
+          locations={locations}
+          employmentTypes={employmentTypes}
+          employeeRoles={employeeRoles}
+          employeeTypes={employeeTypes}
           totalResults={data?.total}
-          isSearching={isLoading}
+          isSearching={isLoading || isLoadingFilters}
         />
 
         <div className="relative">
