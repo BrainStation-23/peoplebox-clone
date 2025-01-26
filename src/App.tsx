@@ -10,6 +10,10 @@ import AdminLayout from "./components/layouts/AdminLayout";
 import UserLayout from "./components/layouts/UserLayout";
 import Dashboard from "./pages/Dashboard";
 
+// Public pages
+import PublicSurveyPage from "./pages/public/Survey";
+import ThankYouPage from "./pages/public/ThankYou";
+
 // User pages
 import UserDashboard from "./pages/user/Dashboard";
 import UserProfile from "./pages/user/Profile";
@@ -53,6 +57,10 @@ const App = () => (
           <Route path="/login" element={<Login />} />
           <Route path="/auth/callback" element={<AuthCallback />} />
           <Route path="/auth/reset-password" element={<ResetPassword />} />
+          
+          {/* Public routes */}
+          <Route path="/public/survey/:token" element={<PublicSurveyPage />} />
+          <Route path="/public/survey/:token/thank-you" element={<ThankYouPage />} />
           
           {/* User routes */}
           <Route path="/user" element={<UserLayout />}>
