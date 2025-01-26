@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, ChevronRight, Fullscreen } from "lucide-react";
+import { ChevronLeft, ChevronRight, ArrowLeft, Fullscreen } from "lucide-react";
 import { CampaignData, SurveyJsonData } from "./types";
 import { TitleSlide } from "./slides/TitleSlide";
 import { StatusDistributionSlide } from "./slides/StatusDistributionSlide";
@@ -11,6 +11,7 @@ import { cn } from "@/lib/utils";
 
 export default function PresentationView() {
   const { id } = useParams();
+  const navigate = useNavigate();
   const [currentSlide, setCurrentSlide] = useState(0);
   const [isFullscreen, setIsFullscreen] = useState(false);
 
@@ -38,12 +39,10 @@ export default function PresentationView() {
 
       if (error) throw error;
 
-      // Parse and validate json_data
       const jsonData = typeof data.survey.json_data === 'string' 
         ? JSON.parse(data.survey.json_data)
         : data.survey.json_data;
 
-      // Ensure the data has the required structure
       if (!jsonData || !Array.isArray(jsonData.pages)) {
         throw new Error('Invalid survey data structure');
       }
@@ -87,7 +86,7 @@ export default function PresentationView() {
 
   if (!campaign) return null;
 
-  const totalSlides = 2; // Update this as you add more slides
+  const totalSlides = 2;
 
   const nextSlide = () => {
     setCurrentSlide((prev) => Math.min(totalSlides - 1, prev + 1));
@@ -97,8 +96,25 @@ export default function PresentationView() {
     setCurrentSlide((prev) => Math.max(0, prev - 1));
   };
 
+  const handleBack = () => {
+    navigate(`/admin/surveys/campaigns/${id}`);
+  };
+
   return (
-    <div className="fixed inset-0 bg-background">
+    <div className="h-full bg-background relative">
+      {/* Back Button */}
+      <div className="absolute top-4 left-4 z-10">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={handleBack}
+          className="bg-white/80 hover:bg-white/90 backdrop-blur-sm border border-gray-200"
+        >
+          <ArrowLeft className="h-4 w-4 mr-2" />
+          Back to Campaign
+        </Button>
+      </div>
+
       <div className="relative h-full overflow-hidden">
         {/* Progress Bar */}
         <div className="absolute top-0 left-0 w-full h-1 bg-gray-200">
