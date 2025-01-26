@@ -10,6 +10,8 @@ export const CSV_HEADERS = [
   "Designation",
   "Location",
   "Employment Type",
+  "Employee Role",
+  "Employee Type",
   "SBUs",
   "ID" // Added ID as the last column to match export format
 ];
@@ -26,6 +28,8 @@ export const CSV_TEMPLATE_ROW = [
   "Software Engineer",
   "Head Office",
   "Full Time",
+  "Developer",
+  "Regular",
   "SBU1;SBU2",
   "" // Empty ID for new users
 ];
@@ -42,6 +46,8 @@ export const CSV_GUIDELINES = [
   "Designation: Optional, job title or position",
   "Location: Optional, must match an existing location name",
   "Employment Type: Optional, must match an existing employment type name",
+  "Employee Role: Optional, must match an existing employee role name",
+  "Employee Type: Optional, must match an existing employee type name",
   "SBUs: Optional, multiple SBUs should be separated by semicolons (;)",
   "ID: Optional, if provided will update existing user, if empty will create new user"
 ];

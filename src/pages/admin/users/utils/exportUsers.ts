@@ -17,6 +17,8 @@ export const exportUsers = async (users: User[], onProgress?: ProgressCallback) 
     "Designation",
     "Location",
     "Employment Type",
+    "Employee Role",
+    "Employee Type",
     "SBUs",
     "ID" // Hidden technical field for import/update
   ];
@@ -38,13 +40,15 @@ export const exportUsers = async (users: User[], onProgress?: ProgressCallback) 
         user.first_name || "",
         user.last_name || "",
         user.org_id || "",
-        user.level || "", // Now directly using the name string
+        user.level || "",
         user.user_roles?.role || "user",
         user.gender || "",
         user.date_of_birth || "",
         user.designation || "",
-        user.location || "", // Now directly using the name string
-        user.employment_type || "", // Now directly using the name string
+        user.location || "",
+        user.employment_type || "",
+        user.employee_role || "",
+        user.employee_type || "",
         allSbus,
         user.id
       ];
