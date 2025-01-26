@@ -14,6 +14,8 @@ interface CreateUserPayload {
   is_admin: boolean;
   level?: string;
   employment_type?: string;
+  employee_role?: string;
+  employee_type?: string;
   sbus?: string;
   org_id?: string;
   gender?: string;
@@ -108,10 +110,12 @@ async function handleUserRelationships(supabaseClient: any, userId: string, user
   
   try {
     // Get IDs for relationships
-    const [levelId, employmentTypeId, locationId] = await Promise.all([
+    const [levelId, employmentTypeId, locationId, employeeRoleId, employeeTypeId] = await Promise.all([
       user.level ? getLevelId(supabaseClient, user.level) : null,
       user.employment_type ? getEmploymentTypeId(supabaseClient, user.employment_type) : null,
-      user.location ? getLocationId(supabaseClient, user.location) : null
+      user.location ? getLocationId(supabaseClient, user.location) : null,
+      user.employee_role ? getEmployeeRoleId(supabaseClient, user.employee_role) : null,
+      user.employee_type ? getEmployeeTypeId(supabaseClient, user.employee_type) : null
     ]);
 
     // Update profile with all fields, converting empty strings to null
@@ -124,6 +128,8 @@ async function handleUserRelationships(supabaseClient: any, userId: string, user
         level_id: levelId,
         employment_type_id: employmentTypeId,
         location_id: locationId,
+        employee_role_id: employeeRoleId,
+        employee_type_id: employeeTypeId,
         gender: nullIfEmpty(user.gender),
         date_of_birth: nullIfEmpty(user.date_of_birth),
         designation: nullIfEmpty(user.designation)
