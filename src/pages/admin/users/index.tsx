@@ -1,3 +1,4 @@
+<lov-code>
 import { useState, useEffect } from "react";
 import { useDebounce } from "@/hooks/use-debounce";
 import { User } from "./types";
@@ -5,13 +6,23 @@ import { useUsers } from "./hooks/useUsers";
 import { useUserActions } from "./hooks/useUserActions";
 import { useSBUs } from "./hooks/useSBUs";
 import { useFilterOptions } from "./hooks/useFilterOptions";
-import UserTable from "./components/UserTable";
+import { UserGrid } from "./components/UserGrid";
 import CreateUserDialog from "./components/CreateUserDialog";
 import EditUserDialog from "./components/EditUserDialog";
 import { SearchFilters } from "./components/UserTable/SearchFilters";
 import { ImportDialog } from "./components/ImportDialog";
 import { ExportProgress } from "./components/UserTable/ExportProgress";
 import { exportUsers } from "./utils/exportUsers";
+import { Button } from "@/components/ui/button";
+import { Power, MoreHorizontal, X } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 export default function UsersPage() {
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
@@ -27,6 +38,7 @@ export default function UsersPage() {
   const [selectedEmployeeRole, setSelectedEmployeeRole] = useState("all");
   const [selectedEmployeeType, setSelectedEmployeeType] = useState("all");
   const [pageSize, setPageSize] = useState(10);
+  const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
   const [exportProgress, setExportProgress] = useState({
     isOpen: false,
     processed: 0,
@@ -115,6 +127,82 @@ export default function UsersPage() {
     setIsImportDialogOpen(false);
   };
 
+  const handleBulkDelete = async () => {
+    try {
+      for (const userId of selectedUsers) {
+        await handleDelete(userId);
+      }
+      toast.success(`Successfully deleted ${selectedUsers.length} users`);
+      setSelectedUsers([]);
+    } catch (error) {
+      toast.error("Failed to delete selected users");
+    }
+  };
+
+  const handleBulkStatusToggle = async () => {
+    try {
+      const { data: firstUser } = await supabase
+        .from('profiles')
+        .select('status')
+        .eq('id', selectedUsers[0])
+        .single();
+
+      const newStatus = firstUser?.status === 'active' ? 'disabled' : 'active';
+
+      const { error } = await supabase
+        .from('profiles')
+        .update({ status: newStatus })
+        .in('id', selectedUsers);
+
+      if (error) throw error;
+
+      refetch();
+      
+      toast.success(
+        `Successfully ${newStatus === 'active' ? 'activated' : 'deactivated'} ${selectedUsers.length} users`
+      );
+      
+      setSelectedUsers([]);
+    } catch (error) {
+      console.error('Error toggling status:', error);
+      toast.error("Failed to update user status");
+    }
+  };
+
+  const handleRoleToggle = async (userId: string, isAdmin: boolean) => {
+    try {
+      const { error } = await supabase
+        .from('user_roles')
+        .update({ role: isAdmin ? 'admin' : 'user' })
+        .eq('user_id', userId);
+
+      if (error) throw error;
+
+      refetch();
+      toast.success('User role updated successfully');
+    } catch (error) {
+      console.error('Error updating role:', error);
+      toast.error('Failed to update user role');
+    }
+  };
+
+  const handleStatusToggle = async (userId: string, isActive: boolean) => {
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({ status: isActive ? 'active' : 'disabled' })
+        .eq('id', userId);
+
+      if (error) throw error;
+
+      refetch();
+      toast.success('User status updated successfully');
+    } catch (error) {
+      console.error('Error updating status:', error);
+      toast.error('Failed to update user status');
+    }
+  };
+
   return (
     <div className="container mx-auto py-6 space-y-4">
       <div className="flex justify-between items-center">
@@ -155,51 +243,7 @@ export default function UsersPage() {
           isSearching={isLoading || isLoadingFilters}
         />
 
-        <div className="relative">
-          <UserTable
-            users={data?.users || []}
-            isLoading={isLoading}
-            page={currentPage}
-            pageSize={pageSize}
-            total={data?.total || 0}
-            onPageChange={handlePageChange}
-            onDelete={handleDelete}
-            searchTerm={searchTerm}
-            setSearchTerm={setSearchTerm}
-            selectedSBU={selectedSBU}
-            onPageSizeChange={handlePageSizeChange}
-          />
-        </div>
-      </div>
-
-      <CreateUserDialog
-        open={isCreateDialogOpen}
-        onOpenChange={setIsCreateDialogOpen}
-        onSuccess={handleCreateSuccess}
-      />
-
-      <EditUserDialog
-        user={selectedUser}
-        open={isEditDialogOpen}
-        onOpenChange={setIsEditDialogOpen}
-      />
-
-      <ImportDialog
-        open={isImportDialogOpen}
-        onOpenChange={setIsImportDialogOpen}
-        onImportComplete={handleImportComplete}
-      />
-
-      <ExportProgress
-        open={exportProgress.isOpen}
-        onOpenChange={(open) =>
-          setExportProgress((prev) => ({ ...prev, isOpen: open }))
-        }
-        progress={exportProgress.processed}
-        total={exportProgress.total}
-        error={exportProgress.error}
-        isComplete={exportProgress.isComplete}
-      />
-    </div>
-  );
-}
+        <div className="flex justify-between items-center mb-4">
+          <div className="flex items-center gap-2">
+            {selectedUsers.length > 0 && (
+             

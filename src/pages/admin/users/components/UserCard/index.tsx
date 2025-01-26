@@ -2,7 +2,7 @@ import { User } from "../../types";
 import { Switch } from "@/components/ui/switch";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
-import { MoreHorizontal } from "lucide-react";
+import { MoreHorizontal, User as UserIcon } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
