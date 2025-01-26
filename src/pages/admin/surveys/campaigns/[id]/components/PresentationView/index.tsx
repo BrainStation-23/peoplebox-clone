@@ -3,10 +3,11 @@ import { useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, Fullscreen } from "lucide-react";
 import { CampaignData, SurveyJsonData } from "./types";
 import { TitleSlide } from "./slides/TitleSlide";
 import { StatusDistributionSlide } from "./slides/StatusDistributionSlide";
+import { cn } from "@/lib/utils";
 
 export default function PresentationView() {
   const { id } = useParams();
@@ -99,10 +100,23 @@ export default function PresentationView() {
   return (
     <div className="fixed inset-0 bg-background">
       <div className="relative h-full overflow-hidden">
+        {/* Progress Bar */}
+        <div className="absolute top-0 left-0 w-full h-1 bg-gray-200">
+          <div 
+            className="h-full bg-primary transition-all duration-300 ease-in-out"
+            style={{ width: `${((currentSlide + 1) / totalSlides) * 100}%` }}
+          />
+        </div>
+
         {/* Navigation Controls */}
         <div className="absolute top-4 right-4 z-10 space-x-2">
-          <Button variant="outline" size="sm" onClick={toggleFullscreen}>
-            {isFullscreen ? "Exit Fullscreen" : "Enter Fullscreen"}
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={toggleFullscreen}
+            className="bg-white/80 hover:bg-white/90 backdrop-blur-sm border border-gray-200"
+          >
+            <Fullscreen className="h-4 w-4" />
           </Button>
         </div>
 
@@ -112,6 +126,10 @@ export default function PresentationView() {
             size="icon"
             onClick={previousSlide}
             disabled={currentSlide === 0}
+            className={cn(
+              "bg-white/80 hover:bg-white/90 backdrop-blur-sm border border-gray-200",
+              "disabled:opacity-50 disabled:cursor-not-allowed"
+            )}
           >
             <ChevronLeft className="h-4 w-4" />
           </Button>
@@ -120,15 +138,21 @@ export default function PresentationView() {
             size="icon"
             onClick={nextSlide}
             disabled={currentSlide === totalSlides - 1}
+            className={cn(
+              "bg-white/80 hover:bg-white/90 backdrop-blur-sm border border-gray-200",
+              "disabled:opacity-50 disabled:cursor-not-allowed"
+            )}
           >
             <ChevronRight className="h-4 w-4" />
           </Button>
         </div>
 
-        {/* Slides */}
-        <div className="h-full">
-          <TitleSlide campaign={campaign} isActive={currentSlide === 0} />
-          <StatusDistributionSlide campaign={campaign} isActive={currentSlide === 1} />
+        {/* Slides Container */}
+        <div className="h-full p-8">
+          <div className="max-w-6xl mx-auto h-full">
+            <TitleSlide campaign={campaign} isActive={currentSlide === 0} />
+            <StatusDistributionSlide campaign={campaign} isActive={currentSlide === 1} />
+          </div>
         </div>
       </div>
     </div>
