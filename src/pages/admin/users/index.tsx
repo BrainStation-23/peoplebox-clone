@@ -1,4 +1,3 @@
-<lov-code>
 import { useState, useEffect } from "react";
 import { useDebounce } from "@/hooks/use-debounce";
 import { User } from "./types";
@@ -14,12 +13,12 @@ import { ImportDialog } from "./components/ImportDialog";
 import { ExportProgress } from "./components/UserTable/ExportProgress";
 import { exportUsers } from "./utils/exportUsers";
 import { Button } from "@/components/ui/button";
-import { Power, MoreHorizontal, X } from "lucide-react";
+import { Power, MoreHorizontal } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuTrigger,
+  DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -114,19 +113,6 @@ export default function UsersPage() {
     }
   };
 
-  const handlePageChange = (page: number) => {
-    setCurrentPage(page);
-  };
-
-  const handlePageSizeChange = (size: number) => {
-    setPageSize(size);
-  };
-
-  const handleImportComplete = () => {
-    refetch();
-    setIsImportDialogOpen(false);
-  };
-
   const handleBulkDelete = async () => {
     try {
       for (const userId of selectedUsers) {
@@ -169,50 +155,13 @@ export default function UsersPage() {
     }
   };
 
-  const handleRoleToggle = async (userId: string, isAdmin: boolean) => {
-    try {
-      const { error } = await supabase
-        .from('user_roles')
-        .update({ role: isAdmin ? 'admin' : 'user' })
-        .eq('user_id', userId);
-
-      if (error) throw error;
-
-      refetch();
-      toast.success('User role updated successfully');
-    } catch (error) {
-      console.error('Error updating role:', error);
-      toast.error('Failed to update user role');
-    }
-  };
-
-  const handleStatusToggle = async (userId: string, isActive: boolean) => {
-    try {
-      const { error } = await supabase
-        .from('profiles')
-        .update({ status: isActive ? 'active' : 'disabled' })
-        .eq('id', userId);
-
-      if (error) throw error;
-
-      refetch();
-      toast.success('User status updated successfully');
-    } catch (error) {
-      console.error('Error updating status:', error);
-      toast.error('Failed to update user status');
-    }
-  };
-
   return (
     <div className="container mx-auto py-6 space-y-4">
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-bold">Users</h1>
-        <button
-          onClick={() => setIsCreateDialogOpen(true)}
-          className="bg-primary text-primary-foreground hover:bg-primary/90 px-4 py-2 rounded-md"
-        >
+        <Button onClick={() => setIsCreateDialogOpen(true)}>
           Add User
-        </button>
+        </Button>
       </div>
 
       <div className="space-y-4">
@@ -243,7 +192,82 @@ export default function UsersPage() {
           isSearching={isLoading || isLoadingFilters}
         />
 
-        <div className="flex justify-between items-center mb-4">
+        {selectedUsers.length > 0 && (
           <div className="flex items-center gap-2">
-            {selectedUsers.length > 0 && (
-             
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="sm">
+                  Bulk Actions <MoreHorizontal className="ml-2 h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent>
+                <DropdownMenuItem onClick={handleBulkStatusToggle}>
+                  <Power className="mr-2 h-4 w-4" />
+                  Toggle Status
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  className="text-destructive"
+                  onClick={handleBulkDelete}
+                >
+                  Delete Selected
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+            <span className="text-sm text-muted-foreground">
+              {selectedUsers.length} selected
+            </span>
+          </div>
+        )}
+
+        <UserGrid
+          users={data?.users || []}
+          selectedUsers={selectedUsers}
+          onSelectUser={(userId, checked) => {
+            if (checked) {
+              setSelectedUsers(prev => [...prev, userId]);
+            } else {
+              setSelectedUsers(prev => prev.filter(id => id !== userId));
+            }
+          }}
+          onEdit={setSelectedUser}
+          onDelete={handleDelete}
+          onPasswordChange={() => {}}
+          onRoleToggle={() => {}}
+          onStatusToggle={() => {}}
+        />
+      </div>
+
+      <CreateUserDialog
+        open={isCreateDialogOpen}
+        onOpenChange={setIsCreateDialogOpen}
+        onSuccess={handleCreateSuccess}
+      />
+
+      <EditUserDialog
+        user={selectedUser}
+        open={!!selectedUser}
+        onOpenChange={(open) => !open && setSelectedUser(null)}
+      />
+
+      <ImportDialog
+        open={isImportDialogOpen}
+        onOpenChange={setIsImportDialogOpen}
+        onImportComplete={() => {
+          refetch();
+          setIsImportDialogOpen(false);
+        }}
+      />
+
+      <ExportProgress
+        open={exportProgress.isOpen}
+        onOpenChange={(open) =>
+          setExportProgress((prev) => ({ ...prev, isOpen: open }))
+        }
+        progress={exportProgress.processed}
+        total={exportProgress.total}
+        error={exportProgress.error}
+        isComplete={exportProgress.isComplete}
+      />
+    </div>
+  );
+}
