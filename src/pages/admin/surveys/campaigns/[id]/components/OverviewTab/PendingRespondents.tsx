@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Mail, Link2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useState } from "react";
+import { Checkbox } from "@/components/ui/checkbox";
 
 type Respondent = {
   id: string;
@@ -28,6 +29,7 @@ type Props = {
 export function PendingRespondents({ campaignId, instanceId }: Props) {
   const { toast } = useToast();
   const [sendingReminders, setSendingReminders] = useState<Record<string, boolean>>({});
+  const [selectedRespondents, setSelectedRespondents] = useState<Set<string>>(new Set());
 
   const { data: pendingRespondents, isLoading } = useQuery({
     queryKey: ["pending-respondents", campaignId, instanceId],
@@ -60,7 +62,6 @@ export function PendingRespondents({ campaignId, instanceId }: Props) {
 
       if (error) throw error;
 
-      // Transform the data
       return assignments.map((assignment): Respondent => {
         const primarySbu = assignment.user.user_sbus?.find(us => us.is_primary);
         return {
@@ -138,18 +139,47 @@ export function PendingRespondents({ campaignId, instanceId }: Props) {
     }
   };
 
-  const canSendReminder = (lastReminderSent: string | null) => {
-    if (!lastReminderSent) return true;
-    const hoursSinceLastReminder = (Date.now() - new Date(lastReminderSent).getTime()) / (1000 * 60 * 60);
-    return hoursSinceLastReminder >= 24;
+  const toggleSelectAll = () => {
+    if (!pendingRespondents) return;
+    
+    if (selectedRespondents.size === pendingRespondents.length) {
+      setSelectedRespondents(new Set());
+    } else {
+      setSelectedRespondents(new Set(pendingRespondents.map(r => r.id)));
+    }
   };
+
+  const toggleRespondent = (id: string) => {
+    const newSelected = new Set(selectedRespondents);
+    if (newSelected.has(id)) {
+      newSelected.delete(id);
+    } else {
+      newSelected.add(id);
+    }
+    setSelectedRespondents(newSelected);
+  };
+
+  const isAllSelected = pendingRespondents?.length === selectedRespondents.size;
+  const selectedCount = selectedRespondents.size;
 
   if (isLoading) return <div>Loading...</div>;
 
   return (
     <Card>
-      <CardHeader>
+      <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle>Pending Respondents</CardTitle>
+        {pendingRespondents && pendingRespondents.length > 0 && (
+          <div className="flex items-center gap-2">
+            <Checkbox 
+              checked={isAllSelected}
+              onClick={toggleSelectAll}
+              aria-label="Select all respondents"
+            />
+            <span className="text-sm text-muted-foreground">
+              {selectedCount} of {pendingRespondents.length} selected
+            </span>
+          </div>
+        )}
       </CardHeader>
       <CardContent>
         <ScrollArea className="h-[400px] pr-4">
@@ -159,19 +189,26 @@ export function PendingRespondents({ campaignId, instanceId }: Props) {
                 key={respondent.id}
                 className="flex items-center justify-between p-2 border rounded-lg"
               >
-                <div>
-                  <p className="font-medium">
-                    {respondent.first_name} {respondent.last_name}
-                  </p>
-                  <p className="text-sm text-gray-500">{respondent.email}</p>
-                  {respondent.primary_sbu && (
-                    <p className="text-sm text-gray-500">{respondent.primary_sbu.name}</p>
-                  )}
-                  {respondent.last_reminder_sent && (
-                    <p className="text-xs text-gray-400">
-                      Last reminder: {new Date(respondent.last_reminder_sent).toLocaleString()}
+                <div className="flex items-center gap-4">
+                  <Checkbox 
+                    checked={selectedRespondents.has(respondent.id)}
+                    onClick={() => toggleRespondent(respondent.id)}
+                    aria-label={`Select ${respondent.first_name} ${respondent.last_name}`}
+                  />
+                  <div>
+                    <p className="font-medium">
+                      {respondent.first_name} {respondent.last_name}
                     </p>
-                  )}
+                    <p className="text-sm text-gray-500">{respondent.email}</p>
+                    {respondent.primary_sbu && (
+                      <p className="text-sm text-gray-500">{respondent.primary_sbu.name}</p>
+                    )}
+                    {respondent.last_reminder_sent && (
+                      <p className="text-xs text-gray-400">
+                        Last reminder: {new Date(respondent.last_reminder_sent).toLocaleString()}
+                      </p>
+                    )}
+                  </div>
                 </div>
                 <div className="flex gap-2">
                   <Button
