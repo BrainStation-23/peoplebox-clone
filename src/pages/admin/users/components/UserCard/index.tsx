@@ -1,9 +1,10 @@
 import { memo } from "react";
+import { useNavigate } from "react-router-dom";
 import { User } from "../../types";
 import { Switch } from "@/components/ui/switch";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
-import { MoreHorizontal, User as UserIcon } from "lucide-react";
+import { MoreHorizontal } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -30,12 +31,12 @@ export const UserCard = memo(function UserCard({
   user,
   selected,
   onSelect,
-  onEdit,
   onDelete,
   onPasswordChange,
   onRoleToggle,
   onStatusToggle,
 }: UserCardProps) {
+  const navigate = useNavigate();
   const isAdmin = user.user_roles.role === "admin";
   const isActive = user.status === "active";
   const primarySbu = user.user_sbus?.find((sbu) => sbu.is_primary)?.sbu.name;
@@ -140,7 +141,7 @@ export const UserCard = memo(function UserCard({
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             <DropdownMenuItem 
-              onClick={() => onEdit(user)}
+              onClick={() => navigate(`/admin/users/${user.id}/edit`)}
               className="cursor-pointer"
             >
               Edit
