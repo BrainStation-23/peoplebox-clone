@@ -86,6 +86,54 @@ export type Database = {
         }
         Relationships: []
       }
+      employee_roles: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          status: Database["public"]["Enums"]["employee_role_status"]
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          status?: Database["public"]["Enums"]["employee_role_status"]
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          status?: Database["public"]["Enums"]["employee_role_status"]
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      employee_types: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          status: Database["public"]["Enums"]["employee_type_status"]
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          status?: Database["public"]["Enums"]["employee_type_status"]
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          status?: Database["public"]["Enums"]["employee_type_status"]
+          updated_at?: string
+        }
+        Relationships: []
+      }
       employment_types: {
         Row: {
           created_at: string
@@ -167,6 +215,8 @@ export type Database = {
           date_of_birth: string | null
           designation: string | null
           email: string
+          employee_role_id: string | null
+          employee_type_id: string | null
           employment_type_id: string | null
           first_name: string | null
           gender: Database["public"]["Enums"]["gender_type"] | null
@@ -184,6 +234,8 @@ export type Database = {
           date_of_birth?: string | null
           designation?: string | null
           email: string
+          employee_role_id?: string | null
+          employee_type_id?: string | null
           employment_type_id?: string | null
           first_name?: string | null
           gender?: Database["public"]["Enums"]["gender_type"] | null
@@ -201,6 +253,8 @@ export type Database = {
           date_of_birth?: string | null
           designation?: string | null
           email?: string
+          employee_role_id?: string | null
+          employee_type_id?: string | null
           employment_type_id?: string | null
           first_name?: string | null
           gender?: Database["public"]["Enums"]["gender_type"] | null
@@ -214,6 +268,20 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "profiles_employee_role_id_fkey"
+            columns: ["employee_role_id"]
+            isOneToOne: false
+            referencedRelation: "employee_roles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "profiles_employee_type_id_fkey"
+            columns: ["employee_type_id"]
+            isOneToOne: false
+            referencedRelation: "employee_types"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "profiles_employment_type_id_fkey"
             columns: ["employment_type_id"]
@@ -665,6 +733,8 @@ export type Database = {
       assignment_status: "pending" | "completed" | "expired"
       campaign_status: "draft" | "active" | "completed" | "archived"
       email_provider: "resend"
+      employee_role_status: "active" | "inactive"
+      employee_type_status: "active" | "inactive"
       employment_type_status: "active" | "inactive"
       gender_type: "male" | "female" | "other"
       instance_status: "upcoming" | "active" | "completed"

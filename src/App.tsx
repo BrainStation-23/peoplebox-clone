@@ -44,6 +44,8 @@ import EmailConfig from "./pages/admin/config/email";
 import LevelConfig from "./pages/admin/config/level";
 import LocationConfig from "./pages/admin/config/location";
 import EmploymentTypeConfig from "./pages/admin/config/employment-type";
+import EmployeeTypeConfig from "./pages/admin/config/employee-type";
+import EmployeeRoleConfig from "./pages/admin/config/employee-role";
 
 const queryClient = new QueryClient();
 
@@ -96,6 +98,8 @@ const App = () => (
               <Route path="level" element={<LevelConfig />} />
               <Route path="location" element={<LocationConfig />} />
               <Route path="employment-type" element={<EmploymentTypeConfig />} />
+              <Route path="employee-type" element={<EmployeeTypeConfig />} />
+              <Route path="employee-role" element={<EmployeeRoleConfig />} />
             </Route>
             <Route path="profile" element={<AdminProfile />} />
             <Route path="settings" element={<AdminSettings />} />
