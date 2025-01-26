@@ -39,12 +39,16 @@ export function ActivityTab({ campaignId, selectedInstanceId }: ActivityTabProps
   });
 
   return (
-    <div className="space-y-6">
-      <PendingRespondents 
-        campaignId={campaignId} 
-        instanceId={selectedInstanceId} 
-      />
-      <RecentActivityList activities={recentActivity || []} />
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="w-full">
+        <PendingRespondents 
+          campaignId={campaignId} 
+          instanceId={selectedInstanceId} 
+        />
+      </div>
+      <div className="w-full">
+        <RecentActivityList activities={recentActivity || []} />
+      </div>
     </div>
   );
 }
