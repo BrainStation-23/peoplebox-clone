@@ -19,7 +19,6 @@ export default function EditUserPage() {
   const { data: user, isLoading } = useQuery({
     queryKey: ["user", id],
     queryFn: async () => {
-      // First get the profile data
       const { data: profileData, error: profileError } = await supabase
         .from("profiles")
         .select(`
@@ -54,7 +53,6 @@ export default function EditUserPage() {
         throw new Error("Profile not found");
       }
 
-      // Then get the user role separately
       const { data: roleData, error: roleError } = await supabase
         .from("user_roles")
         .select("role")
@@ -67,7 +65,6 @@ export default function EditUserPage() {
         throw new Error("User role not found");
       }
 
-      // Combine the data
       return {
         ...profileData,
         user_roles: roleData
@@ -96,6 +93,10 @@ export default function EditUserPage() {
     setSelectedLocation,
     selectedEmploymentType,
     setSelectedEmploymentType,
+    selectedEmployeeRole,
+    setSelectedEmployeeRole,
+    selectedEmployeeType,
+    setSelectedEmployeeType,
     updateProfileMutation,
   } = useProfileManagement(user);
 
@@ -171,6 +172,10 @@ export default function EditUserPage() {
             setSelectedEmploymentType={setSelectedEmploymentType}
             selectedLevel={selectedLevel}
             setSelectedLevel={setSelectedLevel}
+            selectedEmployeeRole={selectedEmployeeRole}
+            setSelectedEmployeeRole={setSelectedEmployeeRole}
+            selectedEmployeeType={selectedEmployeeType}
+            setSelectedEmployeeType={setSelectedEmployeeType}
           />
         </TabsContent>
 

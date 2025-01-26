@@ -15,6 +15,8 @@ export function useProfileManagement(user: User | null) {
   const [designation, setDesignation] = useState("");
   const [selectedLocation, setSelectedLocation] = useState("");
   const [selectedEmploymentType, setSelectedEmploymentType] = useState("");
+  const [selectedEmployeeRole, setSelectedEmployeeRole] = useState("");
+  const [selectedEmployeeType, setSelectedEmployeeType] = useState("");
   const queryClient = useQueryClient();
 
   const { data: profileData, error: profileError } = useQuery({
@@ -46,6 +48,8 @@ export function useProfileManagement(user: User | null) {
       setDesignation(profileData.designation || '');
       setSelectedLocation(profileData.location_id || '');
       setSelectedEmploymentType(profileData.employment_type_id || '');
+      setSelectedEmployeeRole(profileData.employee_role_id || '');
+      setSelectedEmployeeType(profileData.employee_type_id || '');
     }
   }, [profileData]);
 
@@ -64,6 +68,8 @@ export function useProfileManagement(user: User | null) {
         designation: designation || null,
         location_id: selectedLocation || null,
         employment_type_id: selectedEmploymentType || null,
+        employee_role_id: selectedEmployeeRole || null,
+        employee_type_id: selectedEmployeeType || null,
       };
 
       console.log('Updating profile with data:', {
@@ -74,7 +80,9 @@ export function useProfileManagement(user: User | null) {
           orgId,
           designation,
           selectedLocation,
-          selectedEmploymentType
+          selectedEmploymentType,
+          selectedEmployeeRole,
+          selectedEmployeeType
         }
       });
 
@@ -88,7 +96,6 @@ export function useProfileManagement(user: User | null) {
         throw profileError;
       }
 
-      // Log the result of the update
       const { data: updatedProfile, error: fetchError } = await supabase
         .from("profiles")
         .select('*')
@@ -133,6 +140,10 @@ export function useProfileManagement(user: User | null) {
     setSelectedLocation,
     selectedEmploymentType,
     setSelectedEmploymentType,
+    selectedEmployeeRole,
+    setSelectedEmployeeRole,
+    selectedEmployeeType,
+    setSelectedEmployeeType,
     profileData,
     profileError,
     updateProfileMutation,
