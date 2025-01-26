@@ -41,6 +41,10 @@ export default function EditUserDialog({
     setSelectedLocation,
     selectedEmploymentType,
     setSelectedEmploymentType,
+    selectedEmployeeRole,
+    setSelectedEmployeeRole,
+    selectedEmployeeType,
+    setSelectedEmployeeType,
     profileError,
     updateProfileMutation,
   } = useProfileManagement(user);
@@ -97,6 +101,10 @@ export default function EditUserDialog({
               setSelectedEmploymentType={setSelectedEmploymentType}
               selectedLevel={selectedLevel}
               setSelectedLevel={setSelectedLevel}
+              selectedEmployeeRole={selectedEmployeeRole}
+              setSelectedEmployeeRole={setSelectedEmployeeRole}
+              selectedEmployeeType={selectedEmployeeType}
+              setSelectedEmployeeType={setSelectedEmployeeType}
             />
           </TabsContent>
 
