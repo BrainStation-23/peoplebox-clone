@@ -66,6 +66,7 @@ export default function CampaignDetailsPage() {
       <CampaignHeader 
         campaign={campaign} 
         isLoading={isLoadingCampaign}
+        selectedInstanceId={selectedInstanceId}
       />
 
       <div className="flex justify-end">

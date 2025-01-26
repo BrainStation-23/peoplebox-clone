@@ -29,9 +29,10 @@ interface CampaignHeaderProps {
     ends_at: string;
   } | undefined;
   isLoading: boolean;
+  selectedInstanceId?: string;
 }
 
-export function CampaignHeader({ campaign, isLoading }: CampaignHeaderProps) {
+export function CampaignHeader({ campaign, isLoading, selectedInstanceId }: CampaignHeaderProps) {
   const { id } = useParams();
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -90,6 +91,14 @@ export function CampaignHeader({ campaign, isLoading }: CampaignHeaderProps) {
   };
 
   const handlePresent = () => {
+    if (!selectedInstanceId) {
+      toast({
+        variant: "destructive",
+        title: "No instance selected",
+        description: "Please select an instance before starting the presentation.",
+      });
+      return;
+    }
     navigate(`/admin/surveys/campaigns/${id}/present?instance=${selectedInstanceId}`);
   };
 
