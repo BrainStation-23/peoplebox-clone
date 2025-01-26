@@ -155,6 +155,8 @@ export default function UsersPage() {
     }
   };
 
+  const totalPages = Math.ceil((data?.total || 0) / pageSize);
+
   return (
     <div className="container mx-auto py-6 space-y-4">
       <div className="flex justify-between items-center">
@@ -234,6 +236,9 @@ export default function UsersPage() {
           onPasswordChange={() => {}}
           onRoleToggle={() => {}}
           onStatusToggle={() => {}}
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={setCurrentPage}
         />
       </div>
 
