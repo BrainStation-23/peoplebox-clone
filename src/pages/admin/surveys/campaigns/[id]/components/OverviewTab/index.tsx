@@ -1,13 +1,8 @@
 import { useQuery } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
-import { CompletionRateCard } from "./CompletionRateCard";
-import { ResponseRateChart } from "./ResponseRateChart";
-import { StatusDistributionChart, type StatusData } from "./StatusDistributionChart";
-import { RecentActivityList } from "./RecentActivityList";
-import { SBUResponseRates } from "./SBUResponseRates";
-import { CompletionTrends } from "./CompletionTrends";
-import { PendingRespondents } from "./PendingRespondents";
+import { StatisticsSection } from "./components/StatisticsSection";
+import { ChartsSection } from "./components/ChartsSection";
 
 interface OverviewTabProps {
   campaignId: string;
@@ -15,7 +10,6 @@ interface OverviewTabProps {
 }
 
 export function OverviewTab({ campaignId, selectedInstanceId }: OverviewTabProps) {
-  // Fetch instance details including completion rate
   const { data: instanceStats } = useQuery({
     queryKey: ["instance-stats", selectedInstanceId],
     queryFn: async () => {
@@ -35,7 +29,6 @@ export function OverviewTab({ campaignId, selectedInstanceId }: OverviewTabProps
 
       if (responsesError) throw responsesError;
 
-      // Calculate completion rate
       const totalAssignments = assignments?.length || 0;
       const completedResponses = responses?.length || 0;
       const completionRate = totalAssignments > 0 
@@ -51,7 +44,6 @@ export function OverviewTab({ campaignId, selectedInstanceId }: OverviewTabProps
     enabled: !!selectedInstanceId,
   });
 
-  // Fetch responses over time for the selected instance
   const { data: responseData } = useQuery({
     queryKey: ["instance-responses", selectedInstanceId],
     queryFn: async () => {
@@ -65,17 +57,14 @@ export function OverviewTab({ campaignId, selectedInstanceId }: OverviewTabProps
         `)
         .eq("assignment.campaign_id", campaignId);
 
-      // Add instance filter if selected
       if (selectedInstanceId) {
         query.eq("campaign_instance_id", selectedInstanceId);
       }
 
       const { data, error } = await query.order("created_at");
-      
       if (error) throw error;
 
-      // Group responses by date
-      const groupedData = data.reduce((acc: any[], response) => {
+      return data.reduce((acc: any[], response) => {
         const date = format(new Date(response.created_at), "MMM d");
         const existingEntry = acc.find(entry => entry.date === date);
         
@@ -87,12 +76,9 @@ export function OverviewTab({ campaignId, selectedInstanceId }: OverviewTabProps
         
         return acc;
       }, []);
-
-      return groupedData;
     },
   });
 
-  // Fetch assignment status distribution for the instance
   const { data: statusData } = useQuery({
     queryKey: ["instance-status-distribution", selectedInstanceId],
     queryFn: async () => {
@@ -102,10 +88,8 @@ export function OverviewTab({ campaignId, selectedInstanceId }: OverviewTabProps
         .eq("campaign_id", campaignId);
 
       const { data, error } = await query;
-      
       if (error) throw error;
 
-      // If instance is selected, we need to check responses for this instance
       if (selectedInstanceId) {
         const { data: responses } = await supabase
           .from("survey_responses")
@@ -114,7 +98,6 @@ export function OverviewTab({ campaignId, selectedInstanceId }: OverviewTabProps
 
         const completedAssignmentIds = new Set(responses?.map(r => r.assignment_id));
 
-        // Update status based on instance responses
         data.forEach(assignment => {
           if (completedAssignmentIds.has(assignment.id)) {
             assignment.status = 'completed';
@@ -130,72 +113,27 @@ export function OverviewTab({ campaignId, selectedInstanceId }: OverviewTabProps
         return acc;
       }, {});
 
-      return Object.entries(distribution).map(([name, value]): StatusData => ({
+      return Object.entries(distribution).map(([name, value]) => ({
         name,
         value,
       }));
     },
   });
 
-  // Fetch recent activity for the instance
-  const { data: recentActivity } = useQuery({
-    queryKey: ["instance-recent-activity", selectedInstanceId],
-    queryFn: async () => {
-      const query = supabase
-        .from("survey_responses")
-        .select(`
-          created_at,
-          assignment:survey_assignments!inner(campaign_id),
-          user:profiles!survey_responses_user_id_fkey (
-            first_name,
-            last_name,
-            email
-          )
-        `)
-        .eq("assignment.campaign_id", campaignId);
-
-      // Add instance filter if selected
-      if (selectedInstanceId) {
-        query.eq("campaign_instance_id", selectedInstanceId);
-      }
-
-      const { data, error } = await query
-        .order("created_at", { ascending: false })
-        .limit(10);
-      
-      if (error) throw error;
-      return data;
-    },
-  });
-
   return (
     <div className="space-y-6">
-      <div className="grid gap-4 md:grid-cols-2">
-        <CompletionRateCard completionRate={instanceStats?.completionRate} />
-      </div>
-      
-      <div className="grid gap-6 md:grid-cols-2">
-        <SBUResponseRates 
-          campaignId={campaignId} 
-          instanceId={selectedInstanceId} 
-        />
-        <CompletionTrends 
-          campaignId={campaignId} 
-          instanceId={selectedInstanceId} 
-        />
-      </div>
-
-      <div className="grid gap-6 md:grid-cols-2">
-        <StatusDistributionChart data={statusData || []} />
-        <ResponseRateChart data={responseData || []} />
-      </div>
-
-      <PendingRespondents 
-        campaignId={campaignId} 
-        instanceId={selectedInstanceId} 
+      <StatisticsSection 
+        instanceStats={instanceStats}
+        campaignId={campaignId}
+        selectedInstanceId={selectedInstanceId}
       />
       
-      <RecentActivityList activities={recentActivity || []} />
+      <ChartsSection 
+        statusData={statusData}
+        responseData={responseData}
+        campaignId={campaignId}
+        selectedInstanceId={selectedInstanceId}
+      />
     </div>
   );
 }

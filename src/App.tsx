@@ -4,6 +4,8 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Login from "./pages/Login";
+import AuthCallback from "./pages/auth/AuthCallback";
+import ResetPassword from "./pages/auth/ResetPassword";
 import AdminLayout from "./components/layouts/AdminLayout";
 import UserLayout from "./components/layouts/UserLayout";
 import Dashboard from "./pages/Dashboard";
@@ -11,6 +13,7 @@ import Dashboard from "./pages/Dashboard";
 // User pages
 import UserDashboard from "./pages/user/Dashboard";
 import UserProfile from "./pages/user/Profile";
+import UserSettings from "./pages/user/Settings";
 import UserMySurveys from "./pages/user/my-surveys";
 import UserSurveyResponse from "./pages/user/my-surveys/[id]";
 
@@ -18,6 +21,7 @@ import UserSurveyResponse from "./pages/user/my-surveys/[id]";
 import AdminDashboard from "./pages/admin/Dashboard";
 import AdminConfig from "./pages/admin/Config";
 import AdminProfile from "./pages/admin/Profile";
+import AdminSettings from "./pages/admin/Settings";
 import Users from "./pages/admin/users";
 import EditUserPage from "./pages/admin/users/[id]/edit";
 import MySurveysPage from "./pages/admin/my-surveys";
@@ -28,6 +32,7 @@ import PreviewSurveyPage from "./pages/admin/surveys/[id]/preview";
 import CampaignsPage from "./pages/admin/surveys/campaigns";
 import CampaignFormPage from "./pages/admin/surveys/campaigns/CampaignFormPage";
 import CampaignDetailsPage from "./pages/admin/surveys/campaigns/[id]";
+import PresentationView from "./pages/admin/surveys/campaigns/[id]/components/PresentationView";
 import PlatformConfigLayout from "./components/layouts/PlatformConfigLayout";
 import SBUsConfig from "./pages/admin/config/sbus";
 import SBUDetails from "./pages/admin/config/sbus/[id]";
@@ -46,6 +51,8 @@ const App = () => (
         <Sonner />
         <Routes>
           <Route path="/login" element={<Login />} />
+          <Route path="/auth/callback" element={<AuthCallback />} />
+          <Route path="/auth/reset-password" element={<ResetPassword />} />
           
           {/* User routes */}
           <Route path="/user" element={<UserLayout />}>
@@ -54,6 +61,7 @@ const App = () => (
             <Route path="my-surveys" element={<UserMySurveys />} />
             <Route path="my-surveys/:id" element={<UserSurveyResponse />} />
             <Route path="profile" element={<UserProfile />} />
+            <Route path="settings" element={<UserSettings />} />
           </Route>
           
           {/* Admin routes */}
@@ -71,7 +79,7 @@ const App = () => (
             <Route path="surveys/campaigns" element={<CampaignsPage />} />
             <Route path="surveys/campaigns/create" element={<CampaignFormPage />} />
             <Route path="surveys/campaigns/:id" element={<CampaignDetailsPage />} />
-            <Route path="surveys/campaigns/:id/edit" element={<CampaignDetailsPage />} />
+            <Route path="surveys/campaigns/:id/present" element={<PresentationView />} />
             <Route path="config" element={<PlatformConfigLayout />}>
               <Route index element={<AdminConfig />} />
               <Route path="sbus" element={<SBUsConfig />} />
@@ -82,6 +90,7 @@ const App = () => (
               <Route path="employment-type" element={<EmploymentTypeConfig />} />
             </Route>
             <Route path="profile" element={<AdminProfile />} />
+            <Route path="settings" element={<AdminSettings />} />
           </Route>
           
           <Route path="/" element={<Navigate to="/login" replace />} />

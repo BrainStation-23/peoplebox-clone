@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { User } from "../types";
+import { User, UserSBU } from "../types";
+import { Json } from "@/integrations/supabase/types";
 
 interface UseUsersProps {
   currentPage: number;
@@ -9,130 +10,69 @@ interface UseUsersProps {
   selectedSBU: string;
 }
 
+interface SearchUsersResponse {
+  profile: {
+    id: string;
+    email: string;
+    first_name: string | null;
+    last_name: string | null;
+    profile_image_url: string | null;
+    org_id: string | null;
+    gender: string | null;
+    date_of_birth: string | null;
+    designation: string | null;
+    status: string;
+    user_roles: {
+      role: string;
+    };
+    user_sbus: UserSBU[];
+  };
+  total_count: number;
+}
+
 export function useUsers({ currentPage, pageSize, searchTerm, selectedSBU }: UseUsersProps) {
   return useQuery({
     queryKey: ["users", currentPage, pageSize, searchTerm, selectedSBU],
     queryFn: async () => {
       console.log("Fetching users with params:", { currentPage, pageSize, searchTerm, selectedSBU });
       
-      // First, get the total count with filters
-      let countQuery = supabase
-        .from("profiles")
-        .select('*', { count: 'exact', head: true });
+      const { data, error } = await supabase
+        .rpc('search_users', {
+          search_text: searchTerm,
+          page_number: currentPage,
+          page_size: pageSize,
+          sbu_filter: selectedSBU !== 'all' ? selectedSBU : null
+        });
 
-      if (searchTerm) {
-        countQuery = countQuery.or(`email.ilike.%${searchTerm}%,first_name.ilike.%${searchTerm}%,last_name.ilike.%${searchTerm}%,org_id.ilike.%${searchTerm}%`);
+      if (error) {
+        console.error("Error fetching users:", error);
+        throw error;
       }
 
-      // If SBU is selected, first get the user IDs belonging to that SBU
-      if (selectedSBU !== 'all') {
-        const { data: sbuUsers } = await supabase
-          .from('user_sbus')
-          .select('user_id')
-          .eq('sbu_id', selectedSBU);
+      // Transform the data to match the User type
+      const transformedUsers = (data as unknown as SearchUsersResponse[]).map(item => {
+        const profile = item.profile;
+        console.log("Raw user data:", profile);
         
-        if (sbuUsers && sbuUsers.length > 0) {
-          countQuery = countQuery.in('id', sbuUsers.map(u => u.user_id));
-        } else {
-          // If no users in the selected SBU, return empty result
-          return { users: [], total: 0 };
-        }
-      }
-
-      const { count, error: countError } = await countQuery;
-
-      if (countError) {
-        console.error("Error fetching count:", countError);
-        throw countError;
-      }
-
-      const total = count || 0;
-      const start = (currentPage - 1) * pageSize;
-
-      // Then, get profiles with their related data
-      let query = supabase
-        .from("profiles")
-        .select(`
-          id,
-          email,
-          first_name,
-          last_name,
-          profile_image_url,
-          org_id,
-          gender,
-          date_of_birth,
-          designation,
-          status,
-          level:levels!left(name),
-          location:locations!left(name),
-          employment_type:employment_types!left(name),
-          user_sbus!left(
-            is_primary,
-            sbu:sbus(name)
-          )
-        `);
-
-      if (searchTerm) {
-        query = query.or(`email.ilike.%${searchTerm}%,first_name.ilike.%${searchTerm}%,last_name.ilike.%${searchTerm}%,org_id.ilike.%${searchTerm}%`);
-      }
-
-      // Apply SBU filter to the main query
-      if (selectedSBU !== 'all') {
-        const { data: sbuUsers } = await supabase
-          .from('user_sbus')
-          .select('user_id')
-          .eq('sbu_id', selectedSBU);
-        
-        if (sbuUsers && sbuUsers.length > 0) {
-          query = query.in('id', sbuUsers.map(u => u.user_id));
-        } else {
-          return { users: [], total: 0 };
-        }
-      }
-
-      const { data: profiles, error: profilesError } = await query
-        .range(start, start + pageSize - 1);
-
-      console.log("Fetched profiles:", profiles);
-
-      if (profilesError) {
-        console.error("Error fetching profiles:", profilesError);
-        throw profilesError;
-      }
-
-      // Get user roles for these profiles
-      const { data: userRoles, error: rolesError } = await supabase
-        .from('user_roles')
-        .select('user_id, role')
-        .in('user_id', profiles?.map(p => p.id) || []);
-
-      console.log("Fetched user roles:", userRoles);
-
-      if (rolesError) {
-        console.error("Error fetching user roles:", rolesError);
-        throw rolesError;
-      }
-
-      // Combine the data
-      const usersWithData = profiles?.map((profile) => {
-        const userData = {
-          ...profile,
-          level: profile.level?.name || null,
-          location: profile.location?.name || null,
-          employment_type: profile.employment_type?.name || null,
-          user_roles: userRoles?.find(r => r.user_id === profile.id) || { role: "user" as const },
-          user_sbus: profile.user_sbus?.map(sbu => ({
-            ...sbu,
-            sbu: sbu.sbu
-          }))
-        };
-        console.log("Transformed user data:", userData);
-        return userData;
+        return {
+          id: profile.id,
+          email: profile.email,
+          first_name: profile.first_name,
+          last_name: profile.last_name,
+          profile_image_url: profile.profile_image_url,
+          org_id: profile.org_id,
+          gender: profile.gender,
+          date_of_birth: profile.date_of_birth,
+          designation: profile.designation,
+          status: profile.status,
+          user_roles: profile.user_roles,
+          user_sbus: profile.user_sbus
+        } as User;
       });
 
       return {
-        users: usersWithData as User[],
-        total
+        users: transformedUsers,
+        total: data?.[0]?.total_count || 0
       };
     },
   });

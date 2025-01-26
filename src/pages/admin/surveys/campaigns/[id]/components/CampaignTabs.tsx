@@ -1,36 +1,28 @@
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { useNavigate, useLocation } from "react-router-dom";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
-const tabs = [
-  { id: "overview", label: "Overview" },
-  { id: "assignments", label: "Assignments" },
-  { id: "responses", label: "Responses" },
-  { id: "reports", label: "Reports" },
-];
-
-export function CampaignTabs({ children }: { children: React.ReactNode }) {
-  const navigate = useNavigate();
-  const location = useLocation();
-  const currentTab = location.hash.replace("#", "") || "overview";
-
-  const handleTabChange = (value: string) => {
-    navigate({ hash: value });
-  };
-
+export function TabPanel({ value, children }: { value: string; children: React.ReactNode }) {
   return (
-    <Tabs value={currentTab} onValueChange={handleTabChange} className="space-y-6">
+    <TabsContent value={value} className="space-y-4">
+      {children}
+    </TabsContent>
+  );
+}
+
+interface CampaignTabsProps {
+  children: React.ReactNode;
+}
+
+export function CampaignTabs({ children }: CampaignTabsProps) {
+  return (
+    <Tabs defaultValue="overview" className="space-y-4">
       <TabsList>
-        {tabs.map((tab) => (
-          <TabsTrigger key={tab.id} value={tab.id}>
-            {tab.label}
-          </TabsTrigger>
-        ))}
+        <TabsTrigger value="overview">Overview</TabsTrigger>
+        <TabsTrigger value="assignments">Assignments</TabsTrigger>
+        <TabsTrigger value="responses">Responses</TabsTrigger>
+        <TabsTrigger value="activity">Activity</TabsTrigger>
+        <TabsTrigger value="reports">Reports</TabsTrigger>
       </TabsList>
       {children}
     </Tabs>
   );
-}
-
-export function TabPanel({ value, children }: { value: string; children: React.ReactNode }) {
-  return <TabsContent value={value}>{children}</TabsContent>;
 }

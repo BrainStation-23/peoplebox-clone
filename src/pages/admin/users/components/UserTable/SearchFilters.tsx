@@ -27,13 +27,19 @@ export function SearchFilters({
   isSearching,
   totalResults
 }: SearchFiltersProps) {
+  const addFilter = (key: string, value: string) => {
+    const currentFilters = searchTerm.split(' ').filter(term => !term.startsWith(`${key}:`));
+    const newSearchTerm = [...currentFilters, `${key}:${value}`].join(' ').trim();
+    setSearchTerm(newSearchTerm);
+  };
+
   return (
     <div className="flex items-center justify-between mb-4">
       <div className="flex items-center gap-4">
         <div className="relative">
           <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Search by name, email, or org ID..."
+            placeholder="Search users... (Try status:active or role:admin)"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="pl-8 w-[300px] pr-8"
@@ -70,6 +76,22 @@ export function SearchFilters({
             ))}
           </SelectContent>
         </Select>
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => addFilter('status', 'active')}
+          >
+            Active Users
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => addFilter('role', 'admin')}
+          >
+            Admins
+          </Button>
+        </div>
       </div>
       <div className="flex gap-2">
         <Button onClick={onImport} variant="outline" size="sm">
