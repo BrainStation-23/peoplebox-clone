@@ -17,6 +17,8 @@ export interface User {
   designation?: string | null;
   location?: string | null;
   employment_type?: string | null;
+  employee_role?: string | null;  // Added this field
+  employee_type?: string | null;  // Added this field
   status?: ProfileStatus | null;
   user_roles: {
     role: UserRole;
