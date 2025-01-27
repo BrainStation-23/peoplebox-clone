@@ -21,7 +21,6 @@ interface CreateUserPayload {
   users?: CreateUserPayload[]
 }
 
-// Initialize Supabase client
 const supabaseUrl = Deno.env.get('SUPABASE_URL')!
 const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
 const supabase = createClient(supabaseUrl, supabaseKey)
@@ -180,13 +179,14 @@ async function createSingleUser(payload: CreateUserPayload) {
       await assignSBUs(authUser.user.id, payload.sbus);
     }
 
-    return { success: true, userId: authUser.user.id };
+    return { success: true, userId: authUser.user.id, email: payload.email };
   } catch (error) {
     console.error('User creation failed:', error);
     return { 
       success: false, 
       error: error instanceof Error ? error.message : 'Unknown error occurred',
-      details: error 
+      details: error,
+      email: payload.email
     };
   }
 }
@@ -197,10 +197,16 @@ async function createBatchUsers(users: CreateUserPayload[]) {
   const results = [];
   for (const user of users) {
     const result = await createSingleUser(user);
-    results.push({ ...result, email: user.email });
+    results.push(result);
   }
   
-  return results;
+  // Check if any operations were successful
+  const hasSuccessfulOperations = results.some(result => result.success);
+  
+  return {
+    success: hasSuccessfulOperations,
+    results
+  };
 }
 
 Deno.serve(async (req) => {
@@ -216,17 +222,24 @@ Deno.serve(async (req) => {
     let result;
     if (payload.method === 'BATCH' && payload.users) {
       result = await createBatchUsers(payload.users);
+      // For batch operations, return 200 if any operation was successful
+      return new Response(
+        JSON.stringify(result.results),
+        { 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: result.success ? 200 : 400
+        }
+      );
     } else {
       result = await createSingleUser(payload);
+      return new Response(
+        JSON.stringify(result),
+        { 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: result.success ? 200 : 400
+        }
+      );
     }
-
-    return new Response(
-      JSON.stringify(result),
-      { 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: result.success ? 200 : 400
-      }
-    );
   } catch (error) {
     console.error('Request failed:', error);
     return new Response(
