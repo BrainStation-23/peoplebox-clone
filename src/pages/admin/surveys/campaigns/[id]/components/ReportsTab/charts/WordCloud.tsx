@@ -1,7 +1,5 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import ReactWordcloud from "react-wordcloud";
-import "tippy.js/dist/tippy.css";
-import "tippy.js/animations/scale.css";
+import { useCallback, useRef, useEffect } from "react";
+import Wordcloud from "@visx/wordcloud/lib/Wordcloud";
 
 interface WordCloudProps {
   words: Array<{
@@ -10,27 +8,77 @@ interface WordCloudProps {
   }>;
 }
 
-export function WordCloud({ words }: WordCloudProps) {
-  const options = {
-    rotations: 2,
-    rotationAngles: [-90, 0] as [number, number],
-    fontSizes: [12, 30] as [number, number],
-    padding: 2,
-    deterministic: true,
-  };
+interface WordData {
+  text: string;
+  size: number;
+}
 
-  const callbacks = {
-    getWordTooltip: (word: { text: string; value: number }) => 
-      `${word.text} (${word.value} occurrences)`,
-  };
+export function WordCloud({ words }: WordCloudProps) {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const colors = [
+    "#2563eb", // blue-600
+    "#3b82f6", // blue-500
+    "#60a5fa", // blue-400
+    "#93c5fd", // blue-300
+  ];
+
+  useEffect(() => {
+    console.log("WordCloud received words:", words);
+  }, [words]);
+
+  // Convert our data format to what @visx/wordcloud expects
+  const formattedWords = words.map((w) => ({
+    text: w.text,
+    size: w.value,
+  }));
+
+  const getRotation = useCallback(() => {
+    return Math.random() * 60 - 30;
+  }, []);
+
+  const getFontSize = useCallback((word: WordData) => {
+    const maxSize = Math.max(...words.map((w) => w.value));
+    const minSize = Math.min(...words.map((w) => w.value));
+    const scale = (word.size - minSize) / (maxSize - minSize || 1);
+    return 12 + scale * 20; // Scale between 12px and 32px
+  }, [words]);
+
+  const getColor = useCallback((word: WordData) => {
+    const maxSize = Math.max(...words.map((w) => w.value));
+    const index = Math.floor((word.size / maxSize) * colors.length);
+    return colors[Math.min(index, colors.length - 1)];
+  }, [words]);
 
   return (
-    <div style={{ height: "300px", width: "100%" }}>
-      <ReactWordcloud
-        words={words}
-        options={options}
-        callbacks={callbacks}
-      />
+    <div ref={containerRef} className="w-full h-[400px] relative">
+      <Wordcloud
+        words={formattedWords}
+        width={containerRef.current?.clientWidth || 600}
+        height={400}
+        fontSize={(w) => getFontSize(w as WordData)}
+        font={"Inter"}
+        padding={2}
+        rotate={getRotation}
+        spiral="rectangular"
+      >
+        {(cloudWords) => (
+          <g transform={`translate(${(containerRef.current?.clientWidth || 600) / 2},200)`}>
+            {cloudWords.map((w, i) => (
+              <text
+                key={i}
+                fill={getColor(w as WordData)}
+                textAnchor="middle"
+                transform={`translate(${w.x}, ${w.y}) rotate(${w.rotate})`}
+                fontSize={w.size}
+                fontFamily={w.font}
+                style={{ userSelect: "none" }}
+              >
+                {w.text}
+              </text>
+            ))}
+          </g>
+        )}
+      </Wordcloud>
     </div>
   );
 }

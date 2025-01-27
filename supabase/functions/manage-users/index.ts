@@ -5,13 +5,11 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
-interface CreateUserPayload {
-  id?: string;
-  email: string;
-  password?: string;
-  first_name: string | null;
-  last_name: string | null;
-  is_admin: boolean;
+interface UpdateUserPayload {
+  id: string;
+  first_name?: string | null;
+  last_name?: string | null;
+  is_admin?: boolean;
   level?: string;
   employment_type?: string;
   employee_role?: string;
@@ -22,14 +20,6 @@ interface CreateUserPayload {
   date_of_birth?: string;
   designation?: string;
   location?: string;
-}
-
-interface BatchCreateUserPayload {
-  users: CreateUserPayload[];
-}
-
-interface DeleteUserPayload {
-  user_id: string;
 }
 
 // Helper function to convert empty strings to null
@@ -139,8 +129,8 @@ async function getSBUIds(supabaseClient: any, sbuNames: string) {
   return data;
 }
 
-async function handleUserRelationships(supabaseClient: any, userId: string, user: CreateUserPayload) {
-  console.log('Processing relationships for user:', user.email);
+async function handleUserUpdate(supabaseClient: any, user: UpdateUserPayload) {
+  console.log('Processing update for user:', user.id);
   
   try {
     // Get IDs for relationships
@@ -152,15 +142,7 @@ async function handleUserRelationships(supabaseClient: any, userId: string, user
       user.employee_type ? getEmployeeTypeId(supabaseClient, user.employee_type) : null
     ]);
 
-    console.log('Retrieved IDs:', {
-      levelId,
-      employmentTypeId,
-      locationId,
-      employeeRoleId,
-      employeeTypeId
-    });
-
-    // Update profile with all fields, converting empty strings to null
+    // Update profile
     const { error: updateProfileError } = await supabaseClient
       .from('profiles')
       .update({
@@ -176,11 +158,22 @@ async function handleUserRelationships(supabaseClient: any, userId: string, user
         date_of_birth: nullIfEmpty(user.date_of_birth),
         designation: nullIfEmpty(user.designation)
       })
-      .eq('id', userId);
+      .eq('id', user.id);
 
     if (updateProfileError) {
-      console.error('Error updating profile:', updateProfileError);
       throw updateProfileError;
+    }
+
+    // Update role if needed
+    if (user.is_admin !== undefined) {
+      const { error: updateRoleError } = await supabaseClient
+        .from('user_roles')
+        .update({ role: user.is_admin ? 'admin' : 'user' })
+        .eq('user_id', user.id);
+
+      if (updateRoleError) {
+        throw updateRoleError;
+      }
     }
 
     // Handle SBU assignments if provided
@@ -191,11 +184,11 @@ async function handleUserRelationships(supabaseClient: any, userId: string, user
         await supabaseClient
           .from('user_sbus')
           .delete()
-          .eq('user_id', userId);
+          .eq('user_id', user.id);
 
         // Create new assignments
         const sbuAssignments = sbuData.map((sbu, index) => ({
-          user_id: userId,
+          user_id: user.id,
           sbu_id: sbu.id,
           is_primary: index === 0 // First SBU is primary
         }));
@@ -205,132 +198,51 @@ async function handleUserRelationships(supabaseClient: any, userId: string, user
           .insert(sbuAssignments);
 
         if (sbuError) {
-          console.error('Error assigning SBUs:', sbuError);
           throw sbuError;
         }
       }
     }
 
-    return null;
+    return { success: true };
   } catch (error) {
-    console.error('Error handling relationships:', error);
-    return error;
+    console.error('Error updating user:', error);
+    return { 
+      success: false, 
+      error: error instanceof Error ? error.message : 'Unknown error occurred'
+    };
   }
 }
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders })
+    return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    console.log('Creating Supabase client...')
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-    )
+    );
 
-    const { method, action } = await req.json()
-    console.log(`Received request with method: ${method}`)
+    const { user } = await req.json();
+    
+    if (!user?.id) {
+      throw new Error('User ID is required for updates');
+    }
 
-    if (method === 'BATCH_CREATE') {
-      const payload = action as BatchCreateUserPayload
-      console.log('Processing users in batch:', payload.users.length)
+    const result = await handleUserUpdate(supabaseClient, user);
+    
+    if (!result.success) {
+      throw new Error(result.error || 'Failed to update user');
+    }
 
-      const results = []
-      const errors = []
-
-      for (const user of payload.users) {
-        try {
-          if (user.id) {
-            // Update existing user
-            console.log('Updating existing user:', user.id)
-            
-            // Handle all relationships and profile updates
-            const relationshipError = await handleUserRelationships(supabaseClient, user.id, user);
-            
-            if (relationshipError) {
-              errors.push({ user: user, error: relationshipError.message });
-              continue;
-            }
-
-            // Update role if needed
-            if (user.is_admin) {
-              const { error: updateRoleError } = await supabaseClient
-                .from('user_roles')
-                .update({ role: 'admin' })
-                .eq('user_id', user.id);
-
-              if (updateRoleError) {
-                errors.push({ user: user, error: updateRoleError.message });
-                continue;
-              }
-            }
-
-            results.push({ user: user, success: true });
-          } else {
-            // Create new user
-            console.log('Creating new user:', user.email);
-            const password = user.password || Math.random().toString(36).slice(-8);
-            
-            const { data: authUser, error: createUserError } = await supabaseClient.auth.admin.createUser({
-              email: user.email,
-              password: password,
-              email_confirm: true
-            });
-
-            if (createUserError) {
-              console.error('Error creating user:', createUserError);
-              errors.push({ user: user, error: createUserError.message });
-              continue;
-            }
-
-            // Handle all relationships and profile updates
-            const relationshipError = await handleUserRelationships(supabaseClient, authUser.user.id, user);
-            
-            if (relationshipError) {
-              errors.push({ user: user, error: relationshipError.message });
-              continue;
-            }
-
-            // Set admin role if needed
-            if (user.is_admin) {
-              const { error: updateRoleError } = await supabaseClient
-                .from('user_roles')
-                .update({ role: 'admin' })
-                .eq('user_id', authUser.user.id);
-
-              if (updateRoleError) {
-                errors.push({ user: user, error: updateRoleError.message });
-                continue;
-              }
-            }
-
-            results.push({ user: user, success: true });
-          }
-        } catch (error) {
-          console.error('Error processing user:', user, error);
-          errors.push({ user: user, error: error.message });
-        }
+    return new Response(
+      JSON.stringify({ message: 'User updated successfully' }),
+      { 
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 200 
       }
-
-      return new Response(
-        JSON.stringify({ 
-          message: 'Batch processing completed',
-          results: results,
-          errors: errors
-        }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    // Handle CORS preflight requests
-    if (req.method === 'OPTIONS') {
-      return new Response(null, { headers: corsHeaders });
-    }
-
-    console.error('Invalid method received:', method);
-    throw new Error('Invalid method');
+    );
 
   } catch (error) {
     console.error('Function error:', error);
@@ -345,4 +257,4 @@ Deno.serve(async (req) => {
       }
     );
   }
-})
+});

@@ -10,6 +10,7 @@ import { EmploymentDetailsTab } from "../components/EditUserDialog/EmploymentDet
 import { useProfileManagement } from "../hooks/useProfileManagement";
 import { useSupervisorManagement } from "../hooks/useSupervisorManagement";
 import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 import { User } from "../types";
 
 export default function EditUserPage() {
@@ -42,16 +43,30 @@ export default function EditUserPage() {
               id,
               name
             )
-          )
+          ),
+          org_id,
+          gender,
+          date_of_birth,
+          designation,
+          location_id,
+          employment_type_id,
+          employee_role_id,
+          employee_type_id,
+          status
         `)
         .eq("id", id)
         .maybeSingle();
 
-      if (profileError) throw profileError;
+      if (profileError) {
+        console.error("Error fetching profile:", profileError);
+        throw profileError;
+      }
 
       if (!profileData) {
         throw new Error("Profile not found");
       }
+
+      console.info("Fetched profile data:", profileData);
 
       const { data: roleData, error: roleError } = await supabase
         .from("user_roles")
@@ -114,6 +129,17 @@ export default function EditUserPage() {
     return <div>User not found</div>;
   }
 
+  const handleSave = async () => {
+    try {
+      await updateProfileMutation.mutateAsync();
+      toast.success("User profile updated successfully");
+      navigate("/admin/users");
+    } catch (error) {
+      console.error("Error updating profile:", error);
+      toast.error("Failed to update user profile");
+    }
+  };
+
   return (
     <div className="container mx-auto py-6 space-y-6">
       <div className="flex items-center justify-between">
@@ -131,7 +157,7 @@ export default function EditUserPage() {
           <Button variant="outline" onClick={() => navigate("/admin/users")}>
             Cancel
           </Button>
-          <Button onClick={() => updateProfileMutation.mutate()} disabled={updateProfileMutation.isPending}>
+          <Button onClick={handleSave} disabled={updateProfileMutation.isPending}>
             Save Changes
           </Button>
         </div>

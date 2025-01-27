@@ -24,6 +24,8 @@ serve(async (req) => {
       throw new Error('User ID is required');
     }
 
+    console.log('Starting user deletion process for user:', user_id);
+
     // Check if user exists
     const { data: user, error: userError } = await supabaseClient.auth.admin.getUserById(user_id);
 
@@ -32,127 +34,7 @@ serve(async (req) => {
       throw new Error('User not found');
     }
 
-    console.log('Starting manual database cleanup...');
-
-    // 1. First handle survey-related tables
-    // Delete survey responses
-    const { error: responsesError } = await supabaseClient
-      .from('survey_responses')
-      .delete()
-      .eq('user_id', user_id);
-    
-    if (responsesError) {
-      console.error('Error deleting survey responses:', responsesError);
-      throw responsesError;
-    }
-
-    // Delete survey assignments
-    const { error: assignmentsError } = await supabaseClient
-      .from('survey_assignments')
-      .delete()
-      .eq('user_id', user_id);
-    
-    if (assignmentsError) {
-      console.error('Error deleting survey assignments:', assignmentsError);
-      throw assignmentsError;
-    }
-
-    // Delete surveys created by user
-    const { error: surveysError } = await supabaseClient
-      .from('surveys')
-      .delete()
-      .eq('created_by', user_id);
-    
-    if (surveysError) {
-      console.error('Error deleting surveys:', surveysError);
-      throw surveysError;
-    }
-
-    // Delete survey campaigns created by user
-    const { error: campaignsError } = await supabaseClient
-      .from('survey_campaigns')
-      .delete()
-      .eq('created_by', user_id);
-    
-    if (campaignsError) {
-      console.error('Error deleting survey campaigns:', campaignsError);
-      throw campaignsError;
-    }
-
-    // 2. Handle user relationships
-    // Delete user_roles
-    const { error: rolesError } = await supabaseClient
-      .from('user_roles')
-      .delete()
-      .eq('user_id', user_id);
-    
-    if (rolesError) {
-      console.error('Error deleting user roles:', rolesError);
-      throw rolesError;
-    }
-
-    // Delete user_sbus
-    const { error: sbusError } = await supabaseClient
-      .from('user_sbus')
-      .delete()
-      .eq('user_id', user_id);
-    
-    if (sbusError) {
-      console.error('Error deleting user sbus:', sbusError);
-      throw sbusError;
-    }
-
-    // Delete user_supervisors where user is either supervisor or supervisee
-    const { error: supervisorsError } = await supabaseClient
-      .from('user_supervisors')
-      .delete()
-      .or(`user_id.eq.${user_id},supervisor_id.eq.${user_id}`);
-    
-    if (supervisorsError) {
-      console.error('Error deleting user supervisors:', supervisorsError);
-      throw supervisorsError;
-    }
-
-    // Update SBUs where user is head
-    const { error: sbusHeadError } = await supabaseClient
-      .from('sbus')
-      .update({ head_id: null })
-      .eq('head_id', user_id);
-    
-    if (sbusHeadError) {
-      console.error('Error updating sbus head:', sbusHeadError);
-      throw sbusHeadError;
-    }
-
-    // 3. Update profile to remove foreign key references
-    const { error: profileUpdateError } = await supabaseClient
-      .from('profiles')
-      .update({
-        employee_role_id: null,
-        employee_type_id: null,
-        employment_type_id: null,
-        level_id: null,
-        location_id: null
-      })
-      .eq('id', user_id);
-    
-    if (profileUpdateError) {
-      console.error('Error updating profile:', profileUpdateError);
-      throw profileUpdateError;
-    }
-
-    // Delete profile
-    const { error: profileError } = await supabaseClient
-      .from('profiles')
-      .delete()
-      .eq('id', user_id);
-    
-    if (profileError) {
-      console.error('Error deleting profile:', profileError);
-      throw profileError;
-    }
-
-    // Finally, delete the auth user
+    // Delete the user using auth admin API
     const { error: deleteError } = await supabaseClient.auth.admin.deleteUser(user_id);
 
     if (deleteError) {

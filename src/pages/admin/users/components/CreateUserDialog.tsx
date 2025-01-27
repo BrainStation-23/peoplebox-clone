@@ -22,7 +22,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 
 const formSchema = z.object({
   email: z.string().email(),
@@ -44,7 +44,6 @@ export default function CreateUserDialog({
   onSuccess,
 }: CreateUserDialogProps) {
   const [isLoading, setIsLoading] = useState(false);
-  const { toast } = useToast();
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -59,25 +58,26 @@ export default function CreateUserDialog({
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     try {
       setIsLoading(true);
-      const { error } = await supabase.functions.invoke('manage-users', {
-        body: { method: 'CREATE', action: values }
+      console.log('Creating user with values:', values);
+      
+      const { data, error } = await supabase.functions.invoke('create-basic-user', {
+        body: values
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error creating user:', error);
+        throw error;
+      }
 
-      toast({
-        title: "Success",
-        description: "User created successfully",
-      });
+      console.log('User created successfully:', data);
+      toast.success("User created successfully");
 
       form.reset();
       onSuccess();
+      onOpenChange(false);
     } catch (error) {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: error.message,
-      });
+      console.error('Create user error:', error);
+      toast.error(error instanceof Error ? error.message : "Failed to create user");
     } finally {
       setIsLoading(false);
     }

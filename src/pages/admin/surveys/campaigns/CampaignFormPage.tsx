@@ -88,6 +88,7 @@ export default function CampaignFormPage() {
         campaign_type: formData.is_recurring ? 'recurring' : 'one_time',
         status: 'draft',
         created_by: session.user.id,
+        anonymous: formData.anonymous, // Added this line to include the anonymous flag
       };
 
       if (isEditMode) {
