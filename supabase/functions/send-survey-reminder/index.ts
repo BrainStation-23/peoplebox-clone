@@ -17,6 +17,7 @@ interface ReminderRequest {
   dueDate: string | null;
   recipientEmail: string;
   recipientName: string;
+  publicAccessToken: string;
 }
 
 const handler = async (req: Request): Promise<Response> => {
@@ -85,6 +86,9 @@ const handler = async (req: Request): Promise<Response> => {
       }
     }
 
+    // Generate the public access URL
+    const publicAccessUrl = `${SUPABASE_URL.replace('.supabase.co', '')}/public/survey/${reminderRequest.publicAccessToken}`;
+
     // Send reminder email using Resend
     console.log("Sending email via Resend...");
     const dueDateText = reminderRequest.dueDate 
@@ -106,7 +110,10 @@ const handler = async (req: Request): Promise<Response> => {
             <h2>Hello ${reminderRequest.recipientName},</h2>
             <p>This is a friendly reminder that you have a pending survey to complete: <strong>${reminderRequest.surveyName}</strong></p>
             <p>${dueDateText}</p>
-            <p>Please log in to the survey system to complete your response.</p>
+            <p>You can complete the survey by clicking the link below:</p>
+            <p><a href="${publicAccessUrl}" style="display: inline-block; background-color: #2563eb; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px;">Complete Survey</a></p>
+            <p style="color: #666; font-size: 14px;">If the button doesn't work, you can copy and paste this link into your browser:</p>
+            <p style="color: #666; font-size: 14px;">${publicAccessUrl}</p>
             <p>Thank you for your participation!</p>
           </div>
         `,
