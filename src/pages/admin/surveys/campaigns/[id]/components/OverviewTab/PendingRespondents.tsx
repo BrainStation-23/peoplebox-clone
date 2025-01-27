@@ -98,6 +98,7 @@ export function PendingRespondents({ campaignId, instanceId }: Props) {
           dueDate: assignment.due_date,
           recipientEmail: respondent.email,
           recipientName: `${respondent.first_name || ''} ${respondent.last_name || ''}`.trim() || 'Participant',
+          publicAccessToken: respondent.public_access_token,
         },
       });
 
