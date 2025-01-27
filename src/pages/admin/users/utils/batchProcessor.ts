@@ -44,27 +44,24 @@ export async function* batchProcessor(
     try {
       console.log('Processing batch with users:', batchUsers);
       
-      const { data: responseData, error } = await supabase.functions.invoke('manage-users', {
+      const { data: responseData, error } = await supabase.functions.invoke('create-user', {
         body: {
-          method: 'BATCH_CREATE',
-          action: {
-            users: batchUsers.map(user => ({
-              id: user.id,
-              email: user.email,
-              first_name: user.firstName,
-              last_name: user.lastName,
-              is_admin: user.role === 'admin',
-              // Add all additional fields
-              level: user.level,
-              employment_type: user.employmentType,
-              designation: user.designation,
-              org_id: user.orgId,
-              location: user.location,
-              gender: user.gender,
-              date_of_birth: user.dateOfBirth,
-              sbus: user.sbus
-            }))
-          }
+          method: 'BATCH',
+          users: batchUsers.map(user => ({
+            id: user.id,
+            email: user.email,
+            first_name: user.firstName,
+            last_name: user.lastName,
+            is_admin: user.role === 'admin',
+            level: user.level,
+            employment_type: user.employmentType,
+            designation: user.designation,
+            org_id: user.orgId,
+            location: user.location,
+            gender: user.gender,
+            date_of_birth: user.dateOfBirth,
+            sbus: user.sbus
+          }))
         }
       });
 

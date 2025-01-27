@@ -59,12 +59,27 @@ export default function CreateUserDialog({
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     try {
       setIsLoading(true);
-      const { error } = await supabase.functions.invoke('manage-users', {
-        body: { method: 'CREATE', action: values }
+      console.log('Creating user with values:', values);
+      
+      const { data, error } = await supabase.functions.invoke('create-user', {
+        body: { 
+          method: 'SINGLE',
+          user: {
+            email: values.email,
+            password: values.password,
+            first_name: values.first_name,
+            last_name: values.last_name,
+            is_admin: values.is_admin
+          }
+        }
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error creating user:', error);
+        throw error;
+      }
 
+      console.log('User created successfully:', data);
       toast({
         title: "Success",
         description: "User created successfully",
@@ -73,10 +88,11 @@ export default function CreateUserDialog({
       form.reset();
       onSuccess();
     } catch (error) {
+      console.error('Create user error:', error);
       toast({
         variant: "destructive",
         title: "Error",
-        description: error.message,
+        description: error instanceof Error ? error.message : "Failed to create user",
       });
     } finally {
       setIsLoading(false);
