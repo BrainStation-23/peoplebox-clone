@@ -1,10 +1,10 @@
-import { memo } from "react";
+import { memo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { User } from "../../types";
 import { Switch } from "@/components/ui/switch";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
-import { MoreHorizontal, Briefcase, Users, MapPin, Building, GraduationCap, Mail } from "lucide-react";
+import { MoreHorizontal, Briefcase, Users, MapPin, Building, GraduationCap, Mail, Loader } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -16,7 +16,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
-import { toast } from "sonner";
+import { toast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 
 interface UserCardProps {
@@ -40,12 +40,19 @@ export const UserCard = memo(function UserCard({
   onStatusToggle,
 }: UserCardProps) {
   const navigate = useNavigate();
-  const isAdmin = user.user_roles.role === "admin";
-  const isActive = user.status === "active";
+  const [isAdmin, setIsAdmin] = useState(user.user_roles.role === "admin");
+  const [isActive, setIsActive] = useState(user.status === "active");
+  const [isUpdatingRole, setIsUpdatingRole] = useState(false);
+  const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
+
   const primarySbu = user.user_sbus?.find((sbu) => sbu.is_primary)?.sbu.name;
   const otherSbus = user.user_sbus?.filter(sbu => !sbu.is_primary).map(sbu => sbu.sbu.name);
 
   const handleRoleToggle = async (checked: boolean) => {
+    setIsUpdatingRole(true);
+    // Optimistically update the UI
+    setIsAdmin(checked);
+
     try {
       const { error: roleError } = await supabase
         .from('user_roles')
@@ -55,14 +62,29 @@ export const UserCard = memo(function UserCard({
       if (roleError) throw roleError;
 
       onRoleToggle(user.id, checked);
-      toast.success(`User role updated to ${checked ? 'admin' : 'user'}`);
+      toast({
+        title: "Success",
+        description: `User role updated to ${checked ? 'admin' : 'user'}`,
+      });
     } catch (error) {
+      // Revert the optimistic update on failure
+      setIsAdmin(!checked);
       console.error('Error updating role:', error);
-      toast.error('Failed to update user role');
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: 'Failed to update user role',
+      });
+    } finally {
+      setIsUpdatingRole(false);
     }
   };
 
   const handleStatusToggle = async (checked: boolean) => {
+    setIsUpdatingStatus(true);
+    // Optimistically update the UI
+    setIsActive(checked);
+
     try {
       const { error } = await supabase.functions.invoke('toggle-user-status', {
         body: { 
@@ -74,10 +96,21 @@ export const UserCard = memo(function UserCard({
       if (error) throw error;
 
       onStatusToggle(user.id, checked);
-      toast.success(`User ${checked ? 'activated' : 'deactivated'} successfully`);
+      toast({
+        title: "Success",
+        description: `User ${checked ? 'activated' : 'deactivated'} successfully`,
+      });
     } catch (error) {
+      // Revert the optimistic update on failure
+      setIsActive(!checked);
       console.error('Error updating status:', error);
-      toast.error('Failed to update user status');
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: 'Failed to update user status',
+      });
+    } finally {
+      setIsUpdatingStatus(false);
     }
   };
 
@@ -137,19 +170,37 @@ export const UserCard = memo(function UserCard({
             <div className="flex items-center gap-4 shrink-0">
               <div className="flex items-center gap-2">
                 <span className="text-sm text-muted-foreground whitespace-nowrap">Admin</span>
-                <Switch
-                  checked={isAdmin}
-                  onCheckedChange={handleRoleToggle}
-                  className="transition-opacity duration-200 hover:opacity-80"
-                />
+                <div className="relative">
+                  <Switch
+                    checked={isAdmin}
+                    onCheckedChange={handleRoleToggle}
+                    disabled={isUpdatingRole}
+                    className={cn(
+                      "transition-opacity duration-200 hover:opacity-80",
+                      isUpdatingRole && "opacity-50"
+                    )}
+                  />
+                  {isUpdatingRole && (
+                    <Loader className="absolute right-[-24px] top-1/2 transform -translate-y-1/2 h-4 w-4 animate-spin" />
+                  )}
+                </div>
               </div>
               <div className="flex items-center gap-2">
                 <span className="text-sm text-muted-foreground whitespace-nowrap">Active</span>
-                <Switch
-                  checked={isActive}
-                  onCheckedChange={handleStatusToggle}
-                  className="transition-opacity duration-200 hover:opacity-80"
-                />
+                <div className="relative">
+                  <Switch
+                    checked={isActive}
+                    onCheckedChange={handleStatusToggle}
+                    disabled={isUpdatingStatus}
+                    className={cn(
+                      "transition-opacity duration-200 hover:opacity-80",
+                      isUpdatingStatus && "opacity-50"
+                    )}
+                  />
+                  {isUpdatingStatus && (
+                    <Loader className="absolute right-[-24px] top-1/2 transform -translate-y-1/2 h-4 w-4 animate-spin" />
+                  )}
+                </div>
               </div>
             </div>
           </div>
