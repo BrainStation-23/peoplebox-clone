@@ -1,9 +1,7 @@
 import { Card } from "@/components/ui/card";
 import { ProcessedResponse } from "../../hooks/useResponseProcessing";
 import { ComparisonDimension } from "../../types/comparison";
-import ReactWordcloud from "react-wordcloud";
-import "tippy.js/dist/tippy.css";
-import "tippy.js/animations/scale.css";
+import { WordCloud } from "../../charts/WordCloud";
 
 interface TextComparisonProps {
   responses: ProcessedResponse[];
@@ -72,16 +70,8 @@ export function TextComparison({
       {groupedWords.map(({ group, words }) => (
         <Card key={group} className="p-4">
           <h3 className="mb-4 text-lg font-semibold">{group}</h3>
-          <div style={{ height: "200px" }}>
-            <ReactWordcloud
-              words={words}
-              options={{
-                rotations: 2,
-                rotationAngles: [-90, 0],
-                fontSizes: [12, 24],
-                padding: 2,
-              }}
-            />
+          <div className="h-[200px]">
+            <WordCloud words={words} />
           </div>
         </Card>
       ))}

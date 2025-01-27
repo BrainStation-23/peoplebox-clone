@@ -1,6 +1,4 @@
 import { useCallback } from "react";
-import { Text } from "@visx/text";
-import { scaleLog } from "@visx/scale";
 import Wordcloud from "@visx/wordcloud/lib/Wordcloud";
 
 interface WordCloudProps {
@@ -8,6 +6,11 @@ interface WordCloudProps {
     text: string;
     value: number;
   }>;
+}
+
+interface WordData {
+  text: string;
+  size: number;
 }
 
 export function WordCloud({ words }: WordCloudProps) {
@@ -29,32 +32,26 @@ export function WordCloud({ words }: WordCloudProps) {
     return Math.random() * 60 - 30;
   }, []);
 
-  const getFontSize = useCallback((datum: { size: number }) => {
-    const scale = scaleLog({
-      domain: [
-        Math.min(...words.map((w) => w.value)),
-        Math.max(...words.map((w) => w.value)),
-      ],
-      range: [12, 32],
-    });
-    return scale(datum.size);
+  const getFontSize = useCallback((word: WordData) => {
+    const maxSize = Math.max(...words.map((w) => w.value));
+    const minSize = Math.min(...words.map((w) => w.value));
+    const scale = (word.size - minSize) / (maxSize - minSize);
+    return 12 + scale * 20; // Scale between 12px and 32px
   }, [words]);
 
-  const getColor = useCallback((datum: { size: number }) => {
-    // Use size to determine color - bigger words get darker colors
-    const index = Math.floor(
-      (datum.size / Math.max(...words.map((w) => w.value))) * colors.length
-    );
+  const getColor = useCallback((word: WordData) => {
+    const maxSize = Math.max(...words.map((w) => w.value));
+    const index = Math.floor((word.size / maxSize) * colors.length);
     return colors[Math.min(index, colors.length - 1)];
   }, [words]);
 
   return (
-    <div className="w-full h-[300px] bg-white">
+    <div className="w-full h-full bg-white">
       <Wordcloud
         words={formattedWords}
         width={600}
         height={300}
-        fontSize={getFontSize}
+        fontSize={(w) => getFontSize(w as WordData)}
         font={"Inter"}
         padding={2}
         rotate={getRotation}
@@ -63,16 +60,17 @@ export function WordCloud({ words }: WordCloudProps) {
         {(cloudWords) => (
           <g transform={`translate(${600 / 2},${300 / 2})`}>
             {cloudWords.map((w, i) => (
-              <Text
+              <text
                 key={i}
-                fill={getColor(w)}
+                fill={getColor(w as WordData)}
                 textAnchor="middle"
                 transform={`translate(${w.x}, ${w.y}) rotate(${w.rotate})`}
                 fontSize={w.size}
                 fontFamily={w.font}
+                style={{ userSelect: "none" }}
               >
                 {w.text}
-              </Text>
+              </text>
             ))}
           </g>
         )}
