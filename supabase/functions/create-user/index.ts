@@ -7,6 +7,16 @@ interface CreateUserPayload {
   first_name?: string
   last_name?: string
   is_admin?: boolean
+  org_id?: string
+  level?: string
+  location?: string
+  employment_type?: string
+  employee_role?: string
+  employee_type?: string
+  gender?: string
+  date_of_birth?: string
+  designation?: string
+  sbus?: string
   method?: 'SINGLE' | 'BATCH'
   users?: CreateUserPayload[]
 }
@@ -15,20 +25,93 @@ const supabaseUrl = Deno.env.get('SUPABASE_URL')!
 const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
 const supabase = createClient(supabaseUrl, supabaseKey)
 
-async function createSingleUser(payload: CreateUserPayload) {
-  console.log('Creating single user with payload:', {
-    ...payload,
-    password: payload.password ? '[REDACTED]' : undefined
-  });
+async function getLocationId(locationName?: string): Promise<string | null> {
+  if (!locationName) return null;
+  
+  const { data } = await supabase
+    .from("locations")
+    .select("id")
+    .eq("name", locationName)
+    .maybeSingle();
 
-  if (!payload.email) {
-    console.error('Email is required');
-    return { 
-      success: false, 
-      error: 'Email is required',
-      details: { email: payload.email }
-    };
-  }
+  return data?.id || null;
+}
+
+async function getLevelId(levelName?: string): Promise<string | null> {
+  if (!levelName) return null;
+  
+  const { data } = await supabase
+    .from("levels")
+    .select("id")
+    .eq("name", levelName)
+    .eq("status", "active")
+    .maybeSingle();
+
+  return data?.id || null;
+}
+
+async function getEmploymentTypeId(typeName?: string): Promise<string | null> {
+  if (!typeName) return null;
+
+  const { data } = await supabase
+    .from("employment_types")
+    .select("id")
+    .eq("name", typeName)
+    .eq("status", "active")
+    .maybeSingle();
+
+  return data?.id || null;
+}
+
+async function getEmployeeRoleId(roleName?: string): Promise<string | null> {
+  if (!roleName) return null;
+
+  const { data } = await supabase
+    .from("employee_roles")
+    .select("id")
+    .eq("name", roleName)
+    .eq("status", "active")
+    .maybeSingle();
+
+  return data?.id || null;
+}
+
+async function getEmployeeTypeId(typeName?: string): Promise<string | null> {
+  if (!typeName) return null;
+
+  const { data } = await supabase
+    .from("employee_types")
+    .select("id")
+    .eq("name", typeName)
+    .eq("status", "active")
+    .maybeSingle();
+
+  return data?.id || null;
+}
+
+async function assignSBUs(userId: string, sbuString?: string): Promise<void> {
+  if (!sbuString) return;
+
+  const sbuNames = sbuString.split(";").map(s => s.trim());
+  
+  const { data: sbus } = await supabase
+    .from("sbus")
+    .select("id, name")
+    .in("name", sbuNames);
+
+  if (!sbus?.length) return;
+
+  const assignments = sbus.map((sbu, index) => ({
+    user_id: userId,
+    sbu_id: sbu.id,
+    is_primary: index === 0,
+  }));
+
+  await supabase.from("user_sbus").insert(assignments);
+}
+
+async function createSingleUser(payload: CreateUserPayload) {
+  console.log('Creating single user:', payload);
 
   try {
     // Create auth user
@@ -36,47 +119,74 @@ async function createSingleUser(payload: CreateUserPayload) {
       email: payload.email,
       password: payload.password || Math.random().toString(36).slice(-8),
       email_confirm: true,
-      user_metadata: {
-        first_name: payload.first_name,
-        last_name: payload.last_name
-      }
     });
 
     if (authError) {
       console.error('Auth user creation failed:', authError);
-      return { 
-        success: false, 
-        error: authError.message,
-        details: authError
-      };
+      throw authError;
     }
 
     console.log('Auth user created:', authUser);
 
-    // Set admin role if requested
+    // Get IDs for related entities
+    const [levelId, locationId, employmentTypeId, employeeRoleId, employeeTypeId] = 
+      await Promise.all([
+        getLevelId(payload.level),
+        getLocationId(payload.location),
+        getEmploymentTypeId(payload.employment_type),
+        getEmployeeRoleId(payload.employee_role),
+        getEmployeeTypeId(payload.employee_type)
+      ]);
+
+    // Update profile with additional info
+    const { error: profileError } = await supabase
+      .from("profiles")
+      .update({
+        first_name: payload.first_name,
+        last_name: payload.last_name,
+        org_id: payload.org_id,
+        level_id: levelId,
+        location_id: locationId,
+        employment_type_id: employmentTypeId,
+        employee_role_id: employeeRoleId,
+        employee_type_id: employeeTypeId,
+        gender: payload.gender,
+        date_of_birth: payload.date_of_birth,
+        designation: payload.designation,
+      })
+      .eq("id", authUser.user.id);
+
+    if (profileError) {
+      console.error('Profile update failed:', profileError);
+      throw profileError;
+    }
+
+    // Set user role
     if (payload.is_admin) {
       const { error: roleError } = await supabase
-        .from('user_roles')
+        .from("user_roles")
         .update({ role: 'admin' })
-        .eq('user_id', authUser.user.id);
+        .eq("user_id", authUser.user.id);
 
       if (roleError) {
         console.error('Role update failed:', roleError);
-        // Don't throw here, the user is still created
+        throw roleError;
       }
     }
 
-    return { 
-      success: true, 
-      userId: authUser.user.id, 
-      email: payload.email 
-    };
+    // Assign SBUs if provided
+    if (payload.sbus) {
+      await assignSBUs(authUser.user.id, payload.sbus);
+    }
+
+    return { success: true, userId: authUser.user.id, email: payload.email };
   } catch (error) {
     console.error('User creation failed:', error);
     return { 
       success: false, 
       error: error instanceof Error ? error.message : 'Unknown error occurred',
-      details: error
+      details: error,
+      email: payload.email
     };
   }
 }
@@ -107,14 +217,12 @@ Deno.serve(async (req) => {
 
   try {
     const payload: CreateUserPayload = await req.json();
-    console.log('Received payload:', {
-      ...payload,
-      password: payload.password ? '[REDACTED]' : undefined
-    });
+    console.log('Received payload:', payload);
 
     let result;
     if (payload.method === 'BATCH' && payload.users) {
       result = await createBatchUsers(payload.users);
+      // For batch operations, return 200 if any operation was successful
       return new Response(
         JSON.stringify(result.results),
         { 
@@ -137,8 +245,7 @@ Deno.serve(async (req) => {
     return new Response(
       JSON.stringify({ 
         success: false, 
-        error: error instanceof Error ? error.message : 'Unknown error occurred',
-        details: error
+        error: error instanceof Error ? error.message : 'Unknown error occurred' 
       }),
       { 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
