@@ -4,7 +4,7 @@ import { User } from "../../types";
 import { Switch } from "@/components/ui/switch";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
-import { MoreHorizontal } from "lucide-react";
+import { MoreHorizontal, Briefcase, Users, MapPin, Building, GraduationCap, Mail } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -14,6 +14,7 @@ import {
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
 
 interface UserCardProps {
@@ -40,6 +41,7 @@ export const UserCard = memo(function UserCard({
   const isAdmin = user.user_roles.role === "admin";
   const isActive = user.status === "active";
   const primarySbu = user.user_sbus?.find((sbu) => sbu.is_primary)?.sbu.name;
+  const otherSbus = user.user_sbus?.filter(sbu => !sbu.is_primary).map(sbu => sbu.sbu.name);
 
   return (
     <Card 
@@ -59,21 +61,23 @@ export const UserCard = memo(function UserCard({
       
       <CardHeader className="space-y-4">
         <div className="flex items-start gap-4">
-          <Avatar className="h-12 w-12 ring-2 ring-background transition-transform duration-200 hover:scale-110">
+          <Avatar className="h-16 w-16 ring-2 ring-background transition-transform duration-200 hover:scale-110">
             <AvatarImage src={user.profile_image_url || undefined} />
-            <AvatarFallback className="bg-primary/10">
-              {user.first_name?.[0]}
-              {user.last_name?.[0]}
+            <AvatarFallback className="bg-primary/10 text-lg">
+              {user.first_name?.[0]}{user.last_name?.[0]}
             </AvatarFallback>
           </Avatar>
-          <div className="flex-1 space-y-1">
-            <h3 className="font-semibold leading-none">
+          <div className="flex-1 space-y-2">
+            <h3 className="font-semibold text-lg leading-none">
               {user.first_name} {user.last_name}
             </h3>
-            <p className="text-sm text-muted-foreground">{user.email}</p>
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <Mail className="h-4 w-4" />
+              <span>{user.email}</span>
+            </div>
             {user.org_id && (
               <Badge variant="outline" className="mt-1">
-                {user.org_id}
+                ID: {user.org_id}
               </Badge>
             )}
           </div>
@@ -81,50 +85,98 @@ export const UserCard = memo(function UserCard({
       </CardHeader>
 
       <CardContent className="space-y-4">
-        <div className="grid grid-cols-2 gap-4">
-          <div className="flex items-center justify-between">
-            <span className="text-sm text-muted-foreground">Admin</span>
-            <Switch
-              checked={isAdmin}
-              onCheckedChange={(checked) => onRoleToggle(user.id, checked)}
-              className="transition-opacity duration-200 hover:opacity-80"
-            />
+        <div className="grid gap-4">
+          {/* Employment Status Section */}
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex items-center gap-2">
+              <Badge variant={isActive ? "default" : "secondary"}>
+                {isActive ? "Active" : "Inactive"}
+              </Badge>
+              <Badge variant={isAdmin ? "destructive" : "outline"}>
+                {isAdmin ? "Admin" : "User"}
+              </Badge>
+            </div>
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-muted-foreground">Admin</span>
+                <Switch
+                  checked={isAdmin}
+                  onCheckedChange={(checked) => onRoleToggle(user.id, checked)}
+                  className="transition-opacity duration-200 hover:opacity-80"
+                />
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-muted-foreground">Active</span>
+                <Switch
+                  checked={isActive}
+                  onCheckedChange={(checked) => onStatusToggle(user.id, checked)}
+                  className="transition-opacity duration-200 hover:opacity-80"
+                />
+              </div>
+            </div>
           </div>
-          <div className="flex items-center justify-between">
-            <span className="text-sm text-muted-foreground">Active</span>
-            <Switch
-              checked={isActive}
-              onCheckedChange={(checked) => onStatusToggle(user.id, checked)}
-              className="transition-opacity duration-200 hover:opacity-80"
-            />
-          </div>
-        </div>
 
-        <div className="space-y-2">
-          {primarySbu && (
-            <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">Primary SBU</span>
-              <span>{primarySbu}</span>
-            </div>
-          )}
-          {user.designation && (
-            <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">Designation</span>
-              <span>{user.designation}</span>
-            </div>
-          )}
-          {user.level && (
-            <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">Level</span>
-              <span>{user.level}</span>
-            </div>
-          )}
-          {user.location && (
-            <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">Location</span>
-              <span>{user.location}</span>
-            </div>
-          )}
+          <Separator />
+
+          {/* Employment Details Section */}
+          <div className="grid gap-3">
+            {primarySbu && (
+              <div className="flex items-center gap-2 text-sm">
+                <Building className="h-4 w-4 text-muted-foreground" />
+                <span className="text-muted-foreground">Primary SBU:</span>
+                <span className="font-medium">{primarySbu}</span>
+              </div>
+            )}
+            {otherSbus && otherSbus.length > 0 && (
+              <div className="flex items-center gap-2 text-sm">
+                <Building className="h-4 w-4 text-muted-foreground" />
+                <span className="text-muted-foreground">Other SBUs:</span>
+                <span className="font-medium">{otherSbus.join(", ")}</span>
+              </div>
+            )}
+            {user.designation && (
+              <div className="flex items-center gap-2 text-sm">
+                <Briefcase className="h-4 w-4 text-muted-foreground" />
+                <span className="text-muted-foreground">Designation:</span>
+                <span className="font-medium">{user.designation}</span>
+              </div>
+            )}
+            {user.level && (
+              <div className="flex items-center gap-2 text-sm">
+                <GraduationCap className="h-4 w-4 text-muted-foreground" />
+                <span className="text-muted-foreground">Level:</span>
+                <span className="font-medium">{user.level}</span>
+              </div>
+            )}
+            {user.location && (
+              <div className="flex items-center gap-2 text-sm">
+                <MapPin className="h-4 w-4 text-muted-foreground" />
+                <span className="text-muted-foreground">Location:</span>
+                <span className="font-medium">{user.location}</span>
+              </div>
+            )}
+            {user.employment_type && (
+              <div className="flex items-center gap-2 text-sm">
+                <Users className="h-4 w-4 text-muted-foreground" />
+                <span className="text-muted-foreground">Employment Type:</span>
+                <span className="font-medium">{user.employment_type}</span>
+              </div>
+            )}
+            {user.employee_role && (
+              <div className="flex items-center gap-2 text-sm">
+                <Users className="h-4 w-4 text-muted-foreground" />
+                <span className="text-muted-foreground">Employee Role:</span>
+                <span className="font-medium">{user.employee_role}</span>
+              </div>
+            )}
+            {user.employee_type && (
+              <div className="flex items-center gap-2 text-sm">
+                <Users className="h-4 w-4 text-muted-foreground" />
+                <span className="text-muted-foreground">Employee Type:</span>
+                <span className="font-medium">{user.employee_type}</span>
+              </div>
+            )}
+          </div>
         </div>
       </CardContent>
 
