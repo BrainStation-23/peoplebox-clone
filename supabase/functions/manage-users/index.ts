@@ -140,7 +140,11 @@ async function getSBUIds(supabaseClient: any, sbuNames: string) {
 }
 
 async function handleUserRelationships(supabaseClient: any, userId: string, user: CreateUserPayload) {
-  console.log('Processing relationships for user:', user.email);
+  console.log('Processing relationships for user:', {
+    email: user.email,
+    employeeRole: user.employee_role,
+    employeeType: user.employee_type
+  });
   
   try {
     // Get IDs for relationships
@@ -157,11 +161,12 @@ async function handleUserRelationships(supabaseClient: any, userId: string, user
       employmentTypeId,
       locationId,
       employeeRoleId,
-      employeeTypeId
+      employeeTypeId,
+      userId
     });
 
     // Update profile with all fields, converting empty strings to null
-    const { error: updateProfileError } = await supabaseClient
+    const { data: updatedProfile, error: updateProfileError } = await supabaseClient
       .from('profiles')
       .update({
         first_name: nullIfEmpty(user.first_name),
@@ -176,12 +181,15 @@ async function handleUserRelationships(supabaseClient: any, userId: string, user
         date_of_birth: nullIfEmpty(user.date_of_birth),
         designation: nullIfEmpty(user.designation)
       })
-      .eq('id', userId);
+      .eq('id', userId)
+      .select();
 
     if (updateProfileError) {
       console.error('Error updating profile:', updateProfileError);
       throw updateProfileError;
     }
+
+    console.log('Updated profile:', updatedProfile);
 
     // Handle SBU assignments if provided
     if (user.sbus) {
