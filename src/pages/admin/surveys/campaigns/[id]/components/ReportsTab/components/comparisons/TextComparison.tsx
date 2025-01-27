@@ -2,6 +2,7 @@ import { Card } from "@/components/ui/card";
 import { ProcessedResponse } from "../../hooks/useResponseProcessing";
 import { ComparisonDimension } from "../../types/comparison";
 import { WordCloud } from "../../charts/WordCloud";
+import { useEffect } from "react";
 
 interface TextComparisonProps {
   responses: ProcessedResponse[];
@@ -65,12 +66,16 @@ export function TextComparison({
 
   const groupedWords = processData();
 
+  useEffect(() => {
+    console.log("TextComparison processed data:", groupedWords);
+  }, [groupedWords]);
+
   return (
     <div className="grid gap-4 md:grid-cols-2">
       {groupedWords.map(({ group, words }) => (
         <Card key={group} className="p-4">
           <h3 className="mb-4 text-lg font-semibold">{group}</h3>
-          <div className="h-[200px]">
+          <div className="min-h-[400px]">
             <WordCloud words={words} />
           </div>
         </Card>

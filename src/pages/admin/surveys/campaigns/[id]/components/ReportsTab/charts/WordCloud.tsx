@@ -1,4 +1,4 @@
-import { useCallback } from "react";
+import { useCallback, useRef, useEffect } from "react";
 import Wordcloud from "@visx/wordcloud/lib/Wordcloud";
 
 interface WordCloudProps {
@@ -14,12 +14,17 @@ interface WordData {
 }
 
 export function WordCloud({ words }: WordCloudProps) {
+  const containerRef = useRef<HTMLDivElement>(null);
   const colors = [
     "#2563eb", // blue-600
     "#3b82f6", // blue-500
     "#60a5fa", // blue-400
     "#93c5fd", // blue-300
   ];
+
+  useEffect(() => {
+    console.log("WordCloud received words:", words);
+  }, [words]);
 
   // Convert our data format to what @visx/wordcloud expects
   const formattedWords = words.map((w) => ({
@@ -28,14 +33,13 @@ export function WordCloud({ words }: WordCloudProps) {
   }));
 
   const getRotation = useCallback(() => {
-    // Randomly rotate between -30 and 30 degrees
     return Math.random() * 60 - 30;
   }, []);
 
   const getFontSize = useCallback((word: WordData) => {
     const maxSize = Math.max(...words.map((w) => w.value));
     const minSize = Math.min(...words.map((w) => w.value));
-    const scale = (word.size - minSize) / (maxSize - minSize);
+    const scale = (word.size - minSize) / (maxSize - minSize || 1);
     return 12 + scale * 20; // Scale between 12px and 32px
   }, [words]);
 
@@ -46,11 +50,11 @@ export function WordCloud({ words }: WordCloudProps) {
   }, [words]);
 
   return (
-    <div className="w-full h-full bg-white">
+    <div ref={containerRef} className="w-full h-[400px] relative">
       <Wordcloud
         words={formattedWords}
-        width={600}
-        height={300}
+        width={containerRef.current?.clientWidth || 600}
+        height={400}
         fontSize={(w) => getFontSize(w as WordData)}
         font={"Inter"}
         padding={2}
@@ -58,7 +62,7 @@ export function WordCloud({ words }: WordCloudProps) {
         spiral="rectangular"
       >
         {(cloudWords) => (
-          <g transform={`translate(${600 / 2},${300 / 2})`}>
+          <g transform={`translate(${(containerRef.current?.clientWidth || 600) / 2},200)`}>
             {cloudWords.map((w, i) => (
               <text
                 key={i}
