@@ -60,6 +60,8 @@ export async function* batchProcessor(
             location: user.location,
             gender: user.gender,
             date_of_birth: user.dateOfBirth,
+            employee_role: user.employeeRole,
+            employee_type: user.employeeType,
             sbus: user.sbus
           }))
         }
