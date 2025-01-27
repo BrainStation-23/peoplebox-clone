@@ -46,7 +46,7 @@ export const UserCard = memo(function UserCard({
   return (
     <Card 
       className={cn(
-        "relative transition-all duration-200 hover:shadow-md will-change-transform",
+        "relative h-full transition-all duration-200 hover:shadow-md will-change-transform",
         selected ? 'ring-2 ring-primary scale-[1.02]' : '',
         !isActive && 'opacity-75'
       )}
@@ -67,16 +67,16 @@ export const UserCard = memo(function UserCard({
               {user.first_name?.[0]}{user.last_name?.[0]}
             </AvatarFallback>
           </Avatar>
-          <div className="flex-1 space-y-2">
-            <h3 className="font-semibold text-lg leading-none">
+          <div className="flex-1 min-w-0">
+            <h3 className="font-semibold text-lg leading-none truncate">
               {user.first_name} {user.last_name}
             </h3>
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <Mail className="h-4 w-4" />
-              <span>{user.email}</span>
+            <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1">
+              <Mail className="h-4 w-4 shrink-0" />
+              <span className="truncate">{user.email}</span>
             </div>
             {user.org_id && (
-              <Badge variant="outline" className="mt-1">
+              <Badge variant="outline" className="mt-2">
                 ID: {user.org_id}
               </Badge>
             )}
@@ -86,8 +86,8 @@ export const UserCard = memo(function UserCard({
 
       <CardContent className="space-y-4">
         <div className="grid gap-4">
-          {/* Employment Status Section */}
-          <div className="flex items-center justify-between gap-4">
+          {/* Status Section */}
+          <div className="flex items-center justify-between gap-2 flex-wrap">
             <div className="flex items-center gap-2">
               <Badge variant={isActive ? "default" : "secondary"}>
                 {isActive ? "Active" : "Inactive"}
@@ -96,9 +96,9 @@ export const UserCard = memo(function UserCard({
                 {isAdmin ? "Admin" : "User"}
               </Badge>
             </div>
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-4 shrink-0">
               <div className="flex items-center gap-2">
-                <span className="text-sm text-muted-foreground">Admin</span>
+                <span className="text-sm text-muted-foreground whitespace-nowrap">Admin</span>
                 <Switch
                   checked={isAdmin}
                   onCheckedChange={(checked) => onRoleToggle(user.id, checked)}
@@ -106,7 +106,7 @@ export const UserCard = memo(function UserCard({
                 />
               </div>
               <div className="flex items-center gap-2">
-                <span className="text-sm text-muted-foreground">Active</span>
+                <span className="text-sm text-muted-foreground whitespace-nowrap">Active</span>
                 <Switch
                   checked={isActive}
                   onCheckedChange={(checked) => onStatusToggle(user.id, checked)}
@@ -122,58 +122,58 @@ export const UserCard = memo(function UserCard({
           <div className="grid gap-3">
             {primarySbu && (
               <div className="flex items-center gap-2 text-sm">
-                <Building className="h-4 w-4 text-muted-foreground" />
-                <span className="text-muted-foreground">Primary SBU:</span>
-                <span className="font-medium">{primarySbu}</span>
+                <Building className="h-4 w-4 text-muted-foreground shrink-0" />
+                <span className="text-muted-foreground whitespace-nowrap">Primary SBU:</span>
+                <span className="font-medium truncate">{primarySbu}</span>
               </div>
             )}
             {otherSbus && otherSbus.length > 0 && (
               <div className="flex items-center gap-2 text-sm">
-                <Building className="h-4 w-4 text-muted-foreground" />
-                <span className="text-muted-foreground">Other SBUs:</span>
-                <span className="font-medium">{otherSbus.join(", ")}</span>
+                <Building className="h-4 w-4 text-muted-foreground shrink-0" />
+                <span className="text-muted-foreground whitespace-nowrap">Other SBUs:</span>
+                <span className="font-medium truncate">{otherSbus.join(", ")}</span>
               </div>
             )}
             {user.designation && (
               <div className="flex items-center gap-2 text-sm">
-                <Briefcase className="h-4 w-4 text-muted-foreground" />
-                <span className="text-muted-foreground">Designation:</span>
-                <span className="font-medium">{user.designation}</span>
+                <Briefcase className="h-4 w-4 text-muted-foreground shrink-0" />
+                <span className="text-muted-foreground whitespace-nowrap">Designation:</span>
+                <span className="font-medium truncate">{user.designation}</span>
               </div>
             )}
             {user.level && (
               <div className="flex items-center gap-2 text-sm">
-                <GraduationCap className="h-4 w-4 text-muted-foreground" />
-                <span className="text-muted-foreground">Level:</span>
-                <span className="font-medium">{user.level}</span>
+                <GraduationCap className="h-4 w-4 text-muted-foreground shrink-0" />
+                <span className="text-muted-foreground whitespace-nowrap">Level:</span>
+                <span className="font-medium truncate">{user.level}</span>
               </div>
             )}
             {user.location && (
               <div className="flex items-center gap-2 text-sm">
-                <MapPin className="h-4 w-4 text-muted-foreground" />
-                <span className="text-muted-foreground">Location:</span>
-                <span className="font-medium">{user.location}</span>
+                <MapPin className="h-4 w-4 text-muted-foreground shrink-0" />
+                <span className="text-muted-foreground whitespace-nowrap">Location:</span>
+                <span className="font-medium truncate">{user.location}</span>
               </div>
             )}
             {user.employment_type && (
               <div className="flex items-center gap-2 text-sm">
-                <Users className="h-4 w-4 text-muted-foreground" />
-                <span className="text-muted-foreground">Employment Type:</span>
-                <span className="font-medium">{user.employment_type}</span>
+                <Users className="h-4 w-4 text-muted-foreground shrink-0" />
+                <span className="text-muted-foreground whitespace-nowrap">Employment Type:</span>
+                <span className="font-medium truncate">{user.employment_type}</span>
               </div>
             )}
             {user.employee_role && (
               <div className="flex items-center gap-2 text-sm">
-                <Users className="h-4 w-4 text-muted-foreground" />
-                <span className="text-muted-foreground">Employee Role:</span>
-                <span className="font-medium">{user.employee_role}</span>
+                <Users className="h-4 w-4 text-muted-foreground shrink-0" />
+                <span className="text-muted-foreground whitespace-nowrap">Employee Role:</span>
+                <span className="font-medium truncate">{user.employee_role}</span>
               </div>
             )}
             {user.employee_type && (
               <div className="flex items-center gap-2 text-sm">
-                <Users className="h-4 w-4 text-muted-foreground" />
-                <span className="text-muted-foreground">Employee Type:</span>
-                <span className="font-medium">{user.employee_type}</span>
+                <Users className="h-4 w-4 text-muted-foreground shrink-0" />
+                <span className="text-muted-foreground whitespace-nowrap">Employee Type:</span>
+                <span className="font-medium truncate">{user.employee_type}</span>
               </div>
             )}
           </div>
@@ -191,7 +191,7 @@ export const UserCard = memo(function UserCard({
               <MoreHorizontal className="h-4 w-4" />
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
+          <DropdownMenuContent align="end" className="w-[200px]">
             <DropdownMenuItem 
               onClick={() => navigate(`/admin/users/${user.id}/edit`)}
               className="cursor-pointer"
