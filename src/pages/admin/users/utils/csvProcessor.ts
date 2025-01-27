@@ -17,6 +17,8 @@ const csvRowSchema = z.object({
   designation: z.string().optional(),
   location: z.string().optional(),
   employmentType: z.string().optional(),
+  employeeRole: z.string().optional(),
+  employeeType: z.string().optional(),
 });
 
 export type CSVRow = z.infer<typeof csvRowSchema>;
@@ -154,6 +156,8 @@ export async function processCSVFile(file: File): Promise<ProcessingResult> {
       designation: row[headers.indexOf("Designation")]?.trim(),
       location: row[headers.indexOf("Location")]?.trim(),
       employmentType: row[headers.indexOf("Employment Type")]?.trim(),
+      employeeRole: row[headers.indexOf("Employee Role")]?.trim(),
+      employeeType: row[headers.indexOf("Employee Type")]?.trim(),
     };
 
     try {

@@ -14,6 +14,8 @@ interface CreateUserPayload {
   is_admin: boolean;
   level?: string;
   employment_type?: string;
+  employee_role?: string;
+  employee_type?: string;
   sbus?: string;
   org_id?: string;
   gender?: string;
@@ -87,6 +89,40 @@ async function getLocationId(supabaseClient: any, locationName: string) {
   return data?.id;
 }
 
+async function getEmployeeRoleId(supabaseClient: any, roleName: string) {
+  if (!roleName?.trim()) return null;
+
+  const { data, error } = await supabaseClient
+    .from('employee_roles')
+    .select('id')
+    .eq('name', roleName)
+    .eq('status', 'active')
+    .single();
+  
+  if (error) {
+    console.error('Error finding employee role:', roleName, error);
+    return null;
+  }
+  return data?.id;
+}
+
+async function getEmployeeTypeId(supabaseClient: any, typeName: string) {
+  if (!typeName?.trim()) return null;
+
+  const { data, error } = await supabaseClient
+    .from('employee_types')
+    .select('id')
+    .eq('name', typeName)
+    .eq('status', 'active')
+    .single();
+  
+  if (error) {
+    console.error('Error finding employee type:', typeName, error);
+    return null;
+  }
+  return data?.id;
+}
+
 async function getSBUIds(supabaseClient: any, sbuNames: string) {
   if (!sbuNames?.trim()) return [];
 
@@ -108,11 +144,21 @@ async function handleUserRelationships(supabaseClient: any, userId: string, user
   
   try {
     // Get IDs for relationships
-    const [levelId, employmentTypeId, locationId] = await Promise.all([
+    const [levelId, employmentTypeId, locationId, employeeRoleId, employeeTypeId] = await Promise.all([
       user.level ? getLevelId(supabaseClient, user.level) : null,
       user.employment_type ? getEmploymentTypeId(supabaseClient, user.employment_type) : null,
-      user.location ? getLocationId(supabaseClient, user.location) : null
+      user.location ? getLocationId(supabaseClient, user.location) : null,
+      user.employee_role ? getEmployeeRoleId(supabaseClient, user.employee_role) : null,
+      user.employee_type ? getEmployeeTypeId(supabaseClient, user.employee_type) : null
     ]);
+
+    console.log('Retrieved IDs:', {
+      levelId,
+      employmentTypeId,
+      locationId,
+      employeeRoleId,
+      employeeTypeId
+    });
 
     // Update profile with all fields, converting empty strings to null
     const { error: updateProfileError } = await supabaseClient
@@ -124,6 +170,8 @@ async function handleUserRelationships(supabaseClient: any, userId: string, user
         level_id: levelId,
         employment_type_id: employmentTypeId,
         location_id: locationId,
+        employee_role_id: employeeRoleId,
+        employee_type_id: employeeTypeId,
         gender: nullIfEmpty(user.gender),
         date_of_birth: nullIfEmpty(user.date_of_birth),
         designation: nullIfEmpty(user.designation)
@@ -131,6 +179,7 @@ async function handleUserRelationships(supabaseClient: any, userId: string, user
       .eq('id', userId);
 
     if (updateProfileError) {
+      console.error('Error updating profile:', updateProfileError);
       throw updateProfileError;
     }
 
@@ -156,6 +205,7 @@ async function handleUserRelationships(supabaseClient: any, userId: string, user
           .insert(sbuAssignments);
 
         if (sbuError) {
+          console.error('Error assigning SBUs:', sbuError);
           throw sbuError;
         }
       }
