@@ -16,6 +16,8 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 interface UserCardProps {
   user: User;
@@ -42,6 +44,42 @@ export const UserCard = memo(function UserCard({
   const isActive = user.status === "active";
   const primarySbu = user.user_sbus?.find((sbu) => sbu.is_primary)?.sbu.name;
   const otherSbus = user.user_sbus?.filter(sbu => !sbu.is_primary).map(sbu => sbu.sbu.name);
+
+  const handleRoleToggle = async (checked: boolean) => {
+    try {
+      const { error: roleError } = await supabase
+        .from('user_roles')
+        .update({ role: checked ? 'admin' : 'user' })
+        .eq('user_id', user.id);
+
+      if (roleError) throw roleError;
+
+      onRoleToggle(user.id, checked);
+      toast.success(`User role updated to ${checked ? 'admin' : 'user'}`);
+    } catch (error) {
+      console.error('Error updating role:', error);
+      toast.error('Failed to update user role');
+    }
+  };
+
+  const handleStatusToggle = async (checked: boolean) => {
+    try {
+      const { error } = await supabase.functions.invoke('toggle-user-status', {
+        body: { 
+          userId: user.id,
+          status: checked ? 'active' : 'disabled'
+        }
+      });
+
+      if (error) throw error;
+
+      onStatusToggle(user.id, checked);
+      toast.success(`User ${checked ? 'activated' : 'deactivated'} successfully`);
+    } catch (error) {
+      console.error('Error updating status:', error);
+      toast.error('Failed to update user status');
+    }
+  };
 
   return (
     <Card 
@@ -101,7 +139,7 @@ export const UserCard = memo(function UserCard({
                 <span className="text-sm text-muted-foreground whitespace-nowrap">Admin</span>
                 <Switch
                   checked={isAdmin}
-                  onCheckedChange={(checked) => onRoleToggle(user.id, checked)}
+                  onCheckedChange={handleRoleToggle}
                   className="transition-opacity duration-200 hover:opacity-80"
                 />
               </div>
@@ -109,7 +147,7 @@ export const UserCard = memo(function UserCard({
                 <span className="text-sm text-muted-foreground whitespace-nowrap">Active</span>
                 <Switch
                   checked={isActive}
-                  onCheckedChange={(checked) => onStatusToggle(user.id, checked)}
+                  onCheckedChange={handleStatusToggle}
                   className="transition-opacity duration-200 hover:opacity-80"
                 />
               </div>
