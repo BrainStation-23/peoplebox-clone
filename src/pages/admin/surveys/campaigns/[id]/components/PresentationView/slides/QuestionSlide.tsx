@@ -125,7 +125,9 @@ export function QuestionSlide({
                 <NpsChart data={processedData.data} />
               )}
               {processedData.type === "text" && (
-                <WordCloud words={processedData.data} />
+                <div className="min-h-[400px]">
+                  <WordCloud words={processedData.data} />
+                </div>
               )}
             </div>
           )}
