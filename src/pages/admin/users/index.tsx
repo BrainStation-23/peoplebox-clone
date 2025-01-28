@@ -10,8 +10,6 @@ import CreateUserDialog from "./components/CreateUserDialog";
 import EditUserDialog from "./components/EditUserDialog";
 import { SearchFilters } from "./components/UserTable/SearchFilters";
 import { ImportDialog } from "./components/ImportDialog";
-import { ExportProgress } from "./components/UserTable/ExportProgress";
-import { exportUsers } from "./utils/exportUsers";
 import { Button } from "@/components/ui/button";
 import { Power, MoreHorizontal } from "lucide-react";
 import {
@@ -26,7 +24,6 @@ import { supabase } from "@/integrations/supabase/client";
 export default function UsersPage() {
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isImportDialogOpen, setIsImportDialogOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState("");
@@ -38,13 +35,7 @@ export default function UsersPage() {
   const [selectedEmployeeType, setSelectedEmployeeType] = useState("all");
   const [pageSize, setPageSize] = useState(10);
   const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
-  const [exportProgress, setExportProgress] = useState({
-    isOpen: false,
-    processed: 0,
-    total: 0,
-    error: "",
-    isComplete: false,
-  });
+  
   const debouncedSearch = useDebounce(searchTerm, 300);
 
   useEffect(() => {
@@ -74,44 +65,6 @@ export default function UsersPage() {
     isLoading: isLoadingFilters
   } = useFilterOptions();
   const { handleCreateSuccess, handleDelete } = useUserActions(refetch);
-
-  const handleExport = async () => {
-    if (!data?.users) return;
-    
-    setExportProgress({
-      isOpen: true,
-      processed: 0,
-      total: data.users.length,
-      error: "",
-      isComplete: false,
-    });
-
-    try {
-      await exportUsers(data.users, (processed) => {
-        setExportProgress(prev => ({
-          ...prev,
-          processed,
-        }));
-      });
-
-      setExportProgress(prev => ({
-        ...prev,
-        isComplete: true,
-      }));
-
-      setTimeout(() => {
-        setExportProgress(prev => ({
-          ...prev,
-          isOpen: false,
-        }));
-      }, 2000);
-    } catch (error) {
-      setExportProgress(prev => ({
-        ...prev,
-        error: error instanceof Error ? error.message : "Failed to export users",
-      }));
-    }
-  };
 
   const handleBulkDelete = async () => {
     try {
@@ -182,8 +135,7 @@ export default function UsersPage() {
           setSelectedEmploymentType={setSelectedEmploymentType}
           setSelectedEmployeeRole={setSelectedEmployeeRole}
           setSelectedEmployeeType={setSelectedEmployeeType}
-          onExport={handleExport}
-          onImport={() => setIsImportDialogOpen(true)}
+          onBulkCreate={() => setIsImportDialogOpen(true)}
           sbus={sbus}
           levels={levels}
           locations={locations}
@@ -263,17 +215,6 @@ export default function UsersPage() {
           refetch();
           setIsImportDialogOpen(false);
         }}
-      />
-
-      <ExportProgress
-        open={exportProgress.isOpen}
-        onOpenChange={(open) =>
-          setExportProgress((prev) => ({ ...prev, isOpen: open }))
-        }
-        progress={exportProgress.processed}
-        total={exportProgress.total}
-        error={exportProgress.error}
-        isComplete={exportProgress.isComplete}
       />
     </div>
   );
