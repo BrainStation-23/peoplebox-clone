@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/popover";
 import { useDebounce } from "@/hooks/use-debounce";
 import { useSearchProfiles } from "../hooks/useSearchProfiles";
+import { supabase } from "@/integrations/supabase/client";
 
 interface Profile {
   id: string;
@@ -34,7 +35,7 @@ export function ProfileSearchInput({ value, onChange }: ProfileSearchInputProps)
   const [search, setSearch] = useState("");
   const debouncedSearch = useDebounce(search, 300);
   const { data, isLoading } = useSearchProfiles(debouncedSearch);
-  const profiles = data?.data || [];
+  const profiles = (data?.data || []) as Profile[];
 
   const [selectedProfile, setSelectedProfile] = useState<Profile | null>(null);
 
