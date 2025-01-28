@@ -14,6 +14,40 @@ interface BulkUpdateDialogProps {
   onUpdateComplete: () => void;
 }
 
+interface SearchUsersResponse {
+  profile: {
+    id: string;
+    email: string;
+    first_name: string | null;
+    last_name: string | null;
+    profile_image_url: string | null;
+    level: string | null;
+    org_id: string | null;
+    gender: string | null;
+    date_of_birth: string | null;
+    designation: string | null;
+    location: string | null;
+    employment_type: string | null;
+    employee_role: string | null;
+    employee_type: string | null;
+    status: string;
+    user_roles: {
+      role: string;
+    };
+    user_sbus: Array<{
+      id: string;
+      user_id: string;
+      sbu_id: string;
+      is_primary: boolean;
+      sbu: {
+        id: string;
+        name: string;
+      };
+    }>;
+  };
+  total_count: number;
+}
+
 export function BulkUpdateDialog({ open, onOpenChange, onUpdateComplete }: BulkUpdateDialogProps) {
   const [isExporting, setIsExporting] = useState(false);
 
@@ -35,8 +69,7 @@ export function BulkUpdateDialog({ open, onOpenChange, onUpdateComplete }: BulkU
       if (error) throw error;
 
       if (data) {
-        // Transform the data into User objects
-        const users: User[] = data.map(item => ({
+        const users: User[] = (data as SearchUsersResponse[]).map(item => ({
           id: item.profile.id,
           email: item.profile.email,
           first_name: item.profile.first_name,
