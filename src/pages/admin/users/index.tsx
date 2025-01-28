@@ -10,7 +10,6 @@ import CreateUserDialog from "./components/CreateUserDialog";
 import EditUserDialog from "./components/EditUserDialog";
 import { SearchFilters } from "./components/UserTable/SearchFilters";
 import { ImportDialog } from "./components/ImportDialog";
-import { BulkUpdateDialog } from "./components/BulkUpdateDialog";
 import { Button } from "@/components/ui/button";
 import { Power, MoreHorizontal } from "lucide-react";
 import {
@@ -22,14 +21,10 @@ import {
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 
-// ... keep existing code (imports and type definitions)
-
 export default function UsersPage() {
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isImportDialogOpen, setIsImportDialogOpen] = useState(false);
-  const [isBulkUpdateDialogOpen, setIsBulkUpdateDialogOpen] = useState(false);
-  
   const [currentPage, setCurrentPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedSBU, setSelectedSBU] = useState("all");
@@ -119,14 +114,9 @@ export default function UsersPage() {
     <div className="container mx-auto py-6 space-y-4">
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-bold">Users</h1>
-        <div className="flex gap-2">
-          <Button onClick={() => setIsBulkUpdateDialogOpen(true)} variant="outline">
-            Bulk Update
-          </Button>
-          <Button onClick={() => setIsCreateDialogOpen(true)}>
-            Add User
-          </Button>
-        </div>
+        <Button onClick={() => setIsCreateDialogOpen(true)}>
+          Add User
+        </Button>
       </div>
 
       <div className="space-y-4">
@@ -224,15 +214,6 @@ export default function UsersPage() {
         onImportComplete={() => {
           refetch();
           setIsImportDialogOpen(false);
-        }}
-      />
-
-      <BulkUpdateDialog
-        open={isBulkUpdateDialogOpen}
-        onOpenChange={setIsBulkUpdateDialogOpen}
-        onUpdateComplete={() => {
-          refetch();
-          setIsBulkUpdateDialogOpen(false);
         }}
       />
     </div>
