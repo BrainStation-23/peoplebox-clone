@@ -153,6 +153,7 @@ export default function UsersPage() {
           employeeTypes={employeeTypes}
           totalResults={data?.total}
           isSearching={isLoading || isLoadingFilters}
+          onBulkCreate={() => setIsImportDialogOpen(true)}
         />
 
         {selectedUsers.length > 0 && (
