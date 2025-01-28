@@ -20,7 +20,7 @@ export const exportUsers = async (users: User[], onProgress?: ProgressCallback) 
     "Employee Role",
     "Employee Type",
     "SBUs",
-    "ID" // Hidden technical field for import/update
+    "ID"
   ];
 
   const processUsers = async () => {
@@ -29,7 +29,6 @@ export const exportUsers = async (users: User[], onProgress?: ProgressCallback) 
       const user = users[i];
       console.log("Processing user for export:", user);
       
-      // Combine primary and additional SBUs into semicolon-separated list
       const allSbus = user.user_sbus
         ?.sort((a, b) => (b.is_primary ? 1 : 0) - (a.is_primary ? 1 : 0))
         ?.map(sbu => sbu.sbu.name)
