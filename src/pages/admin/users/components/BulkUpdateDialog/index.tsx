@@ -139,7 +139,17 @@ export function BulkUpdateDialog({ open, onOpenChange, onUpdateComplete }: BulkU
               <ImportGuidelines />
               <UploadArea
                 isProcessing={isProcessing}
-                onProcessingComplete={handleProcessingComplete}
+                onProcessingComplete={async (file) => {
+                  try {
+                    setIsProcessing(true);
+                    const result = await processCSVFile(file);
+                    handleProcessingComplete(result);
+                  } catch (error) {
+                    setIsProcessing(false);
+                    console.error("Processing error:", error);
+                    toast.error(error instanceof Error ? error.message : "Unknown error occurred");
+                  }
+                }}
               />
             </>
           )}
