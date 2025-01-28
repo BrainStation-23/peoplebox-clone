@@ -4,7 +4,7 @@ import { Pause, Play, X } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import type { BatchProgress } from "../../utils/batchProcessor";
 
-export interface ImportProgressProps {
+interface ImportProgressProps {
   progress: BatchProgress;
   paused: boolean;
   onPauseToggle: () => void;

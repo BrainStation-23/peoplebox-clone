@@ -1,14 +1,14 @@
-import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertCircle, Check, Download } from "lucide-react";
 import { ProcessingResult } from "../../utils/csvProcessor";
 import { ImportError, ImportResult, convertValidationErrorsToImportErrors } from "../../utils/errorReporting";
 
-export interface ProcessingResultViewProps {
-  processingResult?: ProcessingResult | null;
-  importResult?: ImportResult | null;
-  onDownloadErrors?: (errors: ImportError[]) => void;
-  onStartImport?: () => void;
+interface ProcessingResultViewProps {
+  processingResult: ProcessingResult | null;
+  importResult: ImportResult | null;
+  onDownloadErrors: (errors: ImportError[]) => void;
+  onStartImport: () => void;
 }
 
 export function ProcessingResultView({

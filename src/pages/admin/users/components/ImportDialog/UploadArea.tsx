@@ -3,7 +3,7 @@ import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { toast } from "@/hooks/use-toast";
 import { processCSVFile, type ProcessingResult } from "../../utils/csvProcessor";
 
-export interface UploadAreaProps {
+interface UploadAreaProps {
   isProcessing: boolean;
   onProcessingComplete: (result: ProcessingResult) => void;
 }

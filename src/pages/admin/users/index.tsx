@@ -9,7 +9,7 @@ import { UserGrid } from "./components/UserGrid";
 import CreateUserDialog from "./components/CreateUserDialog";
 import EditUserDialog from "./components/EditUserDialog";
 import { SearchFilters } from "./components/UserTable/SearchFilters";
-import { BulkUpdateDialog } from "./components/BulkUpdateDialog";
+import { ImportDialog } from "./components/ImportDialog";
 import { Button } from "@/components/ui/button";
 import { Power, MoreHorizontal } from "lucide-react";
 import {
@@ -37,7 +37,6 @@ export default function UsersPage() {
   const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
   
   const debouncedSearch = useDebounce(searchTerm, 300);
-  const [isBulkUpdateDialogOpen, setIsBulkUpdateDialogOpen] = useState(false);
 
   useEffect(() => {
     setCurrentPage(1);
@@ -115,14 +114,9 @@ export default function UsersPage() {
     <div className="container mx-auto py-6 space-y-4">
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-bold">Users</h1>
-        <div className="flex gap-2">
-          <Button onClick={() => setIsCreateDialogOpen(true)}>
-            Add User
-          </Button>
-          <Button onClick={() => setIsBulkUpdateDialogOpen(true)} variant="outline">
-            Bulk Update
-          </Button>
-        </div>
+        <Button onClick={() => setIsCreateDialogOpen(true)}>
+          Add User
+        </Button>
       </div>
 
       <div className="space-y-4">
@@ -212,15 +206,6 @@ export default function UsersPage() {
         user={selectedUser}
         open={!!selectedUser}
         onOpenChange={(open) => !open && setSelectedUser(null)}
-      />
-
-      <BulkUpdateDialog
-        open={isBulkUpdateDialogOpen}
-        onOpenChange={setIsBulkUpdateDialogOpen}
-        onUpdateComplete={() => {
-          refetch();
-          setIsBulkUpdateDialogOpen(false);
-        }}
       />
 
       <ImportDialog
