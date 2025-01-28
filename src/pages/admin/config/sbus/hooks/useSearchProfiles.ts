@@ -12,7 +12,9 @@ export function useSearchProfiles(searchTerm: string) {
   return useQuery({
     queryKey: ["profiles", "search", searchTerm],
     queryFn: async () => {
-      if (!searchTerm.trim()) return { data: [], count: 0 };
+      if (!searchTerm.trim()) {
+        return { data: [], count: 0 };
+      }
       
       const { data, error } = await supabase.rpc("search_users", {
         search_text: searchTerm,

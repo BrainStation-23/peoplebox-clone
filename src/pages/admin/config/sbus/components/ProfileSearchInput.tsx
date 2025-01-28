@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Check, ChevronsUpDown, X } from "lucide-react";
+import { Check, ChevronsUpDown, Loader2, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {
@@ -35,13 +35,12 @@ export function ProfileSearchInput({ value, onChange }: ProfileSearchInputProps)
   const [search, setSearch] = useState("");
   const debouncedSearch = useDebounce(search, 300);
   const { data, isLoading } = useSearchProfiles(debouncedSearch);
-  const profiles = (data?.data || []) as Profile[];
+  const profiles = data?.data || [];
 
   const [selectedProfile, setSelectedProfile] = useState<Profile | null>(null);
 
   useEffect(() => {
     if (value && !selectedProfile) {
-      // Fetch initial profile if value exists
       const fetchProfile = async () => {
         const { data: profile } = await supabase
           .from("profiles")
@@ -95,36 +94,41 @@ export function ProfileSearchInput({ value, onChange }: ProfileSearchInputProps)
               value={search}
               onValueChange={setSearch}
             />
-            {isLoading && (
-              <CommandEmpty>Loading...</CommandEmpty>
+            <CommandEmpty>
+              {isLoading ? (
+                <div className="flex items-center justify-center py-6">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                </div>
+              ) : (
+                "No users found."
+              )}
+            </CommandEmpty>
+            {!isLoading && profiles.length > 0 && (
+              <CommandGroup>
+                {profiles.map((profile) => (
+                  <CommandItem
+                    key={profile.id}
+                    value={profile.id}
+                    onSelect={() => handleSelect(profile)}
+                  >
+                    <Check
+                      className={cn(
+                        "mr-2 h-4 w-4",
+                        selectedProfile?.id === profile.id ? "opacity-100" : "opacity-0"
+                      )}
+                    />
+                    <div className="flex flex-col">
+                      <span>
+                        {profile.first_name} {profile.last_name}
+                      </span>
+                      <span className="text-sm text-muted-foreground">
+                        {profile.email}
+                      </span>
+                    </div>
+                  </CommandItem>
+                ))}
+              </CommandGroup>
             )}
-            {!isLoading && profiles.length === 0 && (
-              <CommandEmpty>No users found.</CommandEmpty>
-            )}
-            <CommandGroup>
-              {profiles.map((profile: Profile) => (
-                <CommandItem
-                  key={profile.id}
-                  value={profile.id}
-                  onSelect={() => handleSelect(profile)}
-                >
-                  <Check
-                    className={cn(
-                      "mr-2 h-4 w-4",
-                      selectedProfile?.id === profile.id ? "opacity-100" : "opacity-0"
-                    )}
-                  />
-                  <div className="flex flex-col">
-                    <span>
-                      {profile.first_name} {profile.last_name}
-                    </span>
-                    <span className="text-sm text-muted-foreground">
-                      {profile.email}
-                    </span>
-                  </div>
-                </CommandItem>
-              ))}
-            </CommandGroup>
           </Command>
         </PopoverContent>
       </Popover>
