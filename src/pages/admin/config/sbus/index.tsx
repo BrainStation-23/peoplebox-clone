@@ -43,19 +43,6 @@ export default function SBUsConfig() {
     },
   });
 
-  // Fetch profiles for head selection
-  const { data: profiles, isLoading: isLoadingProfiles } = useQuery({
-    queryKey: ["profiles"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("profiles")
-        .select("id, first_name, last_name, email");
-      
-      if (error) throw error;
-      return data;
-    },
-  });
-
   // Create SBU mutation
   const createSBU = useMutation({
     mutationFn: async (values: SBUFormValues) => {
@@ -170,10 +157,7 @@ export default function SBUsConfig() {
             <DialogHeader>
               <DialogTitle>Create New SBU</DialogTitle>
             </DialogHeader>
-            <SBUForm
-              onSubmit={createSBU.mutate}
-              profiles={profiles}
-            />
+            <SBUForm onSubmit={createSBU.mutate} />
           </DialogContent>
         </Dialog>
       </div>
@@ -192,7 +176,6 @@ export default function SBUsConfig() {
           </DialogHeader>
           <SBUForm
             onSubmit={(values) => updateSBU.mutate({ ...values, id: editingSBU.id })}
-            profiles={profiles}
             initialValues={{
               name: editingSBU?.name || "",
               profile_image_url: editingSBU?.profile_image_url || "",
