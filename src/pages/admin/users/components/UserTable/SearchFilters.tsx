@@ -93,12 +93,7 @@ export function SearchFilters({
             </span>
           )}
         </div>
-        <div className="flex gap-2">
-          <Button onClick={onBulkCreate} variant="outline" size="sm">
-            <Upload className="mr-2 h-4 w-4" />
-            Bulk Create Users
-          </Button>
-        </div>
+
       </div>
 
       <FilterPanel

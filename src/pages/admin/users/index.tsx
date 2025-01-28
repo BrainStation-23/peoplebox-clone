@@ -12,7 +12,7 @@ import { SearchFilters } from "./components/UserTable/SearchFilters";
 import { ImportDialog } from "./components/ImportDialog";
 import { BulkUpdateDialog } from "./components/BulkUpdateDialog";
 import { Button } from "@/components/ui/button";
-import { Power, MoreHorizontal } from "lucide-react";
+import { Power, MoreHorizontal, Upload, UserRoundPlus, FilePlus2, FileSpreadsheet } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -118,13 +118,16 @@ export default function UsersPage() {
         <h1 className="text-2xl font-bold">Users</h1>
         <div className="flex gap-2">
           <Button onClick={() => setIsCreateDialogOpen(true)}>
+           <UserRoundPlus className="mr-2 h-4 w-4"/>
             Add User
           </Button>
           <Button onClick={() => setIsImportDialogOpen(true)} variant="outline">
-            Bulk Create Users
+            <FilePlus2 className="mr-2 h-4 w-4"/>
+             Bulk Create Users
           </Button>
           <Button onClick={() => setIsUpdateDialogOpen(true)} variant="outline">
-            Bulk Update Users
+            <FileSpreadsheet className="mr-2 h-4 w-4" />
+             Bulk Update Users
           </Button>
         </div>
       </div>
