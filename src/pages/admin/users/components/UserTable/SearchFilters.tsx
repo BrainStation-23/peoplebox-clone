@@ -1,4 +1,4 @@
-import { Search, Download, X } from "lucide-react";
+import { Search, Upload, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
@@ -7,7 +7,7 @@ import { FilterPanel } from "./FilterPanel";
 interface SearchFiltersProps {
   searchTerm: string;
   setSearchTerm: (value: string) => void;
-  onExport: () => void;
+  onBulkCreate: () => void;
   sbus: Array<{ id: string; name: string; }>;
   levels: Array<{ id: string; name: string; }>;
   locations: Array<{ id: string; name: string; }>;
@@ -45,7 +45,7 @@ export function SearchFilters({
   setSelectedEmploymentType,
   setSelectedEmployeeRole,
   setSelectedEmployeeType,
-  onExport,
+  onBulkCreate,
   sbus,
   levels,
   locations,
@@ -94,9 +94,9 @@ export function SearchFilters({
           )}
         </div>
         <div className="flex gap-2">
-          <Button onClick={onExport} variant="outline" size="sm">
-            <Download className="mr-2 h-4 w-4" />
-            Export Users
+          <Button onClick={onBulkCreate} variant="outline" size="sm">
+            <Upload className="mr-2 h-4 w-4" />
+            Bulk Create Users
           </Button>
         </div>
       </div>
