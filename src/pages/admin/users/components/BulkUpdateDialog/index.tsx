@@ -23,6 +23,7 @@ export function BulkUpdateDialog({
   const [file, setFile] = useState<File | null>(null);
   const [progress, setProgress] = useState({ processed: 0, total: 0 });
   const [error, setError] = useState<string | null>(null);
+  const [isProcessing, setIsProcessing] = useState(false);
 
   const handleExport = async () => {
     try {
@@ -36,8 +37,9 @@ export function BulkUpdateDialog({
     }
   };
 
-  const handleFileSelected = (file: File) => {
+  const handleProcessingComplete = (file: File) => {
     setFile(file);
+    setIsProcessing(false);
   };
 
   const handleUpdate = async () => {
@@ -87,9 +89,8 @@ export function BulkUpdateDialog({
               Upload the modified CSV file to update users:
             </p>
             <UploadArea
-              onFileSelected={handleFileSelected}
-              accept=".csv"
-              maxSize={5}
+              isProcessing={isProcessing}
+              onProcessingComplete={handleProcessingComplete}
             />
             {file && (
               <Button onClick={handleUpdate} className="w-full">
@@ -102,15 +103,23 @@ export function BulkUpdateDialog({
         {step === 'processing' && (
           <>
             <ImportProgress
-              current={progress.processed}
-              total={progress.total}
-              error={error || undefined}
+              progress={{ processed: progress.processed, total: progress.total }}
+              paused={false}
+              onPauseToggle={() => {}}
+              onCancel={() => onOpenChange(false)}
             />
             {error && (
               <ProcessingResultView
-                success={false}
-                message={error}
-                onClose={() => onOpenChange(false)}
+                processingResult={null}
+                importResult={{
+                  successful: 0,
+                  failed: 1,
+                  errors: [{
+                    row: 0,
+                    type: 'validation',
+                    message: error
+                  }]
+                }}
               />
             )}
           </>

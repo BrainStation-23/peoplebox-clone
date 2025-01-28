@@ -1,14 +1,35 @@
 import { supabase } from "@/integrations/supabase/client";
 
+interface UserProfile {
+  email: string;
+  first_name: string | null;
+  last_name: string | null;
+  org_id: string | null;
+  level: string | null;
+  user_roles: { role: string };
+  gender: string | null;
+  date_of_birth: string | null;
+  designation: string | null;
+  location: string | null;
+  employment_type: string | null;
+  employee_role: string | null;
+  employee_type: string | null;
+  user_sbus: Array<{
+    id: string;
+    sbu: { name: string };
+    is_primary: boolean;
+  }>;
+  id: string;
+}
+
 type ProgressCallback = (processed: number) => void;
 
 export const exportUsers = async (onProgress?: ProgressCallback) => {
   try {
-    // Get all users with a large page size
     const { data, error } = await supabase.rpc('search_users', {
       search_text: '',
       page_number: 1,
-      page_size: 10000,  // Large enough to get all users
+      page_size: 10000,
       sbu_filter: null,
       level_filter: null,
       location_filter: null,
@@ -19,7 +40,7 @@ export const exportUsers = async (onProgress?: ProgressCallback) => {
 
     if (error) throw error;
 
-    const users = data.map(d => d.profile);
+    const users = data.map(d => d.profile as UserProfile);
     console.log("Exporting all users:", users.length);
 
     const headers = [
@@ -52,7 +73,7 @@ export const exportUsers = async (onProgress?: ProgressCallback) => {
           ?.join(";") || "";
 
         const row = [
-          user.email,
+          user.email || "",
           user.first_name || "",
           user.last_name || "",
           user.org_id || "",
