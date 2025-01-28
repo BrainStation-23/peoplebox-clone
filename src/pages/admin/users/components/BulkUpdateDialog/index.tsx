@@ -1,13 +1,12 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { Progress } from "@/components/ui/progress";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Upload, AlertCircle, Download, X, Check } from "lucide-react";
+import { Upload, Download } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { exportUsers } from "../../utils/exportUsers";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
+import { User } from "../../types";
 
 interface BulkUpdateDialogProps {
   open: boolean;
@@ -36,7 +35,27 @@ export function BulkUpdateDialog({ open, onOpenChange, onUpdateComplete }: BulkU
       if (error) throw error;
 
       if (data) {
-        const users = data.map(item => item.profile);
+        // Transform the data into User objects
+        const users: User[] = data.map(item => ({
+          id: item.profile.id,
+          email: item.profile.email,
+          first_name: item.profile.first_name,
+          last_name: item.profile.last_name,
+          profile_image_url: item.profile.profile_image_url,
+          level: item.profile.level,
+          org_id: item.profile.org_id,
+          gender: item.profile.gender,
+          date_of_birth: item.profile.date_of_birth,
+          designation: item.profile.designation,
+          location: item.profile.location,
+          employment_type: item.profile.employment_type,
+          employee_role: item.profile.employee_role,
+          employee_type: item.profile.employee_type,
+          status: item.profile.status,
+          user_roles: item.profile.user_roles,
+          user_sbus: item.profile.user_sbus
+        }));
+
         await exportUsers(users);
         toast.success("Users exported successfully");
       }
