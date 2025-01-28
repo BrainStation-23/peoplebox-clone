@@ -6,7 +6,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { exportUsers } from "../../utils/exportUsers";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
-import { User, GenderType } from "../../types";
+import { User, GenderType, ProfileStatus } from "../../types";
 
 interface BulkUpdateDialogProps {
   open: boolean;
@@ -30,7 +30,7 @@ interface SearchUsersResponse {
     employment_type: string | null;
     employee_role: string | null;
     employee_type: string | null;
-    status: string;
+    status: ProfileStatus;
     user_roles: {
       role: string;
     };
