@@ -12,7 +12,7 @@ import { SearchFilters } from "./components/UserTable/SearchFilters";
 import { ImportDialog } from "./components/ImportDialog";
 import { BulkUpdateDialog } from "./components/BulkUpdateDialog";
 import { Button } from "@/components/ui/button";
-import { Power, MoreHorizontal, Upload, UserRoundPlus, FilePlus2, FileSpreadsheet } from "lucide-react";
+import { Power, MoreHorizontal, Upload, UserRoundPlus, FilePlus2, FileSpreadsheet, Download } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { exportAllUsers } from "./utils/exportUsers";
 
 export default function UsersPage() {
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
@@ -110,6 +111,19 @@ export default function UsersPage() {
     }
   };
 
+  const handleExportAll = async () => {
+    try {
+      toast.info("Starting export of all users...");
+      await exportAllUsers((processed) => {
+        console.log(`Processed ${processed} users`);
+      });
+      toast.success("Successfully exported all users");
+    } catch (error) {
+      console.error("Error exporting all users:", error);
+      toast.error("Failed to export all users");
+    }
+  };
+
   const totalPages = Math.ceil((data?.total || 0) / pageSize);
 
   return (
@@ -118,16 +132,20 @@ export default function UsersPage() {
         <h1 className="text-2xl font-bold">Users</h1>
         <div className="flex gap-2">
           <Button onClick={() => setIsCreateDialogOpen(true)}>
-           <UserRoundPlus className="mr-2 h-4 w-4"/>
+            <UserRoundPlus className="mr-2 h-4 w-4"/>
             Add User
           </Button>
           <Button onClick={() => setIsImportDialogOpen(true)} variant="outline">
             <FilePlus2 className="mr-2 h-4 w-4"/>
-             Bulk Create Users
+            Bulk Create Users
           </Button>
           <Button onClick={() => setIsUpdateDialogOpen(true)} variant="outline">
             <FileSpreadsheet className="mr-2 h-4 w-4" />
-             Bulk Update Users
+            Bulk Update Users
+          </Button>
+          <Button onClick={handleExportAll} variant="outline">
+            <Download className="mr-2 h-4 w-4" />
+            Export All
           </Button>
         </div>
       </div>

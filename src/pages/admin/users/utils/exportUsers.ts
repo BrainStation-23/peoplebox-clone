@@ -1,4 +1,5 @@
 import { User } from "../types";
+import { supabase } from "@/integrations/supabase/client";
 
 type ProgressCallback = (processed: number) => void;
 
@@ -77,4 +78,28 @@ export const exportUsers = async (users: User[], onProgress?: ProgressCallback) 
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);
+};
+
+export const exportAllUsers = async (onProgress?: ProgressCallback) => {
+  console.log("Starting export all users");
+  
+  const { data, error } = await supabase.rpc('search_users', {
+    search_text: '',
+    page_number: 1,
+    page_size: 100000,
+    sbu_filter: null,
+    level_filter: null,
+    location_filter: null,
+    employment_type_filter: null,
+    employee_role_filter: null,
+    employee_type_filter: null
+  });
+
+  if (error) {
+    console.error("Error fetching all users:", error);
+    throw error;
+  }
+
+  const users = data.map(item => item.profile);
+  await exportUsers(users, onProgress);
 };
