@@ -11,6 +11,7 @@ import EditUserDialog from "./components/EditUserDialog";
 import { SearchFilters } from "./components/UserTable/SearchFilters";
 import { ImportDialog } from "./components/ImportDialog";
 import { BulkUpdateDialog } from "./components/BulkUpdateDialog";
+import { ExportProgress } from "./components/UserTable/ExportProgress";
 import { Button } from "@/components/ui/button";
 import { Power, MoreHorizontal, Upload, UserRoundPlus, FilePlus2, FileSpreadsheet, Download } from "lucide-react";
 import {
@@ -113,18 +114,47 @@ export default function UsersPage() {
 
   const handleExportAll = async () => {
     try {
-      toast.info("Starting export of all users...");
-      await exportAllUsers((processed) => {
-        console.log(`Processed ${processed} users`);
+      setExportProgress({
+        isOpen: true,
+        processed: 0,
+        total: 0,
+        error: "",
+        isComplete: false
       });
+
+      await exportAllUsers((processed, total) => {
+        setExportProgress(prev => ({
+          ...prev,
+          processed,
+          total
+        }));
+      });
+
+      setExportProgress(prev => ({
+        ...prev,
+        isComplete: true
+      }));
+
       toast.success("Successfully exported all users");
     } catch (error) {
       console.error("Error exporting all users:", error);
+      setExportProgress(prev => ({
+        ...prev,
+        error: "Failed to export users"
+      }));
       toast.error("Failed to export all users");
     }
   };
 
   const totalPages = Math.ceil((data?.total || 0) / pageSize);
+
+  const [exportProgress, setExportProgress] = useState({
+    isOpen: false,
+    processed: 0,
+    total: 0,
+    error: "",
+    isComplete: false
+  });
 
   return (
     <div className="container mx-auto py-6 space-y-4">
@@ -255,6 +285,17 @@ export default function UsersPage() {
           refetch();
           setIsUpdateDialogOpen(false);
         }}
+      />
+
+      <ExportProgress
+        open={exportProgress.isOpen}
+        onOpenChange={(open) => 
+          setExportProgress(prev => ({ ...prev, isOpen: open }))
+        }
+        progress={exportProgress.processed}
+        total={exportProgress.total}
+        error={exportProgress.error}
+        isComplete={exportProgress.isComplete}
       />
     </div>
   );

@@ -1,9 +1,10 @@
 import { User } from "../types";
 import { supabase } from "@/integrations/supabase/client";
 
-type ProgressCallback = (processed: number) => void;
+type ProgressCallback = (processed: number, total: number) => void;
 
 export const exportUsers = async (users: User[], onProgress?: ProgressCallback) => {
+  const total = users.length;
   console.log("Starting export with users:", users);
   
   const headers = [
@@ -57,7 +58,7 @@ export const exportUsers = async (users: User[], onProgress?: ProgressCallback) 
       rows.push(row);
       
       if (onProgress) {
-        onProgress(i + 1);
+        onProgress(i + 1, total);
         await new Promise(resolve => setTimeout(resolve, 50));
       }
     }
@@ -102,5 +103,10 @@ export const exportAllUsers = async (onProgress?: ProgressCallback) => {
 
   // Convert the JSON data to User array by extracting the profile property
   const users = data.map(item => item.profile as unknown as User);
+  
+  if (onProgress) {
+    onProgress(0, users.length);
+  }
+  
   await exportUsers(users, onProgress);
 };
