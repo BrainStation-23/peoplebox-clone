@@ -8,6 +8,7 @@ import {
   CommandGroup,
   CommandInput,
   CommandItem,
+  CommandList,
 } from "@/components/ui/command";
 import {
   Popover,
@@ -94,41 +95,43 @@ export function ProfileSearchInput({ value, onChange }: ProfileSearchInputProps)
               value={search}
               onValueChange={setSearch}
             />
-            <CommandEmpty>
-              {isLoading ? (
-                <div className="flex items-center justify-center py-6">
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                </div>
-              ) : (
-                "No users found."
+            <CommandList>
+              <CommandEmpty>
+                {isLoading ? (
+                  <div className="flex items-center justify-center py-6">
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  </div>
+                ) : (
+                  "No users found."
+                )}
+              </CommandEmpty>
+              {profiles.length > 0 && (
+                <CommandGroup>
+                  {profiles.map((profile) => (
+                    <CommandItem
+                      key={profile.id}
+                      value={profile.id}
+                      onSelect={() => handleSelect(profile)}
+                    >
+                      <Check
+                        className={cn(
+                          "mr-2 h-4 w-4",
+                          selectedProfile?.id === profile.id ? "opacity-100" : "opacity-0"
+                        )}
+                      />
+                      <div className="flex flex-col">
+                        <span>
+                          {profile.first_name} {profile.last_name}
+                        </span>
+                        <span className="text-sm text-muted-foreground">
+                          {profile.email}
+                        </span>
+                      </div>
+                    </CommandItem>
+                  ))}
+                </CommandGroup>
               )}
-            </CommandEmpty>
-            {!isLoading && profiles.length > 0 && (
-              <CommandGroup>
-                {profiles.map((profile) => (
-                  <CommandItem
-                    key={profile.id}
-                    value={profile.id}
-                    onSelect={() => handleSelect(profile)}
-                  >
-                    <Check
-                      className={cn(
-                        "mr-2 h-4 w-4",
-                        selectedProfile?.id === profile.id ? "opacity-100" : "opacity-0"
-                      )}
-                    />
-                    <div className="flex flex-col">
-                      <span>
-                        {profile.first_name} {profile.last_name}
-                      </span>
-                      <span className="text-sm text-muted-foreground">
-                        {profile.email}
-                      </span>
-                    </div>
-                  </CommandItem>
-                ))}
-              </CommandGroup>
-            )}
+            </CommandList>
           </Command>
         </PopoverContent>
       </Popover>
