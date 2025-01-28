@@ -7,6 +7,7 @@ import { ProcessingResultView } from "../ImportDialog/ProcessingResult";
 import { UploadArea } from "../ImportDialog/UploadArea";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { ProcessingResult } from "../../utils/csvProcessor";
 
 interface BulkUpdateDialogProps {
   open: boolean;
@@ -20,15 +21,22 @@ export function BulkUpdateDialog({
   onUpdateComplete,
 }: BulkUpdateDialogProps) {
   const [step, setStep] = useState<'export' | 'upload' | 'processing'>('export');
-  const [file, setFile] = useState<File | null>(null);
-  const [progress, setProgress] = useState({ processed: 0, total: 0 });
+  const [processingResult, setProcessingResult] = useState<ProcessingResult | null>(null);
+  const [progress, setProgress] = useState<{ processed: number; total: number; currentBatch: number; totalBatches: number; estimatedTimeRemaining: number; errors: any[] }>({
+    processed: 0,
+    total: 0,
+    currentBatch: 1,
+    totalBatches: 1,
+    estimatedTimeRemaining: 0,
+    errors: []
+  });
   const [error, setError] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
 
   const handleExport = async () => {
     try {
       await exportUsers((processed) => {
-        setProgress({ processed, total: 100 });
+        setProgress(prev => ({ ...prev, processed, total: 100 }));
       });
       setStep('upload');
     } catch (error) {
@@ -37,22 +45,19 @@ export function BulkUpdateDialog({
     }
   };
 
-  const handleProcessingComplete = (file: File) => {
-    setFile(file);
+  const handleProcessingComplete = (result: ProcessingResult) => {
+    setProcessingResult(result);
     setIsProcessing(false);
   };
 
   const handleUpdate = async () => {
-    if (!file) return;
+    if (!processingResult) return;
 
     try {
       setStep('processing');
       
-      const formData = new FormData();
-      formData.append('file', file);
-
       const { data, error } = await supabase.functions.invoke('manage-users-bulk', {
-        body: { action: 'update', file: await file.text() }
+        body: { action: 'update', users: processingResult.newUsers.concat(processingResult.existingUsers) }
       });
 
       if (error) throw error;
@@ -92,7 +97,7 @@ export function BulkUpdateDialog({
               isProcessing={isProcessing}
               onProcessingComplete={handleProcessingComplete}
             />
-            {file && (
+            {processingResult && (
               <Button onClick={handleUpdate} className="w-full">
                 Update Users
               </Button>
@@ -103,7 +108,7 @@ export function BulkUpdateDialog({
         {step === 'processing' && (
           <>
             <ImportProgress
-              progress={{ processed: progress.processed, total: progress.total }}
+              progress={progress}
               paused={false}
               onPauseToggle={() => {}}
               onCancel={() => onOpenChange(false)}
@@ -117,7 +122,8 @@ export function BulkUpdateDialog({
                   errors: [{
                     row: 0,
                     type: 'validation',
-                    message: error
+                    message: error,
+                    data: undefined
                   }]
                 }}
               />

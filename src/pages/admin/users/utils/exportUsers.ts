@@ -40,7 +40,7 @@ export const exportUsers = async (onProgress?: ProgressCallback) => {
 
     if (error) throw error;
 
-    const users = data.map(d => d.profile as UserProfile);
+    const users = data.map(d => d.profile as unknown as UserProfile);
     console.log("Exporting all users:", users.length);
 
     const headers = [
@@ -61,45 +61,27 @@ export const exportUsers = async (onProgress?: ProgressCallback) => {
       "ID"
     ];
 
-    const processUsers = async () => {
-      const rows = [];
-      for (let i = 0; i < users.length; i++) {
-        const user = users[i];
-        console.log("Processing user for export:", user);
-        
-        const allSbus = user.user_sbus
-          ?.sort((a, b) => (b.is_primary ? 1 : 0) - (a.is_primary ? 1 : 0))
-          ?.map(sbu => sbu.sbu.name)
-          ?.join(";") || "";
+    const rows = users.map(user => [
+      user.email || "",
+      user.first_name || "",
+      user.last_name || "",
+      user.org_id || "",
+      user.level || "",
+      user.user_roles?.role || "user",
+      user.gender || "",
+      user.date_of_birth || "",
+      user.designation || "",
+      user.location || "",
+      user.employment_type || "",
+      user.employee_role || "",
+      user.employee_type || "",
+      user.user_sbus
+        ?.sort((a, b) => (b.is_primary ? 1 : 0) - (a.is_primary ? 1 : 0))
+        ?.map(sbu => sbu.sbu.name)
+        ?.join(";") || "",
+      user.id
+    ]);
 
-        const row = [
-          user.email || "",
-          user.first_name || "",
-          user.last_name || "",
-          user.org_id || "",
-          user.level || "",
-          user.user_roles?.role || "user",
-          user.gender || "",
-          user.date_of_birth || "",
-          user.designation || "",
-          user.location || "",
-          user.employment_type || "",
-          user.employee_role || "",
-          user.employee_type || "",
-          allSbus,
-          user.id
-        ];
-        rows.push(row);
-        
-        if (onProgress) {
-          onProgress(i + 1);
-          await new Promise(resolve => setTimeout(resolve, 50));
-        }
-      }
-      return rows;
-    };
-
-    const rows = await processUsers();
     const csvContent = [headers, ...rows]
       .map((row) => row.map((cell) => `"${cell}"`).join(","))
       .join("\n");
