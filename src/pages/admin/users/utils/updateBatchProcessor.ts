@@ -8,6 +8,7 @@ export type BatchProgress = {
   currentBatch: number;
   totalBatches: number;
   estimatedTimeRemaining: number;
+  errors: ImportError[];  // Added this line to match the interface
 };
 
 type BatchProcessorOptions = {
@@ -33,6 +34,7 @@ async function* updateBatchProcessor(
   const totalBatches = Math.ceil(total / batchSize);
   let processed = 0;
   let startTime = Date.now();
+  const errors: ImportError[] = []; // Added to track errors
 
   for (let batchNum = 0; batchNum < totalBatches; batchNum++) {
     if (signal?.aborted) {
@@ -74,12 +76,14 @@ async function* updateBatchProcessor(
       if (responseData?.errors) {
         responseData.errors.forEach(err => {
           if (onError) {
-            onError({
+            const error: ImportError = {
               row: users.findIndex(u => u.email === err.user.email) + 1,
               type: 'update',
               message: err.error,
               data: err.user,
-            });
+            };
+            errors.push(error);
+            onError(error);
           }
         });
       }
@@ -96,6 +100,7 @@ async function* updateBatchProcessor(
         currentBatch: batchNum + 1,
         totalBatches,
         estimatedTimeRemaining,
+        errors, // Added errors to the progress object
       };
 
       onProgress?.(progress);
@@ -104,12 +109,14 @@ async function* updateBatchProcessor(
     } catch (error) {
       if (onError && error instanceof Error) {
         batchUsers.forEach(user => {
-          onError({
+          const importError: ImportError = {
             row: users.findIndex(u => u.email === user.email) + 1,
             type: 'update',
             message: error.message,
             data: user,
-          });
+          };
+          errors.push(importError);
+          onError(importError);
         });
       }
       throw error;
