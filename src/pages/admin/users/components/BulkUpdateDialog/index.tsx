@@ -3,12 +3,11 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { toast } from "sonner";
 import { processCSVFile, type ProcessingResult } from "../../utils/csvProcessor";
 import { ImportError, ImportResult, downloadErrorReport, convertValidationErrorsToImportErrors } from "../../utils/errorReporting";
-import { batchProcessor, type BatchProgress } from "../../utils/batchProcessor";
+import { updateBatchProcessor, type BatchProgress } from "../../utils/updateBatchProcessor";
 import { UploadArea } from "./UploadArea";
 import { ImportGuidelines } from "./ImportGuidelines";
 import { ImportProgress } from "./ImportProgress";
 import { ProcessingResultView } from "./ProcessingResult";
-import { supabase } from "@/integrations/supabase/client";
 
 interface BulkUpdateDialogProps {
   open: boolean;
@@ -46,7 +45,7 @@ export function BulkUpdateDialog({ open, onOpenChange, onUpdateComplete }: BulkU
     abortController.current = new AbortController();
 
     try {
-      const processor = batchProcessor(processingResult, {
+      const processor = updateBatchProcessor(processingResult, {
         onProgress: (batchProgress) => {
           setProgress(batchProgress);
         },
@@ -67,45 +66,6 @@ export function BulkUpdateDialog({ open, onOpenChange, onUpdateComplete }: BulkU
               }
             };
             checkPause();
-          });
-        }
-
-        // Call the manage-users-bulk edge function with the current batch
-        const { data: responseData, error } = await supabase.functions.invoke('manage-users-bulk', {
-          body: {
-            users: processingResult.existingUsers.map(user => ({
-              id: user.id,
-              email: user.email,
-              first_name: user.firstName,
-              last_name: user.lastName,
-              role: user.role,
-              level: user.level,
-              employment_type: user.employmentType,
-              designation: user.designation,
-              org_id: user.orgId,
-              location: user.location,
-              gender: user.gender,
-              date_of_birth: user.dateOfBirth,
-              employee_role: user.employeeRole,
-              employee_type: user.employeeType,
-              sbus: user.sbus
-            }))
-          }
-        });
-
-        if (error) {
-          console.error('Bulk update error:', error);
-          throw error;
-        }
-
-        if (responseData?.errors) {
-          responseData.errors.forEach(err => {
-            errors.push({
-              row: processingResult.existingUsers.findIndex(u => u.email === err.user.email) + 1,
-              type: 'update',
-              message: err.error,
-              data: err.user,
-            });
           });
         }
       }
