@@ -100,6 +100,7 @@ export const exportAllUsers = async (onProgress?: ProgressCallback) => {
     throw error;
   }
 
-  const users = data.map(item => item.profile);
+  // Convert the JSON data to User array by extracting the profile property
+  const users = data.map(item => item.profile as unknown as User);
   await exportUsers(users, onProgress);
 };
