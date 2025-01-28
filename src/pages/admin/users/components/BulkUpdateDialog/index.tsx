@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { exportUsers } from "../../utils/exportUsers";
 import { ImportProgress } from "../ImportDialog/ImportProgress";
-import { ProcessingResult } from "../ImportDialog/ProcessingResult";
+import { ProcessingResultView } from "../ImportDialog/ProcessingResult";
 import { UploadArea } from "../ImportDialog/UploadArea";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -104,10 +104,10 @@ export function BulkUpdateDialog({
             <ImportProgress
               current={progress.processed}
               total={progress.total}
-              error={error}
+              error={error || undefined}
             />
             {error && (
-              <ProcessingResult
+              <ProcessingResultView
                 success={false}
                 message={error}
                 onClose={() => onOpenChange(false)}

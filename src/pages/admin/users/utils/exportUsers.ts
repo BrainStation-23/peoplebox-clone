@@ -1,4 +1,4 @@
-import { User } from "../types";
+import { supabase } from "@/integrations/supabase/client";
 
 type ProgressCallback = (processed: number) => void;
 
