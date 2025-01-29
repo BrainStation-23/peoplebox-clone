@@ -1,14 +1,12 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useProcessedResponses } from "@/pages/admin/surveys/hooks/useProcessedResponses";
-import { BooleanCharts } from "./charts/BooleanCharts";
-import { NpsChart } from "./charts/NpsChart";
-import { WordCloud } from "./charts/WordCloud";
 import { ComparisonSelector } from "./components/ComparisonSelector";
-import { BooleanComparison } from "./components/comparisons/BooleanComparison";
-import { NpsComparison } from "./components/comparisons/NpsComparison";
-import { TextComparison } from "./components/comparisons/TextComparison";
 import { useState } from "react";
 import { ComparisonDimension } from "./types/comparison";
+import { ProcessorFactory, QUESTION_PROCESSORS } from "@/pages/admin/surveys/types/processors";
+import { BarChart } from "./charts/BarChart";
+import { DonutChart } from "./charts/DonutChart";
+import { LineChart } from "./charts/LineChart";
 
 interface ReportsTabProps {
   campaignId: string;
@@ -40,6 +38,26 @@ export function ReportsTab({ campaignId, instanceId }: ReportsTabProps) {
     }));
   };
 
+  const renderVisualization = (question: any) => {
+    const processor = QUESTION_PROCESSORS[question.type]?.();
+    if (!processor) {
+      console.warn(`No processor found for question type: ${question.type}`);
+      return null;
+    }
+
+    const config = processor.getConfig();
+    const { visualization } = config;
+
+    switch (visualization.type) {
+      case 'donut':
+        return <DonutChart data={question.data.responses} colors={config.colors} />;
+      case 'bar':
+        return <BarChart data={question.data.responses} colors={config.colors} />;
+      default:
+        return <div>Unsupported visualization type</div>;
+    }
+  };
+
   return (
     <div className="grid gap-6">
       {questions.map((question) => {
@@ -57,45 +75,7 @@ export function ReportsTab({ campaignId, instanceId }: ReportsTabProps) {
               />
             </CardHeader>
             <CardContent className="space-y-4">
-              {currentDimension === "none" && (
-                <>
-                  {question.type === "boolean" && (
-                    <BooleanCharts data={question.data.responses as { yes: number; no: number }} />
-                  )}
-                  {(question.type === "nps" || question.type === "rating") && (
-                    <NpsChart data={question.data.responses as Array<{ rating: number; count: number }>} />
-                  )}
-                  {(question.type === "text" || question.type === "comment") && (
-                    <WordCloud words={question.data.responses as Array<{ text: string; value: number }>} />
-                  )}
-                </>
-              )}
-
-              {currentDimension !== "none" && (
-                <>
-                  {question.type === "boolean" && (
-                    <BooleanComparison
-                      responses={question.data.responses as any[]}
-                      questionName={question.name}
-                      dimension={currentDimension}
-                    />
-                  )}
-                  {(question.type === "nps" || question.type === "rating") && (
-                    <NpsComparison
-                      responses={question.data.responses as any[]}
-                      questionName={question.name}
-                      dimension={currentDimension}
-                    />
-                  )}
-                  {(question.type === "text" || question.type === "comment") && (
-                    <TextComparison
-                      responses={question.data.responses as any[]}
-                      questionName={question.name}
-                      dimension={currentDimension}
-                    />
-                  )}
-                </>
-              )}
+              {renderVisualization(question)}
             </CardContent>
           </Card>
         );
