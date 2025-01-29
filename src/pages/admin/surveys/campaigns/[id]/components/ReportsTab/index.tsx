@@ -73,6 +73,7 @@ export function ReportsTab({ campaignId, instanceId }: ReportsTabProps) {
       name: question.name,
       type: question.type,
       data: question.data,
+      rateCount: question.rateCount,
     });
 
     const processor = QUESTION_PROCESSORS[question.type]?.();
@@ -93,10 +94,9 @@ export function ReportsTab({ campaignId, instanceId }: ReportsTabProps) {
     const chartType: ChartType = visualization.primary;
     const colorArray = Object.values(visualization.colors);
 
-    // Check if it's a rating question and determine the type
+    // Check if it's a rating question and determine the type based on rateCount
     if (question.type === 'rating') {
-      const maxRating = Math.max(...question.data.responses.map((r: any) => r.rating));
-      if (maxRating > 5) {
+      if (question.rateCount === 10) {
         // NPS rating (0-10)
         return <NpsVisualization data={question.data.responses} />;
       } else {
@@ -133,6 +133,7 @@ export function ReportsTab({ campaignId, instanceId }: ReportsTabProps) {
           name: question.name,
           type: question.type,
           dimension: currentDimension,
+          rateCount: question.rateCount,
         });
 
         return (

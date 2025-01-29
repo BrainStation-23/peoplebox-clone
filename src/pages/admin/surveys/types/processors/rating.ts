@@ -1,6 +1,12 @@
 import { QuestionProcessor, ProcessorConfig, RatingVisualizationType } from './base';
 
 export class RatingProcessor implements QuestionProcessor {
+  private questionConfig: any;
+
+  constructor(questionConfig?: any) {
+    this.questionConfig = questionConfig;
+  }
+
   private npsConfig: ProcessorConfig = {
     categories: ['Detractors', 'Passives', 'Promoters'],
     colors: ['#ef4444', '#eab308', '#22c55e'],
@@ -33,9 +39,9 @@ export class RatingProcessor implements QuestionProcessor {
   };
 
   detectRatingType(responses: any[]): RatingVisualizationType {
-    // Check if any response has a rating > 5
-    const maxRating = Math.max(...responses.map(r => r.answer).filter(Number.isFinite));
-    return maxRating > 5 ? 'nps' : 'satisfaction';
+    // Use rateCount to determine the type
+    const rateCount = this.questionConfig?.rateCount;
+    return rateCount === 10 ? 'nps' : 'satisfaction';
   }
 
   process(responses: any[]): { 
@@ -63,8 +69,9 @@ export class RatingProcessor implements QuestionProcessor {
   }
 
   getConfig(): ProcessorConfig {
-    return this.npsConfig;
+    return this.detectRatingType([]) === 'nps' ? this.npsConfig : this.satisfactionConfig;
   }
 }
 
-export const createRatingProcessor: () => QuestionProcessor = () => new RatingProcessor();
+export const createRatingProcessor = (questionConfig?: any): QuestionProcessor => 
+  new RatingProcessor(questionConfig);
