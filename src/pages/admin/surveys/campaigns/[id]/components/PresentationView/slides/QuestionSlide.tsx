@@ -1,7 +1,7 @@
 import { SlideProps } from "../types";
 import { cn } from "@/lib/utils";
 import { BooleanCharts } from "@/components/shared/charts/BooleanCharts";
-import { NpsChart } from "@/components/shared/charts/NpsChart";
+import { NpsVisualization } from "@/components/shared/charts/NpsVisualization";
 import { WordCloud } from "@/components/shared/charts/WordCloud";
 import { usePresentationResponses } from "../hooks/usePresentationResponses";
 import { QuestionResponseData } from "../types/responses";
@@ -117,12 +117,12 @@ export function QuestionSlide({
 
         <div className="flex-1 flex items-center justify-center">
           {processedData && (
-            <div className="w-full max-w-3xl">
+            <div className="w-full max-w-4xl">
               {processedData.type === "boolean" && (
                 <BooleanCharts data={processedData.data} />
               )}
               {processedData.type === "rating" && (
-                <NpsChart data={processedData.data} />
+                <NpsVisualization data={processedData.data} />
               )}
               {processedData.type === "text" && (
                 <div className="min-h-[400px]">
