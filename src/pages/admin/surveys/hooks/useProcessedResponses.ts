@@ -17,7 +17,7 @@ interface UseProcessedResponsesResult {
 }
 
 export function useProcessedResponses(campaignId: string, instanceId?: string): UseProcessedResponsesResult {
-  return useQuery({
+  const { data: questions = [], isLoading, error } = useQuery({
     queryKey: ["processed-responses", campaignId, instanceId],
     queryFn: async () => {
       console.log("Fetching responses for processing:", { campaignId, instanceId });
@@ -62,11 +62,7 @@ export function useProcessedResponses(campaignId: string, instanceId?: string): 
       const { data: responses } = await query;
 
       if (!responses) {
-        return {
-          questions: [],
-          isLoading: false,
-          error: null
-        };
+        return [];
       }
 
       // Process each question using appropriate processor
@@ -94,4 +90,10 @@ export function useProcessedResponses(campaignId: string, instanceId?: string): 
       return processedQuestions;
     }
   });
+
+  return {
+    questions,
+    isLoading,
+    error: error as Error | null
+  };
 }
