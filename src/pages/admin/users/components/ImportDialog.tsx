@@ -9,7 +9,7 @@ import { ImportError, ImportResult, downloadErrorReport, convertValidationErrors
 import { toast } from "@/hooks/use-toast";
 import { batchProcessor, type BatchProgress } from "../utils/batchProcessor";
 import { formatDistanceToNow } from "date-fns";
-import { CSV_GUIDELINES, generateTemplateCSV } from "../utils/csvTemplate";
+import { IMPORT_CSV_GUIDELINES, generateImportTemplateCSV } from "../utils/csvTemplate";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 
 interface ImportDialogProps {
@@ -185,7 +185,7 @@ export function ImportDialog({ open, onOpenChange, onImportComplete }: ImportDia
   };
 
   const downloadTemplate = () => {
-    const csvContent = generateTemplateCSV();
+    const csvContent = generateImportTemplateCSV();
     const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
     const link = document.createElement("a");
     link.href = URL.createObjectURL(blob);
@@ -222,7 +222,7 @@ export function ImportDialog({ open, onOpenChange, onImportComplete }: ImportDia
               <div className="bg-muted p-4 rounded-lg space-y-2">
                 <h3 className="font-medium">Import Guidelines</h3>
                 <ul className="list-disc list-inside space-y-1 text-sm text-muted-foreground">
-                  {CSV_GUIDELINES.map((guideline, index) => (
+                  {IMPORT_CSV_GUIDELINES.map((guideline, index) => (
                     <li key={index}>{guideline}</li>
                   ))}
                 </ul>
