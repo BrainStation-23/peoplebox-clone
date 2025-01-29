@@ -1,42 +1,69 @@
-import { QuestionProcessor, ProcessorConfig } from './base';
+import { QuestionProcessor, ProcessorConfig, RatingVisualizationType } from './base';
 
-export class NPSProcessor implements QuestionProcessor {
-  private config: ProcessorConfig = {
+export class RatingProcessor implements QuestionProcessor {
+  private npsConfig: ProcessorConfig = {
     categories: ['Detractors', 'Passives', 'Promoters'],
     colors: ['#ef4444', '#eab308', '#22c55e'],
     visualization: {
-      type: 'bar',
-      config: {
-        barPadding: 0.2,
-        showGrid: true,
-      },
-    },
+      primary: 'nps-combined',
+      score: true,
+      distribution: true,
+      colors: {
+        detractor: '#ef4444',
+        passive: '#eab308',
+        promoter: '#22c55e'
+      }
+    }
   };
 
+  private satisfactionConfig: ProcessorConfig = {
+    categories: ['Very Unsatisfied', 'Unsatisfied', 'Neutral', 'Satisfied', 'Very Satisfied'],
+    colors: ['#ef4444', '#f97316', '#eab308', '#22c55e', '#15803d'],
+    visualization: {
+      primary: 'bar',
+      showAverage: true,
+      colors: {
+        1: '#ef4444',
+        2: '#f97316',
+        3: '#eab308',
+        4: '#22c55e',
+        5: '#15803d'
+      }
+    }
+  };
+
+  detectRatingType(responses: any[]): RatingVisualizationType {
+    const maxRating = Math.max(...responses.map(r => r.answer).filter(Number.isFinite));
+    return maxRating > 5 ? 'nps' : 'satisfaction';
+  }
+
   process(responses: any[]): { 
-    type: 'rating'; 
+    type: RatingVisualizationType; 
     data: Array<{ rating: number; count: number }> 
   } {
+    const ratingType = this.detectRatingType(responses);
     const answers = responses
       .filter(r => typeof r.answer === 'number')
       .map(r => r.answer);
 
-    const ratingCounts = new Array(11).fill(0);
+    const maxRating = ratingType === 'nps' ? 10 : 5;
+    const ratingCounts = new Array(maxRating + 1).fill(0);
+    
     answers.forEach((rating) => {
-      if (typeof rating === 'number' && rating >= 0 && rating <= 10) {
+      if (typeof rating === 'number' && rating >= 0 && rating <= maxRating) {
         ratingCounts[rating]++;
       }
     });
 
     return {
-      type: 'rating',
+      type: ratingType,
       data: ratingCounts.map((count, rating) => ({ rating, count })),
     };
   }
 
   getConfig(): ProcessorConfig {
-    return this.config;
+    return this.npsConfig;
   }
 }
 
-export const createNPSProcessor: () => QuestionProcessor = () => new NPSProcessor();
+export const createRatingProcessor: () => QuestionProcessor = () => new RatingProcessor();
