@@ -1,4 +1,4 @@
-import { QuestionProcessor, ProcessorConfig } from './base';
+import { QuestionProcessor, ProcessorConfig, RatingVisualizationType } from './base';
 
 export class TextProcessor implements QuestionProcessor {
   private config: ProcessorConfig = {
@@ -10,14 +10,15 @@ export class TextProcessor implements QuestionProcessor {
       '#93c5fd', // blue-300
     ],
     visualization: {
-      type: 'wordcloud',
-      config: {
-        minFontSize: 12,
-        maxFontSize: 32,
-        padding: 2,
-        font: 'Inter',
-      },
-    },
+      primary: 'bar',
+      showAverage: false,
+      colors: {
+        1: '#2563eb',
+        2: '#3b82f6',
+        3: '#60a5fa',
+        4: '#93c5fd'
+      }
+    }
   };
 
   process(responses: any[]): { 
@@ -52,6 +53,10 @@ export class TextProcessor implements QuestionProcessor {
 
   getConfig(): ProcessorConfig {
     return this.config;
+  }
+
+  detectRatingType(): RatingVisualizationType {
+    return 'satisfaction'; // Default, not used for text
   }
 }
 

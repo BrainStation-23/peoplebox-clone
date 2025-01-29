@@ -1,16 +1,17 @@
-import { QuestionProcessor, ProcessorConfig } from './base';
+import { QuestionProcessor, ProcessorConfig, RatingVisualizationType } from './base';
 
 export class BooleanProcessor implements QuestionProcessor {
   private config: ProcessorConfig = {
     categories: ['Yes', 'No'],
     colors: ['#22c55e', '#ef4444'],
     visualization: {
-      type: 'donut',
-      config: {
-        innerRadius: 0.6,
-        padAngle: 0.02,
-      },
-    },
+      primary: 'donut',
+      showAverage: false,
+      colors: {
+        1: '#22c55e',
+        2: '#ef4444'
+      }
+    }
   };
 
   process(responses: any[]): { type: 'boolean'; data: { yes: number; no: number } } {
@@ -29,6 +30,10 @@ export class BooleanProcessor implements QuestionProcessor {
 
   getConfig(): ProcessorConfig {
     return this.config;
+  }
+
+  detectRatingType(): RatingVisualizationType {
+    return 'satisfaction'; // Default, not used for boolean
   }
 }
 
