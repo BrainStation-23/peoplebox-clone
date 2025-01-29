@@ -1,7 +1,7 @@
 import { Card } from "@/components/ui/card";
 import { ComparisonDimension } from "../../types/comparison";
 import { BarChart } from "../../charts/BarChart";
-import { ProcessedResponse } from "@/pages/admin/surveys/hooks/useResponseProcessing";
+import type { ProcessedResponse } from "@/pages/admin/surveys/hooks/useResponseProcessing";
 
 interface NpsComparisonProps {
   responses: ProcessedResponse[];

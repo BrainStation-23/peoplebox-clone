@@ -1,7 +1,7 @@
 import { Card } from "@/components/ui/card";
 import { ComparisonDimension } from "../../types/comparison";
 import { GroupedBarChart } from "../../charts/GroupedBarChart";
-import { ProcessedResponse } from "@/pages/admin/surveys/hooks/useResponseProcessing";
+import type { ProcessedResponse } from "@/pages/admin/surveys/hooks/useResponseProcessing";
 
 interface BooleanComparisonProps {
   responses: ProcessedResponse[];
