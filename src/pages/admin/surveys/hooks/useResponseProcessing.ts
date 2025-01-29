@@ -28,10 +28,6 @@ export interface ProcessedResponse {
 }
 
 export interface ProcessedData {
-  questions: {
-    name: string;
-    title: string;
-    type: string;
-  }[];
   responses: ProcessedResponse[];
+  data: any[]; // Adding the data property that's being accessed
 }

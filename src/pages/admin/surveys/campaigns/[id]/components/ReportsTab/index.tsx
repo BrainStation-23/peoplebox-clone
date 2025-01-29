@@ -60,13 +60,13 @@ export function ReportsTab({ campaignId, instanceId }: ReportsTabProps) {
               {currentDimension === "none" && (
                 <>
                   {question.type === "boolean" && (
-                    <BooleanCharts data={question.data.data} />
+                    <BooleanCharts data={question.data.responses} />
                   )}
                   {(question.type === "nps" || question.type === "rating") && (
-                    <NpsChart data={question.data.data} />
+                    <NpsChart data={question.data.responses} />
                   )}
                   {(question.type === "text" || question.type === "comment") && (
-                    <WordCloud words={question.data.data} />
+                    <WordCloud words={question.data.responses} />
                   )}
                 </>
               )}
@@ -75,21 +75,21 @@ export function ReportsTab({ campaignId, instanceId }: ReportsTabProps) {
                 <>
                   {question.type === "boolean" && (
                     <BooleanComparison
-                      responses={question.data.data}
+                      responses={question.data.responses}
                       questionName={question.name}
                       dimension={currentDimension}
                     />
                   )}
                   {(question.type === "nps" || question.type === "rating") && (
                     <NpsComparison
-                      responses={question.data.data}
+                      responses={question.data.responses}
                       questionName={question.name}
                       dimension={currentDimension}
                     />
                   )}
                   {(question.type === "text" || question.type === "comment") && (
                     <TextComparison
-                      responses={question.data.data}
+                      responses={question.data.responses}
                       questionName={question.name}
                       dimension={currentDimension}
                     />
