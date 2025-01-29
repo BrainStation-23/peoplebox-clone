@@ -21,7 +21,13 @@ export function NpsComparison({
     > = {};
 
     responses.forEach((response) => {
-      const score = response.answers[questionName]?.answer;
+      // Add null checks for response.answers
+      if (!response.answers || !response.answers[questionName]?.answer) {
+        console.warn(`Missing answer data for question: ${questionName}`);
+        return;
+      }
+
+      const score = response.answers[questionName].answer;
       let groupKey = "Unknown";
 
       // Get the group key based on the dimension
@@ -62,24 +68,33 @@ export function NpsComparison({
     });
 
     // Calculate NPS for each group
-    return Object.entries(groupedData).map(([name, data]) => ({
-      name,
-      value: Math.round(
-        ((data.promoters - data.detractors) / (data.total || 1)) * 100
-      ),
-    }));
+    return Object.entries(groupedData)
+      .filter(([_, data]) => data.total > 0) // Only include groups with responses
+      .map(([name, data]) => ({
+        name,
+        value: Math.round(
+          ((data.promoters - data.detractors) / (data.total || 1)) * 100
+        ),
+      }));
   };
 
   const data = processData();
 
+  if (data.length === 0) {
+    return (
+      <Card className="p-4">
+        <div className="text-center text-muted-foreground">
+          No data available for comparison
+        </div>
+      </Card>
+    );
+  }
+
   return (
     <Card className="p-4">
-      <BarChart 
-        data={data}
-        colors={["#3b82f6"]} // Use blue as the primary color
-      />
+      <BarChart data={data} colors={["#3b82f6"]} />
       <div className="mt-4 text-sm text-center text-muted-foreground">
-        NPS Score by {dimension.replace('_', ' ').toUpperCase()}
+        NPS Score by {dimension.replace("_", " ").toUpperCase()}
       </div>
     </Card>
   );
