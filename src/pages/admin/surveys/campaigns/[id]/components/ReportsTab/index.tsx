@@ -60,13 +60,13 @@ export function ReportsTab({ campaignId, instanceId }: ReportsTabProps) {
               {currentDimension === "none" && (
                 <>
                   {question.type === "boolean" && (
-                    <BooleanCharts data={question.data.responses} />
+                    <BooleanCharts data={question.data.responses as { yes: number; no: number }} />
                   )}
                   {(question.type === "nps" || question.type === "rating") && (
-                    <NpsChart data={question.data.responses} />
+                    <NpsChart data={question.data.responses as Array<{ rating: number; count: number }>} />
                   )}
                   {(question.type === "text" || question.type === "comment") && (
-                    <WordCloud words={question.data.responses} />
+                    <WordCloud words={question.data.responses as Array<{ text: string; value: number }>} />
                   )}
                 </>
               )}
@@ -75,21 +75,21 @@ export function ReportsTab({ campaignId, instanceId }: ReportsTabProps) {
                 <>
                   {question.type === "boolean" && (
                     <BooleanComparison
-                      responses={question.data.responses}
+                      responses={question.data.responses as any[]}
                       questionName={question.name}
                       dimension={currentDimension}
                     />
                   )}
                   {(question.type === "nps" || question.type === "rating") && (
                     <NpsComparison
-                      responses={question.data.responses}
+                      responses={question.data.responses as any[]}
                       questionName={question.name}
                       dimension={currentDimension}
                     />
                   )}
                   {(question.type === "text" || question.type === "comment") && (
                     <TextComparison
-                      responses={question.data.responses}
+                      responses={question.data.responses as any[]}
                       questionName={question.name}
                       dimension={currentDimension}
                     />

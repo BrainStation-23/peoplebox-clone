@@ -1,14 +1,28 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { QUESTION_PROCESSORS } from "../types/processors";
-import type { ProcessedResponse } from "./useResponseProcessing";
+
+interface BooleanData {
+  yes: number;
+  no: number;
+}
+
+interface NpsData {
+  rating: number;
+  count: number;
+}
+
+interface WordData {
+  text: string;
+  value: number;
+}
 
 interface ProcessedQuestion {
   name: string;
   title: string;
   type: string;
   data: {
-    responses: ProcessedResponse[];
+    responses: BooleanData | NpsData[] | WordData[];
   };
 }
 
@@ -81,34 +95,40 @@ export function useProcessedResponses(campaignId: string, instanceId?: string): 
           answer: r.response_data[question.name]
         }));
 
-        const processedData = processor.process(questionResponses);
-
         // Transform the data based on question type
         let transformedData;
         switch (question.type) {
           case 'boolean':
+            const booleanResponses = questionResponses.map(r => r.answer);
             transformedData = {
-              yes: processedData.data.filter((r: any) => r.answer === true).length,
-              no: processedData.data.filter((r: any) => r.answer === false).length
+              yes: booleanResponses.filter((answer: boolean) => answer === true).length,
+              no: booleanResponses.filter((answer: boolean) => answer === false).length
             };
             break;
+
           case 'nps':
           case 'rating':
-            transformedData = Array.from({ length: 11 }, (_, i) => ({
-              rating: i,
-              count: processedData.data.filter((r: any) => r.answer === i).length
+            const ratingCounts = new Array(11).fill(0);
+            questionResponses.forEach(r => {
+              if (typeof r.answer === 'number' && r.answer >= 0 && r.answer <= 10) {
+                ratingCounts[r.answer]++;
+              }
+            });
+            transformedData = ratingCounts.map((count, rating) => ({
+              rating,
+              count
             }));
             break;
+
           case 'text':
           case 'comment':
-            // Process text responses into word frequency
-            const words = processedData.data
-              .map((r: any) => r.answer)
+            const words = questionResponses
+              .map(r => r.answer)
               .filter((text: string) => text)
               .flatMap((text: string) => 
                 text.toLowerCase()
-                .replace(/[^\w\s]/g, '')
-                .split(/\s+/)
+                  .replace(/[^\w\s]/g, '')
+                  .split(/\s+/)
               )
               .filter((word: string) => word.length > 2);
 
@@ -122,8 +142,9 @@ export function useProcessedResponses(campaignId: string, instanceId?: string): 
               .sort((a, b) => b.value - a.value)
               .slice(0, 50);
             break;
+
           default:
-            transformedData = processedData.data;
+            transformedData = [];
         }
 
         return {
