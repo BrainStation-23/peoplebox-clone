@@ -90,14 +90,16 @@ export function ReportsTab({ campaignId, instanceId }: ReportsTabProps) {
     });
 
     const chartType: ChartType = visualization.primary;
+    const colorArray = Object.values(visualization.colors);
+
     switch (chartType) {
       case 'donut':
-        return <DonutChart data={question.data.responses} colors={visualization.colors} />;
+        return <DonutChart data={question.data.responses} colors={colorArray} />;
       case 'bar':
         console.log("[ReportsTab] Rendering bar chart with data:", question.data.responses);
-        return <BarChart data={question.data.responses} colors={visualization.colors} />;
+        return <BarChart data={question.data.responses} colors={colorArray} />;
       case 'nps-combined':
-        return <BarChart data={question.data.responses} colors={visualization.colors} />;
+        return <BarChart data={question.data.responses} colors={colorArray} />;
       default:
         console.warn(`[ReportsTab] Unsupported visualization type: ${visualization.primary}`);
         return <div>Unsupported visualization type</div>;
