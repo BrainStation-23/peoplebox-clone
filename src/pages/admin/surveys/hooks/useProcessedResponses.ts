@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { QUESTION_PROCESSORS } from "../types/processors";
-import type { ProcessedData } from "../types/processors/base";
+import type { ProcessedData } from "./useResponseProcessing";
 
 interface ProcessedQuestion {
   name: string;
