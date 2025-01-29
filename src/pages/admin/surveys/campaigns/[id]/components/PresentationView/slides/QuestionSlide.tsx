@@ -1,8 +1,8 @@
 import { SlideProps } from "../types";
 import { cn } from "@/lib/utils";
-import { BooleanCharts } from "../../ReportsTab/charts/BooleanCharts";
-import { NpsChart } from "../../ReportsTab/charts/NpsChart";
-import { WordCloud } from "../../ReportsTab/charts/WordCloud";
+import { BooleanCharts } from "@/components/shared/charts/BooleanCharts";
+import { NpsChart } from "@/components/shared/charts/NpsChart";
+import { WordCloud } from "@/components/shared/charts/WordCloud";
 import { usePresentationResponses } from "../hooks/usePresentationResponses";
 import { QuestionResponseData } from "../types/responses";
 
