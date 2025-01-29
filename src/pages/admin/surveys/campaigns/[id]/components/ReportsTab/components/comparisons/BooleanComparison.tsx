@@ -48,18 +48,18 @@ export function BooleanComparison({
       }
     });
 
-    // Convert to heatmap format
+    // Convert to heatmap format with numeric values
     const heatmapData = Object.entries(groupedData).flatMap(([name, answers]) =>
       Object.entries(answers).map(([value, count]) => ({
         name,
-        value,
+        value: value === "Yes" ? 1 : 0, // Convert Yes/No to 1/0
         count,
       }))
     );
 
     return {
       data: heatmapData,
-      xCategories: ["Yes", "No"],
+      xCategories: ["No", "Yes"],
     };
   };
 

@@ -18,22 +18,6 @@ export function HeatmapChart({ data, xCategories, height = 300 }: HeatmapProps) 
   const cellHeight = 40;
   const calculatedHeight = Math.max(height, yCategories.length * cellHeight);
 
-  const renderCell = (props: any) => {
-    const { x, y, width, height, count } = props;
-    const opacity = count / maxCount;
-    
-    return (
-      <Rectangle
-        x={x}
-        y={y}
-        width={width}
-        height={height}
-        fill="#8884d8"
-        opacity={opacity}
-      />
-    );
-  };
-
   return (
     <ResponsiveContainer width="100%" height={calculatedHeight}>
       <ScatterChart
@@ -44,7 +28,7 @@ export function HeatmapChart({ data, xCategories, height = 300 }: HeatmapProps) 
           dataKey="value"
           interval={0}
           tickLine={false}
-          data={xCategories.map(value => ({ value }))}
+          ticks={xCategories}
         />
         <YAxis
           type="category"
@@ -69,7 +53,7 @@ export function HeatmapChart({ data, xCategories, height = 300 }: HeatmapProps) 
         {data.map((cell, index) => (
           <Rectangle
             key={`cell-${index}`}
-            x={(Number(cell.value) - 1) * 40}
+            x={(cell.value) * 40}
             y={yCategories.indexOf(cell.name) * cellHeight}
             width={40}
             height={cellHeight}

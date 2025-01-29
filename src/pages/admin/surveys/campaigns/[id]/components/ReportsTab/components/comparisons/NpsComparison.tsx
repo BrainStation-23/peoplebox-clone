@@ -48,18 +48,18 @@ export function NpsComparison({
       }
     });
 
-    // Convert to heatmap format
+    // Convert to heatmap format ensuring numeric values
     const heatmapData = Object.entries(groupedData).flatMap(([name, scores]) =>
       Array.from(allValues).map((value) => ({
         name,
-        value: value.toString(),
+        value: value, // Already numeric
         count: scores[value] || 0,
       }))
     );
 
     return {
       data: heatmapData,
-      xCategories: Array.from(allValues).sort((a, b) => a - b).map(String),
+      xCategories: Array.from(allValues).sort((a, b) => a - b),
     };
   };
 
