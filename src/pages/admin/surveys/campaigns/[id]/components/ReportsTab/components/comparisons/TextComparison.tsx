@@ -1,7 +1,7 @@
 import { Card } from "@/components/ui/card";
-import { ProcessedResponse } from "../../hooks/useResponseProcessing";
 import { ComparisonDimension } from "../../types/comparison";
 import { WordCloud } from "../../charts/WordCloud";
+import { ProcessedResponse } from "@/pages/admin/surveys/hooks/useResponseProcessing";
 import { useEffect } from "react";
 
 interface TextComparisonProps {

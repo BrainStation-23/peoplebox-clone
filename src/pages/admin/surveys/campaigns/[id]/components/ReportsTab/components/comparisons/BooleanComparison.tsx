@@ -1,7 +1,7 @@
 import { Card } from "@/components/ui/card";
-import { ProcessedResponse } from "../../hooks/useResponseProcessing";
 import { ComparisonDimension } from "../../types/comparison";
 import { GroupedBarChart } from "../../charts/GroupedBarChart";
+import { ProcessedResponse } from "@/pages/admin/surveys/hooks/useResponseProcessing";
 
 interface BooleanComparisonProps {
   responses: ProcessedResponse[];
@@ -66,7 +66,7 @@ export function BooleanComparison({
         data={data} 
         keys={keys} 
         colors={colors}
-        height={300} // Taller to accommodate multiple groups
+        height={300}
       />
     </Card>
   );

@@ -1,7 +1,7 @@
 import { Card } from "@/components/ui/card";
-import { ProcessedResponse } from "../../hooks/useResponseProcessing";
 import { ComparisonDimension } from "../../types/comparison";
 import { BarChart } from "../../charts/BarChart";
+import { ProcessedResponse } from "@/pages/admin/surveys/hooks/useResponseProcessing";
 
 interface NpsComparisonProps {
   responses: ProcessedResponse[];
@@ -65,7 +65,7 @@ export function NpsComparison({
     return Object.entries(groupedData).map(([name, data]) => ({
       name,
       value: Math.round(
-        ((data.promoters - data.detractors) / data.total) * 100
+        ((data.promoters - data.detractors) / (data.total || 1)) * 100
       ),
     }));
   };
