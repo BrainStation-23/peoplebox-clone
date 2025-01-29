@@ -39,18 +39,13 @@ export function UserGrid({
   const someSelected = users.length > 0 && users.some(user => selectedUsers.includes(user.id));
 
   const handleSelectAll = (checked: boolean) => {
-    if (checked) {
-      onSelectUser(
-        users[0].id,
-        !users.every(user => selectedUsers.includes(user.id))
-      );
-    } else {
-      users.forEach(user => {
-        if (selectedUsers.includes(user.id)) {
-          onSelectUser(user.id, false);
-        }
-      });
-    }
+    users.forEach(user => {
+      if (checked && !selectedUsers.includes(user.id)) {
+        onSelectUser(user.id, true);
+      } else if (!checked && selectedUsers.includes(user.id)) {
+        onSelectUser(user.id, false);
+      }
+    });
   };
 
   return (
