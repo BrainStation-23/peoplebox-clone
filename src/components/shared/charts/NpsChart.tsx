@@ -8,6 +8,13 @@ interface NpsChartProps {
 }
 
 export function NpsChart({ data }: NpsChartProps) {
+  console.log("[NpsChart] Rendering with data:", data);
+
+  if (!data || !Array.isArray(data)) {
+    console.error("[NpsChart] Invalid data format:", data);
+    return null;
+  }
+
   return (
     <ResponsiveContainer width="100%" height={400}>
       <BarChart data={data}>
