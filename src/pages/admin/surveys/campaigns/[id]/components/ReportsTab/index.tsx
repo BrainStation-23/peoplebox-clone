@@ -7,6 +7,7 @@ import { ProcessorFactory, QUESTION_PROCESSORS } from "@/pages/admin/surveys/typ
 import { BarChart } from "./charts/BarChart";
 import { DonutChart } from "./charts/DonutChart";
 import { LineChart } from "./charts/LineChart";
+import { NpsVisualization } from "@/components/shared/charts/NpsVisualization";
 import { useToast } from "@/hooks/use-toast";
 import { useProcessedResponses } from "@/pages/admin/surveys/hooks/useProcessedResponses";
 import { ChartType } from "@/pages/admin/surveys/types/processors/base";
@@ -99,7 +100,12 @@ export function ReportsTab({ campaignId, instanceId }: ReportsTabProps) {
         console.log("[ReportsTab] Rendering bar chart with data:", question.data.responses);
         return <BarChart data={question.data.responses} colors={colorArray} />;
       case 'nps-combined':
-        return <BarChart data={question.data.responses} colors={colorArray} />;
+        // Transform the data to match NpsVisualization format
+        const npsData = question.data.responses.map((item: any) => ({
+          rating: item.rating,
+          count: item.count
+        }));
+        return <NpsVisualization data={npsData} />;
       default:
         console.warn(`[ReportsTab] Unsupported visualization type: ${visualization.primary}`);
         return <div>Unsupported visualization type</div>;
