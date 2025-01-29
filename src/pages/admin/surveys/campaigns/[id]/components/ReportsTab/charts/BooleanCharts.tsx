@@ -4,22 +4,19 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, PieChart, Pie, Cell, ResponsiveContainer } from "recharts";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
+interface BooleanData {
+  yes: number;
+  no: number;
+}
+
 interface BooleanChartsProps {
-  data: {
-    yes: number;
-    no: number;
-  };
+  data: BooleanData;
 }
 
 export function BooleanCharts({ data }: BooleanChartsProps) {
   const barData = [
     { answer: "Yes", count: data.yes },
     { answer: "No", count: data.no },
-  ];
-
-  const pieData = [
-    { name: "Yes", value: data.yes },
-    { name: "No", value: data.no },
   ];
 
   const COLORS = ["#22c55e", "#ef4444"];

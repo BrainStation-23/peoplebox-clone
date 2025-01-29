@@ -1,10 +1,12 @@
 import { Progress } from "@/components/ui/progress";
 
+interface NpsData {
+  rating: number;
+  count: number;
+}
+
 interface NpsChartProps {
-  data: Array<{
-    rating: number;
-    count: number;
-  }>;
+  data: NpsData[];
 }
 
 export function NpsChart({ data }: NpsChartProps) {
