@@ -33,6 +33,7 @@ export class RatingProcessor implements QuestionProcessor {
   };
 
   detectRatingType(responses: any[]): RatingVisualizationType {
+    // Check if any response has a rating > 5
     const maxRating = Math.max(...responses.map(r => r.answer).filter(Number.isFinite));
     return maxRating > 5 ? 'nps' : 'satisfaction';
   }

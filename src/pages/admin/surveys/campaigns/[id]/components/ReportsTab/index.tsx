@@ -93,6 +93,24 @@ export function ReportsTab({ campaignId, instanceId }: ReportsTabProps) {
     const chartType: ChartType = visualization.primary;
     const colorArray = Object.values(visualization.colors);
 
+    // Check if it's a rating question and determine the type
+    if (question.type === 'rating') {
+      const maxRating = Math.max(...question.data.responses.map((r: any) => r.rating));
+      if (maxRating > 5) {
+        // NPS rating (0-10)
+        return <NpsVisualization data={question.data.responses} />;
+      } else {
+        // Satisfaction rating (1-5)
+        return <BarChart 
+          data={question.data.responses.map((item: any) => ({
+            name: String(item.rating),
+            value: item.count
+          }))} 
+          colors={colorArray}
+        />;
+      }
+    }
+
     switch (chartType) {
       case 'donut':
         return <DonutChart data={question.data.responses} colors={colorArray} />;
@@ -100,12 +118,7 @@ export function ReportsTab({ campaignId, instanceId }: ReportsTabProps) {
         console.log("[ReportsTab] Rendering bar chart with data:", question.data.responses);
         return <BarChart data={question.data.responses} colors={colorArray} />;
       case 'nps-combined':
-        // Transform the data to match NpsVisualization format
-        const npsData = question.data.responses.map((item: any) => ({
-          rating: item.rating,
-          count: item.count
-        }));
-        return <NpsVisualization data={npsData} />;
+        return <NpsVisualization data={question.data.responses} />;
       default:
         console.warn(`[ReportsTab] Unsupported visualization type: ${visualization.primary}`);
         return <div>Unsupported visualization type</div>;
