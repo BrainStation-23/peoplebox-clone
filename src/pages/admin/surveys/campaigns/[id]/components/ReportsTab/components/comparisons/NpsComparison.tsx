@@ -1,7 +1,7 @@
 import { Card } from "@/components/ui/card";
 import { ProcessedResponse } from "../../hooks/useResponseProcessing";
 import { ComparisonDimension } from "../../types/comparison";
-import { HeatmapChart } from "../../charts/HeatmapChart";
+import { BarChart } from "../../charts/BarChart";
 
 interface NpsComparisonProps {
   responses: ProcessedResponse[];
@@ -15,8 +15,10 @@ export function NpsComparison({
   dimension,
 }: NpsComparisonProps) {
   const processData = () => {
-    const groupedData: Record<string, Record<number, number>> = {};
-    const allValues: Set<number> = new Set();
+    const groupedData: Record<
+      string,
+      { promoters: number; passives: number; detractors: number; total: number }
+    > = {};
 
     responses.forEach((response) => {
       const score = response.answers[questionName]?.answer;
@@ -39,41 +41,45 @@ export function NpsComparison({
       }
 
       if (!groupedData[groupKey]) {
-        groupedData[groupKey] = {};
+        groupedData[groupKey] = {
+          promoters: 0,
+          passives: 0,
+          detractors: 0,
+          total: 0,
+        };
       }
 
       if (typeof score === "number") {
-        allValues.add(score);
-        groupedData[groupKey][score] = (groupedData[groupKey][score] || 0) + 1;
+        if (score <= 6) {
+          groupedData[groupKey].detractors++;
+        } else if (score <= 8) {
+          groupedData[groupKey].passives++;
+        } else {
+          groupedData[groupKey].promoters++;
+        }
+        groupedData[groupKey].total++;
       }
     });
 
-    // Convert to heatmap format ensuring numeric values
-    const heatmapData = Object.entries(groupedData).flatMap(([name, scores]) =>
-      Array.from(allValues).map((value) => ({
-        name,
-        value: value, // Already numeric
-        count: scores[value] || 0,
-      }))
-    );
-
-    return {
-      data: heatmapData,
-      xCategories: Array.from(allValues).sort((a, b) => a - b),
-    };
+    // Calculate NPS for each group
+    return Object.entries(groupedData).map(([name, data]) => ({
+      name,
+      value: Math.round(
+        ((data.promoters - data.detractors) / data.total) * 100
+      ),
+    }));
   };
 
-  const { data, xCategories } = processData();
+  const data = processData();
 
   return (
     <Card className="p-4">
-      <HeatmapChart 
+      <BarChart 
         data={data}
-        xCategories={xCategories}
-        height={400}
+        colors={["#3b82f6"]} // Use blue as the primary color
       />
       <div className="mt-4 text-sm text-center text-muted-foreground">
-        Response Distribution by {dimension.replace('_', ' ').toUpperCase()}
+        NPS Score by {dimension.replace('_', ' ').toUpperCase()}
       </div>
     </Card>
   );

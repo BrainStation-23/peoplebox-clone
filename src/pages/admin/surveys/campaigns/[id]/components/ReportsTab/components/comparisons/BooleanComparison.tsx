@@ -1,7 +1,7 @@
 import { Card } from "@/components/ui/card";
 import { ProcessedResponse } from "../../hooks/useResponseProcessing";
 import { ComparisonDimension } from "../../types/comparison";
-import { HeatmapChart } from "../../charts/HeatmapChart";
+import { GroupedBarChart } from "../../charts/GroupedBarChart";
 
 interface BooleanComparisonProps {
   responses: ProcessedResponse[];
@@ -15,7 +15,7 @@ export function BooleanComparison({
   dimension,
 }: BooleanComparisonProps) {
   const processData = () => {
-    const groupedData: Record<string, Record<string, number>> = {};
+    const groupedData: Record<string, { yes: number; no: number }> = {};
 
     responses.forEach((response) => {
       const answer = response.answers[questionName]?.answer;
@@ -38,43 +38,36 @@ export function BooleanComparison({
       }
 
       if (!groupedData[groupKey]) {
-        groupedData[groupKey] = { "Yes": 0, "No": 0 };
+        groupedData[groupKey] = { yes: 0, no: 0 };
       }
 
       if (answer === true) {
-        groupedData[groupKey]["Yes"]++;
+        groupedData[groupKey].yes++;
       } else if (answer === false) {
-        groupedData[groupKey]["No"]++;
+        groupedData[groupKey].no++;
       }
     });
 
-    // Convert to heatmap format with numeric values
-    const heatmapData = Object.entries(groupedData).flatMap(([name, answers]) =>
-      Object.entries(answers).map(([value, count]) => ({
-        name,
-        value: value === "Yes" ? 1 : 0, // Convert Yes/No to 1/0
-        count,
-      }))
-    );
-
-    return {
-      data: heatmapData,
-      xCategories: ["No", "Yes"],
-    };
+    // Convert to format needed for GroupedBarChart
+    return Object.entries(groupedData).map(([name, data]) => ({
+      name,
+      Yes: data.yes,
+      No: data.no,
+    }));
   };
 
-  const { data, xCategories } = processData();
+  const data = processData();
+  const keys = ["Yes", "No"];
+  const colors = ["#22c55e", "#ef4444"]; // Green for Yes, Red for No
 
   return (
     <Card className="p-4">
-      <HeatmapChart 
-        data={data}
-        xCategories={xCategories}
-        height={400}
+      <GroupedBarChart 
+        data={data} 
+        keys={keys} 
+        colors={colors}
+        height={300} // Taller to accommodate multiple groups
       />
-      <div className="mt-4 text-sm text-center text-muted-foreground">
-        Response Distribution by {dimension.replace('_', ' ').toUpperCase()}
-      </div>
     </Card>
   );
 }
