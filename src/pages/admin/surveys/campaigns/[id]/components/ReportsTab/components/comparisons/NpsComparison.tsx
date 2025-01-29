@@ -1,12 +1,12 @@
-import { Card } from "@/components/ui/card";
-import { ProcessedResponse } from "../../hooks/useResponseProcessing";
-import { ComparisonDimension } from "../../types/comparison";
-import { BarChart } from "../../charts/BarChart";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { HeatMapChart } from "../../charts/HeatMapChart";
+import { NpsChart } from "../../charts/NpsChart";
+import type { ProcessedResponse } from "../../hooks/useResponseProcessing";
 
 interface NpsComparisonProps {
   responses: ProcessedResponse[];
   questionName: string;
-  dimension: ComparisonDimension;
+  dimension: "sbu" | "gender" | "location" | "employment_type" | "none";
 }
 
 export function NpsComparison({
@@ -14,73 +14,89 @@ export function NpsComparison({
   questionName,
   dimension,
 }: NpsComparisonProps) {
-  const processData = () => {
-    const groupedData: Record<
-      string,
-      { promoters: number; passives: number; detractors: number; total: number }
-    > = {};
+  const processResponses = () => {
+    const groupedData = new Map();
 
     responses.forEach((response) => {
-      const score = response.answers[questionName]?.answer;
-      let groupKey = "Unknown";
+      const answer = response.answers[questionName]?.answer;
+      if (typeof answer !== "number") return;
 
-      // Get the group key based on the dimension
+      let dimensionValue = "Unknown";
       switch (dimension) {
         case "sbu":
-          groupKey = response.respondent.sbu?.name || "No SBU";
+          dimensionValue = response.respondent.sbu?.name || "Unknown";
           break;
         case "gender":
-          groupKey = response.respondent.gender || "Not Specified";
+          dimensionValue = response.respondent.gender || "Unknown";
           break;
         case "location":
-          groupKey = response.respondent.location?.name || "No Location";
+          dimensionValue = response.respondent.location?.name || "Unknown";
           break;
         case "employment_type":
-          groupKey = response.respondent.employment_type?.name || "Not Specified";
+          dimensionValue = response.respondent.employment_type?.name || "Unknown";
           break;
       }
 
-      if (!groupedData[groupKey]) {
-        groupedData[groupKey] = {
-          promoters: 0,
-          passives: 0,
-          detractors: 0,
+      if (!groupedData.has(dimensionValue)) {
+        groupedData.set(dimensionValue, {
+          dimension: dimensionValue,
+          unsatisfied: 0,
+          neutral: 0,
+          satisfied: 0,
           total: 0,
-        };
+          ratings: [],
+        });
       }
 
-      if (typeof score === "number") {
-        if (score <= 6) {
-          groupedData[groupKey].detractors++;
-        } else if (score <= 8) {
-          groupedData[groupKey].passives++;
-        } else {
-          groupedData[groupKey].promoters++;
-        }
-        groupedData[groupKey].total++;
+      const group = groupedData.get(dimensionValue);
+      group.total += 1;
+      group.ratings.push(answer);
+
+      // For satisfaction ratings (1-5)
+      if (answer <= 3) {
+        group.unsatisfied += 1;
+      } else if (answer === 4) {
+        group.neutral += 1;
+      } else {
+        group.satisfied += 1;
       }
     });
 
-    // Calculate NPS for each group
-    return Object.entries(groupedData).map(([name, data]) => ({
-      name,
-      value: Math.round(
-        ((data.promoters - data.detractors) / data.total) * 100
-      ),
-    }));
+    return Array.from(groupedData.values());
   };
 
-  const data = processData();
+  const isSatisfactionRating = (ratings: number[]) => {
+    return ratings.every(rating => rating >= 1 && rating <= 5);
+  };
+
+  const data = processResponses();
+  const isNpsQuestion = data.length > 0 && data[0].ratings.length > 0 && 
+    !isSatisfactionRating(data[0].ratings);
+
+  if (data.length === 0) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>No data available</CardTitle>
+        </CardHeader>
+      </Card>
+    );
+  }
 
   return (
-    <Card className="p-4">
-      <BarChart 
-        data={data}
-        colors={["#3b82f6"]} // Use blue as the primary color
-      />
-      <div className="mt-4 text-sm text-center text-muted-foreground">
-        NPS Score by {dimension.replace('_', ' ').toUpperCase()}
-      </div>
+    <Card>
+      <CardHeader>
+        <CardTitle>Response Distribution by {dimension.toUpperCase()}</CardTitle>
+      </CardHeader>
+      <CardContent>
+        {isNpsQuestion ? (
+          <NpsChart data={data.flatMap(group => 
+            group.ratings.map(rating => ({ rating, group: group.dimension }))
+          )} />
+        ) : (
+          <HeatMapChart data={data} />
+        )}
+      </CardContent>
     </Card>
   );
 }
