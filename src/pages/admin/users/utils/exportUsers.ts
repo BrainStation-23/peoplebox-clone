@@ -1,5 +1,6 @@
 import { User } from "../types";
 import { supabase } from "@/integrations/supabase/client";
+import Papa from "papaparse";
 
 type ProgressCallback = (processed: number, total: number) => void;
 
@@ -66,9 +67,19 @@ export const exportUsers = async (users: User[], onProgress?: ProgressCallback) 
   };
 
   const rows = await processUsers();
-  const csvContent = [headers, ...rows]
-    .map((row) => row.map((cell) => `"${cell}"`).join(","))
-    .join("\n");
+  
+  // Use PapaParse to generate CSV
+  const csvContent = Papa.unparse({
+    fields: headers,
+    data: rows
+  }, {
+    quotes: true, // Always quote strings
+    quoteChar: '"',
+    escapeChar: '"',
+    delimiter: ",",
+    header: true,
+    newline: "\n"
+  });
 
   console.log("Generated CSV content:", csvContent);
 
