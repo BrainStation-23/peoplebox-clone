@@ -6,6 +6,107 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
+// Helper functions for ID lookups
+async function getLevelIdByName(supabase: any, name: string): Promise<string | null> {
+  if (!name?.trim()) return null;
+  
+  const { data, error } = await supabase
+    .from('levels')
+    .select('id')
+    .eq('name', name.trim())
+    .eq('status', 'active')
+    .maybeSingle();
+  
+  if (error) {
+    console.error('Error finding level:', name, error);
+    return null;
+  }
+  return data?.id;
+}
+
+async function getLocationIdByName(supabase: any, name: string): Promise<string | null> {
+  if (!name?.trim()) return null;
+  
+  const { data, error } = await supabase
+    .from('locations')
+    .select('id')
+    .eq('name', name.trim())
+    .maybeSingle();
+  
+  if (error) {
+    console.error('Error finding location:', name, error);
+    return null;
+  }
+  return data?.id;
+}
+
+async function getEmploymentTypeIdByName(supabase: any, name: string): Promise<string | null> {
+  if (!name?.trim()) return null;
+  
+  const { data, error } = await supabase
+    .from('employment_types')
+    .select('id')
+    .eq('name', name.trim())
+    .eq('status', 'active')
+    .maybeSingle();
+  
+  if (error) {
+    console.error('Error finding employment type:', name, error);
+    return null;
+  }
+  return data?.id;
+}
+
+async function getEmployeeRoleIdByName(supabase: any, name: string): Promise<string | null> {
+  if (!name?.trim()) return null;
+  
+  const { data, error } = await supabase
+    .from('employee_roles')
+    .select('id')
+    .eq('name', name.trim())
+    .eq('status', 'active')
+    .maybeSingle();
+  
+  if (error) {
+    console.error('Error finding employee role:', name, error);
+    return null;
+  }
+  return data?.id;
+}
+
+async function getEmployeeTypeIdByName(supabase: any, name: string): Promise<string | null> {
+  if (!name?.trim()) return null;
+  
+  const { data, error } = await supabase
+    .from('employee_types')
+    .select('id')
+    .eq('name', name.trim())
+    .eq('status', 'active')
+    .maybeSingle();
+  
+  if (error) {
+    console.error('Error finding employee type:', name, error);
+    return null;
+  }
+  return data?.id;
+}
+
+async function getSbuIdByName(supabase: any, name: string): Promise<string | null> {
+  if (!name?.trim()) return null;
+  
+  const { data, error } = await supabase
+    .from('sbus')
+    .select('id')
+    .eq('name', name.trim())
+    .maybeSingle();
+  
+  if (error) {
+    console.error('Error finding SBU:', name, error);
+    return null;
+  }
+  return data?.id;
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders })
@@ -29,26 +130,56 @@ serve(async (req) => {
       try {
         console.log('Processing user update:', user)
 
+        // Lookup all required IDs
+        const [
+          levelId,
+          locationId,
+          employmentTypeId,
+          employeeRoleId,
+          employeeTypeId,
+        ] = await Promise.all([
+          getLevelIdByName(supabase, user.level),
+          getLocationIdByName(supabase, user.location),
+          getEmploymentTypeIdByName(supabase, user.employment_type),
+          getEmployeeRoleIdByName(supabase, user.employee_role),
+          getEmployeeTypeIdByName(supabase, user.employee_type),
+        ]);
+
+        console.log('Looked up IDs:', {
+          levelId,
+          locationId,
+          employmentTypeId,
+          employeeRoleId,
+          employeeTypeId,
+        });
+
+        // Prepare update data with found IDs
+        const updateData: any = {
+          first_name: user.first_name,
+          last_name: user.last_name,
+          org_id: user.org_id,
+          gender: user.gender,
+          date_of_birth: user.date_of_birth,
+          designation: user.designation,
+        };
+
+        // Only add IDs that were successfully looked up
+        if (levelId) updateData.level_id = levelId;
+        if (locationId) updateData.location_id = locationId;
+        if (employmentTypeId) updateData.employment_type_id = employmentTypeId;
+        if (employeeRoleId) updateData.employee_role_id = employeeRoleId;
+        if (employeeTypeId) updateData.employee_type_id = employeeTypeId;
+
+        console.log('Updating profile with data:', updateData);
+
         // Update profile
         const { error: profileError } = await supabase
           .from('profiles')
-          .update({
-            first_name: user.first_name,
-            last_name: user.last_name,
-            org_id: user.org_id,
-            level_id: user.level_id,
-            location_id: user.location_id,
-            employment_type_id: user.employment_type_id,
-            employee_role_id: user.employee_role_id,
-            employee_type_id: user.employee_type_id,
-            gender: user.gender,
-            date_of_birth: user.date_of_birth,
-            designation: user.designation,
-          })
-          .eq('id', user.id)
+          .update(updateData)
+          .eq('id', user.id);
 
         if (profileError) {
-          throw profileError
+          throw profileError;
         }
 
         // Update role if provided
@@ -56,10 +187,10 @@ serve(async (req) => {
           const { error: roleError } = await supabase
             .from('user_roles')
             .update({ role: user.role })
-            .eq('user_id', user.id)
+            .eq('user_id', user.id);
 
           if (roleError) {
-            throw roleError
+            throw roleError;
           }
         }
 
@@ -69,49 +200,52 @@ serve(async (req) => {
           await supabase
             .from('user_sbus')
             .delete()
-            .eq('user_id', user.id)
+            .eq('user_id', user.id);
 
           // Create new SBU assignments
-          const sbuList = user.sbus.split(';').map((sbu: string) => sbu.trim())
+          const sbuList = user.sbus.split(';').map((sbu: string) => sbu.trim());
+          
           for (let i = 0; i < sbuList.length; i++) {
-            const { data: sbuData } = await supabase
-              .from('sbus')
-              .select('id')
-              .eq('name', sbuList[i])
-              .single()
-
-            if (sbuData) {
-              await supabase
+            const sbuId = await getSbuIdByName(supabase, sbuList[i]);
+            
+            if (sbuId) {
+              const { error: sbuError } = await supabase
                 .from('user_sbus')
                 .insert({
                   user_id: user.id,
-                  sbu_id: sbuData.id,
+                  sbu_id: sbuId,
                   is_primary: i === 0,
-                })
+                });
+
+              if (sbuError) {
+                console.error('Error assigning SBU:', sbuList[i], sbuError);
+              }
+            } else {
+              console.error('Could not find SBU:', sbuList[i]);
             }
           }
         }
 
-        results.successful++
+        results.successful++;
       } catch (error) {
-        console.error('Error updating user:', error)
-        results.failed++
+        console.error('Error updating user:', error);
+        results.failed++;
         results.errors.push({
           user,
           error: error.message,
-        })
+        });
       }
     }
 
     return new Response(
       JSON.stringify(results),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    )
+    );
   } catch (error) {
-    console.error('Error:', error)
+    console.error('Error:', error);
     return new Response(
       JSON.stringify({ error: error.message }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
-    )
+    );
   }
 })
