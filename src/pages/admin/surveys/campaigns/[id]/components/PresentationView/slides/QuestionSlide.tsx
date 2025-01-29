@@ -1,8 +1,8 @@
 import { SlideProps } from "../types";
 import { cn } from "@/lib/utils";
-import { BooleanCharts } from "@/components/shared/charts/BooleanCharts";
-import { NpsVisualization } from "@/components/shared/charts/NpsVisualization";
-import { WordCloud } from "@/components/shared/charts/WordCloud";
+import { BooleanCharts } from "../../ReportsTab/charts/BooleanCharts";
+import { NpsChart } from "../../ReportsTab/charts/NpsChart";
+import { WordCloud } from "../../ReportsTab/charts/WordCloud";
 import { usePresentationResponses } from "../hooks/usePresentationResponses";
 import { QuestionResponseData } from "../types/responses";
 
@@ -117,12 +117,12 @@ export function QuestionSlide({
 
         <div className="flex-1 flex items-center justify-center">
           {processedData && (
-            <div className="w-full max-w-4xl">
+            <div className="w-full max-w-3xl">
               {processedData.type === "boolean" && (
                 <BooleanCharts data={processedData.data} />
               )}
               {processedData.type === "rating" && (
-                <NpsVisualization data={processedData.data} />
+                <NpsChart data={processedData.data} />
               )}
               {processedData.type === "text" && (
                 <div className="min-h-[400px]">

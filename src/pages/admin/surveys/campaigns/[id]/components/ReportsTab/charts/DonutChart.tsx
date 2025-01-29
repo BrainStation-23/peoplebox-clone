@@ -2,10 +2,7 @@ import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/
 import { PieChart, Pie, ResponsiveContainer, Cell } from "recharts";
 
 interface DonutChartProps {
-  data: {
-    yes?: number;
-    no?: number;
-  } | Array<{
+  data: Array<{
     name: string;
     value: number;
   }>;
@@ -13,24 +10,12 @@ interface DonutChartProps {
 }
 
 export function DonutChart({ data, colors = ["#3b82f6", "#22c55e", "#eab308", "#ef4444"] }: DonutChartProps) {
-  // Transform the data if it's in yes/no format
-  const chartData = Array.isArray(data) 
-    ? data 
-    : [
-        { name: 'Yes', value: data.yes || 0 },
-        { name: 'No', value: data.no || 0 }
-      ];
-
-  if (!chartData.length) {
-    return <div>No data available</div>;
-  }
-
   return (
     <ChartContainer config={{}}>
       <ResponsiveContainer width="100%" height={180}>
         <PieChart>
           <Pie
-            data={chartData}
+            data={data}
             cx="50%"
             cy="50%"
             innerRadius={60}
@@ -39,7 +24,7 @@ export function DonutChart({ data, colors = ["#3b82f6", "#22c55e", "#eab308", "#
             paddingAngle={5}
             dataKey="value"
           >
-            {chartData.map((entry, index) => (
+            {data.map((entry, index) => (
               <Cell key={`cell-${index}`} fill={colors[index % colors.length]} />
             ))}
           </Pie>

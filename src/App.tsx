@@ -1,5 +1,3 @@
-import { FeatureFlagProvider } from "./contexts/FeatureFlagContext";
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -51,9 +49,7 @@ import EmployeeRoleConfig from "./pages/admin/config/employee-role";
 
 const queryClient = new QueryClient();
 
-function App() {
-  return (
-    <FeatureFlagProvider flags={{ useNewProcessing: false }}>
+const App = () => (
   <QueryClientProvider client={queryClient}>
     <BrowserRouter>
       <TooltipProvider>
@@ -113,8 +109,6 @@ function App() {
       </TooltipProvider>
     </BrowserRouter>
   </QueryClientProvider>
-    </FeatureFlagProvider>
-  );
-}
+);
 
 export default App;

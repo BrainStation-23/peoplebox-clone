@@ -1,192 +1,67 @@
-import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useResponseProcessing } from "./hooks/useResponseProcessing";
+import { BooleanCharts } from "./charts/BooleanCharts";
+import { NpsChart } from "./charts/NpsChart";
+import { WordCloud } from "./charts/WordCloud";
 import { ComparisonSelector } from "./components/ComparisonSelector";
+import { BooleanComparison } from "./components/comparisons/BooleanComparison";
+import { NpsComparison } from "./components/comparisons/NpsComparison";
+import { TextComparison } from "./components/comparisons/TextComparison";
+import { useState } from "react";
 import { ComparisonDimension } from "./types/comparison";
-import { ProcessorFactory, QUESTION_PROCESSORS } from "@/pages/admin/surveys/types/processors";
-import { BarChart } from "./charts/BarChart";
-import { DonutChart } from "./charts/DonutChart";
-import { LineChart } from "./charts/LineChart";
-import { NpsVisualization } from "@/components/shared/charts/NpsVisualization";
-import { useToast } from "@/hooks/use-toast";
-import { useProcessedResponses } from "@/pages/admin/surveys/hooks/useProcessedResponses";
-import { ChartType } from "@/pages/admin/surveys/types/processors/base";
 
 interface ReportsTabProps {
   campaignId: string;
   instanceId?: string;
 }
 
-interface BooleanData {
+type BooleanAnswer = {
   yes: number;
   no: number;
-}
+};
 
-interface NpsData {
+type RatingAnswer = {
   rating: number;
   count: number;
-}
+}[];
 
-interface WordData {
+type TextAnswer = {
   text: string;
   value: number;
-}
+}[];
 
-interface ChartData {
-  name: string;
-  value: number;
-}
-
-interface ProcessedQuestion {
-  name: string;
-  title: string;
-  type: string;
-  rateCount?: number;
-  data: {
-    responses: BooleanData | NpsData[] | WordData[];
-  };
-}
+type ProcessedAnswer = BooleanAnswer | RatingAnswer | TextAnswer;
 
 export function ReportsTab({ campaignId, instanceId }: ReportsTabProps) {
-  const { questions, isLoading, error } = useProcessedResponses(campaignId, instanceId);
+  const { data, isLoading } = useResponseProcessing(campaignId, instanceId);
   const [comparisonDimensions, setComparisonDimensions] = useState<
     Record<string, ComparisonDimension>
   >({});
-  const { toast } = useToast();
-
-  console.log("[ReportsTab] Initial questions data:", questions);
-  console.log("[ReportsTab] Loading state:", isLoading);
-  console.log("[ReportsTab] Error state:", error);
-
-  useEffect(() => {
-    if (error) {
-      toast({
-        title: "Error loading reports",
-        description: error.message,
-        variant: "destructive",
-      });
-    }
-  }, [error, toast]);
-
-  useEffect(() => {
-    if (!isLoading && !error && !questions?.length) {
-      toast({
-        title: "No data available",
-        description: "No questions found for this survey",
-        variant: "destructive",
-      });
-    }
-  }, [isLoading, error, questions, toast]);
 
   if (isLoading) {
     return <div>Loading...</div>;
   }
 
-  if (error) {
-    return <div>Error: {error.message}</div>;
-  }
-
-  if (!questions?.length) {
+  if (!data || !data.questions || !data.responses) {
     return <div>No data available</div>;
   }
 
   const handleComparisonChange = (questionName: string, dimension: ComparisonDimension) => {
-    console.log("[ReportsTab] Comparison dimension changed:", { questionName, dimension });
     setComparisonDimensions((prev) => ({
       ...prev,
       [questionName]: dimension,
     }));
   };
 
-  const transformToChartData = (data: BooleanData | NpsData[] | WordData[]): ChartData[] => {
-    if (Array.isArray(data)) {
-      if ('rating' in data[0]) {
-        // NpsData[]
-        return (data as NpsData[]).map(item => ({
-          name: String(item.rating),
-          value: item.count
-        }));
-      }
-      if ('text' in data[0]) {
-        // WordData[]
-        return (data as WordData[]).map(item => ({
-          name: item.text,
-          value: item.value
-        }));
-      }
-    } else if ('yes' in data) {
-      // BooleanData
-      return [
-        { name: 'Yes', value: data.yes },
-        { name: 'No', value: data.no }
-      ];
-    }
-    return [];
-  };
-
-  const renderVisualization = (question: ProcessedQuestion) => {
-    console.log("[ReportsTab] Rendering visualization for question:", {
-      name: question.name,
-      type: question.type,
-      data: question.data,
-      rateCount: question.rateCount,
-    });
-
-    const processor = QUESTION_PROCESSORS[question.type]?.();
-    if (!processor) {
-      console.warn(`[ReportsTab] No processor found for question type: ${question.type}`);
-      return null;
-    }
-
-    const config = processor.getConfig();
-    console.log("[ReportsTab] Processor config:", config);
-    const { visualization } = config;
-
-    console.log("[ReportsTab] Question data before visualization:", {
-      primary: visualization.primary,
-      data: question.data.responses,
-    });
-
-    const chartType: ChartType = visualization.primary;
-    const colorArray = Object.values(visualization.colors);
-
-    // Check if it's a rating question and determine the type based on rateCount
-    if (question.type === 'rating') {
-      if (question.rateCount === 10) {
-        // NPS rating (0-10)
-        return <NpsVisualization data={question.data.responses as NpsData[]} />;
-      } else {
-        // Satisfaction rating (1-5)
-        return <BarChart 
-          data={transformToChartData(question.data.responses)}
-          colors={colorArray}
-        />;
-      }
-    }
-
-    switch (chartType) {
-      case 'donut':
-        return <DonutChart data={transformToChartData(question.data.responses)} colors={colorArray} />;
-      case 'bar':
-        console.log("[ReportsTab] Rendering bar chart with data:", question.data.responses);
-        return <BarChart data={transformToChartData(question.data.responses)} colors={colorArray} />;
-      case 'nps-combined':
-        return <NpsVisualization data={question.data.responses as NpsData[]} />;
-      default:
-        console.warn(`[ReportsTab] Unsupported visualization type: ${visualization.primary}`);
-        return <div>Unsupported visualization type</div>;
-    }
-  };
-
   return (
     <div className="grid gap-6">
-      {questions.map((question) => {
+      {data.questions.map((question: any) => {
         const currentDimension = comparisonDimensions[question.name] || "none";
-        console.log("[ReportsTab] Processing question:", {
-          name: question.name,
-          type: question.type,
-          dimension: currentDimension,
-          rateCount: question.rateCount,
-        });
+        const processedData = processAnswersForQuestion(
+          question.name,
+          question.type,
+          data.responses
+        );
 
         return (
           <Card key={question.name} className="w-full">
@@ -200,11 +75,108 @@ export function ReportsTab({ campaignId, instanceId }: ReportsTabProps) {
               />
             </CardHeader>
             <CardContent className="space-y-4">
-              {renderVisualization(question)}
+              {currentDimension === "none" && (
+                <>
+                  {question.type === "boolean" && (
+                    <BooleanCharts
+                      data={processedData as BooleanAnswer}
+                    />
+                  )}
+                  {(question.type === "nps" || question.type === "rating") && (
+                    <NpsChart
+                      data={processedData as RatingAnswer}
+                    />
+                  )}
+                  {(question.type === "text" || question.type === "comment") && (
+                    <WordCloud
+                      words={processedData as TextAnswer}
+                    />
+                  )}
+                </>
+              )}
+
+              {currentDimension !== "none" && (
+                <>
+                  {question.type === "boolean" && (
+                    <BooleanComparison
+                      responses={data.responses}
+                      questionName={question.name}
+                      dimension={currentDimension}
+                    />
+                  )}
+                  {(question.type === "nps" || question.type === "rating") && (
+                    <NpsComparison
+                      responses={data.responses}
+                      questionName={question.name}
+                      dimension={currentDimension}
+                    />
+                  )}
+                  {(question.type === "text" || question.type === "comment") && (
+                    <TextComparison
+                      responses={data.responses}
+                      questionName={question.name}
+                      dimension={currentDimension}
+                    />
+                  )}
+                </>
+              )}
             </CardContent>
           </Card>
         );
       })}
     </div>
   );
+}
+
+function processAnswersForQuestion(
+  questionName: string,
+  type: string,
+  responses: any[]
+): ProcessedAnswer {
+  const answers = responses.map(
+    (response) => response.answers[questionName]?.answer
+  );
+
+  switch (type) {
+    case "boolean":
+      return {
+        yes: answers.filter((a) => a === true).length,
+        no: answers.filter((a) => a === false).length,
+      };
+
+    case "nps":
+    case "rating":
+      const ratingCounts = new Array(11).fill(0);
+      answers.forEach((rating) => {
+        if (typeof rating === "number" && rating >= 0 && rating <= 10) {
+          ratingCounts[rating]++;
+        }
+      });
+      return ratingCounts.map((count, rating) => ({ rating, count }));
+
+    case "text":
+    case "comment":
+      const wordFrequency: Record<string, number> = {};
+      answers.forEach((answer) => {
+        if (typeof answer === "string") {
+          const words = answer
+            .toLowerCase()
+            .replace(/[^\w\s]/g, "")
+            .split(/\s+/)
+            .filter((word) => word.length > 2);
+
+          words.forEach((word) => {
+            wordFrequency[word] = (wordFrequency[word] || 0) + 1;
+          });
+        }
+      });
+
+      return Object.entries(wordFrequency)
+        .map(([text, value]) => ({ text, value }))
+        .sort((a, b) => b.value - a.value)
+        .slice(0, 50);
+
+    default:
+      throw new Error(`Unsupported question type: ${type}`);
+  }
 }
