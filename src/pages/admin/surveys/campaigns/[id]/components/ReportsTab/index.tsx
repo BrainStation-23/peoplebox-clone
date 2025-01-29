@@ -1,7 +1,7 @@
+import { useEffect, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { useProcessedResponses } from "@/pages/admin/surveys/hooks/useProcessedResponses";
 import { ComparisonSelector } from "./components/ComparisonSelector";
-import { useState } from "react";
 import { ComparisonDimension } from "./types/comparison";
 import { ProcessorFactory, QUESTION_PROCESSORS } from "@/pages/admin/surveys/types/processors";
 import { BarChart } from "./charts/BarChart";
@@ -25,25 +25,35 @@ export function ReportsTab({ campaignId, instanceId }: ReportsTabProps) {
   console.log("[ReportsTab] Loading state:", isLoading);
   console.log("[ReportsTab] Error state:", error);
 
+  useEffect(() => {
+    if (error) {
+      toast({
+        title: "Error loading reports",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  }, [error, toast]);
+
+  useEffect(() => {
+    if (!isLoading && !error && !questions?.length) {
+      toast({
+        title: "No data available",
+        description: "No questions found for this survey",
+        variant: "destructive",
+      });
+    }
+  }, [isLoading, error, questions, toast]);
+
   if (isLoading) {
     return <div>Loading...</div>;
   }
 
   if (error) {
-    toast({
-      title: "Error loading reports",
-      description: error.message,
-      variant: "destructive",
-    });
     return <div>Error: {error.message}</div>;
   }
 
   if (!questions?.length) {
-    toast({
-      title: "No data available",
-      description: "No questions found for this survey",
-      variant: "destructive",
-    });
     return <div>No data available</div>;
   }
 
@@ -90,11 +100,6 @@ export function ReportsTab({ campaignId, instanceId }: ReportsTabProps) {
         return <BarChart data={question.data.responses} colors={config.colors} />;
       default:
         console.warn(`[ReportsTab] Unsupported visualization type: ${visualization.type}`);
-        toast({
-          title: "Unsupported Visualization",
-          description: `Visualization type '${visualization.type}' is not supported`,
-          variant: "destructive",
-        });
         return <div>Unsupported visualization type</div>;
     }
   };
