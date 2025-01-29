@@ -17,6 +17,16 @@ interface ReportsTabProps {
   instanceId?: string;
 }
 
+interface ProcessedQuestion {
+  name: string;
+  title: string;
+  type: string;
+  rateCount?: number;
+  data: {
+    responses: any[];
+  };
+}
+
 export function ReportsTab({ campaignId, instanceId }: ReportsTabProps) {
   const { questions, isLoading, error } = useProcessedResponses(campaignId, instanceId);
   const [comparisonDimensions, setComparisonDimensions] = useState<
@@ -68,7 +78,7 @@ export function ReportsTab({ campaignId, instanceId }: ReportsTabProps) {
     }));
   };
 
-  const renderVisualization = (question: any) => {
+  const renderVisualization = (question: ProcessedQuestion) => {
     console.log("[ReportsTab] Rendering visualization for question:", {
       name: question.name,
       type: question.type,
