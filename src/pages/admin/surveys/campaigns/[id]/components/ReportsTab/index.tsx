@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ComparisonSelector } from "./components/ComparisonSelector";
 import { ComparisonDimension } from "./types/comparison";
@@ -29,6 +28,11 @@ interface NpsData {
 
 interface WordData {
   text: string;
+  value: number;
+}
+
+interface ChartData {
+  name: string;
   value: number;
 }
 
@@ -93,6 +97,32 @@ export function ReportsTab({ campaignId, instanceId }: ReportsTabProps) {
     }));
   };
 
+  const transformToChartData = (data: BooleanData | NpsData[] | WordData[]): ChartData[] => {
+    if (Array.isArray(data)) {
+      if ('rating' in data[0]) {
+        // NpsData[]
+        return (data as NpsData[]).map(item => ({
+          name: String(item.rating),
+          value: item.count
+        }));
+      }
+      if ('text' in data[0]) {
+        // WordData[]
+        return (data as WordData[]).map(item => ({
+          name: item.text,
+          value: item.value
+        }));
+      }
+    } else if ('yes' in data) {
+      // BooleanData
+      return [
+        { name: 'Yes', value: data.yes },
+        { name: 'No', value: data.no }
+      ];
+    }
+    return [];
+  };
+
   const renderVisualization = (question: ProcessedQuestion) => {
     console.log("[ReportsTab] Rendering visualization for question:", {
       name: question.name,
@@ -127,10 +157,7 @@ export function ReportsTab({ campaignId, instanceId }: ReportsTabProps) {
       } else {
         // Satisfaction rating (1-5)
         return <BarChart 
-          data={(question.data.responses as NpsData[]).map((item) => ({
-            name: String(item.rating),
-            value: item.count
-          }))} 
+          data={transformToChartData(question.data.responses)}
           colors={colorArray}
         />;
       }
@@ -138,10 +165,10 @@ export function ReportsTab({ campaignId, instanceId }: ReportsTabProps) {
 
     switch (chartType) {
       case 'donut':
-        return <DonutChart data={question.data.responses} colors={colorArray} />;
+        return <DonutChart data={transformToChartData(question.data.responses)} colors={colorArray} />;
       case 'bar':
         console.log("[ReportsTab] Rendering bar chart with data:", question.data.responses);
-        return <BarChart data={question.data.responses} colors={colorArray} />;
+        return <BarChart data={transformToChartData(question.data.responses)} colors={colorArray} />;
       case 'nps-combined':
         return <NpsVisualization data={question.data.responses as NpsData[]} />;
       default:
