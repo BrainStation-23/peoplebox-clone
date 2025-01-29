@@ -154,7 +154,7 @@ export function BulkUpdateDialog({ open, onOpenChange, onUpdateComplete }: BulkU
             </>
           )}
 
-          {updating && progress && (
+          {updating && (
             <ImportProgress
               progress={progress}
               paused={paused}
