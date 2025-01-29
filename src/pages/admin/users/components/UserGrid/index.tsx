@@ -18,6 +18,8 @@ interface UserGridProps {
   onPasswordChange: (userId: string) => void;
   onRoleToggle: (userId: string, isAdmin: boolean) => void;
   onStatusToggle: (userId: string, isActive: boolean) => void;
+  onBulkStatusToggle: () => void;
+  onBulkDelete: () => void;
   currentPage: number;
   totalPages: number;
   onPageChange: (page: number) => void;
@@ -34,6 +36,8 @@ export function UserGrid({
   onPasswordChange,
   onRoleToggle,
   onStatusToggle,
+  onBulkStatusToggle,
+  onBulkDelete,
   currentPage,
   totalPages,
   onPageChange,
@@ -89,13 +93,13 @@ export function UserGrid({
                   <Download className="mr-2 h-4 w-4" />
                   Export Selected
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={handleBulkStatusToggle}>
+                <DropdownMenuItem onClick={onBulkStatusToggle}>
                   <Power className="mr-2 h-4 w-4" />
                   Toggle Status
                 </DropdownMenuItem>
                 <DropdownMenuItem
                   className="text-destructive"
-                  onClick={handleBulkDelete}
+                  onClick={onBulkDelete}
                 >
                   <Trash className="mr-2 h-4 w-4" />
                   Delete Selected
