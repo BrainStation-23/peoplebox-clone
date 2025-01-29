@@ -17,13 +17,28 @@ interface ReportsTabProps {
   instanceId?: string;
 }
 
+interface BooleanData {
+  yes: number;
+  no: number;
+}
+
+interface NpsData {
+  rating: number;
+  count: number;
+}
+
+interface WordData {
+  text: string;
+  value: number;
+}
+
 interface ProcessedQuestion {
   name: string;
   title: string;
   type: string;
   rateCount?: number;
   data: {
-    responses: any[];
+    responses: BooleanData | NpsData[] | WordData[];
   };
 }
 
@@ -108,11 +123,11 @@ export function ReportsTab({ campaignId, instanceId }: ReportsTabProps) {
     if (question.type === 'rating') {
       if (question.rateCount === 10) {
         // NPS rating (0-10)
-        return <NpsVisualization data={question.data.responses} />;
+        return <NpsVisualization data={question.data.responses as NpsData[]} />;
       } else {
         // Satisfaction rating (1-5)
         return <BarChart 
-          data={question.data.responses.map((item: any) => ({
+          data={(question.data.responses as NpsData[]).map((item) => ({
             name: String(item.rating),
             value: item.count
           }))} 
@@ -128,7 +143,7 @@ export function ReportsTab({ campaignId, instanceId }: ReportsTabProps) {
         console.log("[ReportsTab] Rendering bar chart with data:", question.data.responses);
         return <BarChart data={question.data.responses} colors={colorArray} />;
       case 'nps-combined':
-        return <NpsVisualization data={question.data.responses} />;
+        return <NpsVisualization data={question.data.responses as NpsData[]} />;
       default:
         console.warn(`[ReportsTab] Unsupported visualization type: ${visualization.primary}`);
         return <div>Unsupported visualization type</div>;
