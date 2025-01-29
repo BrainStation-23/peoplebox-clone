@@ -8,8 +8,8 @@ export class BooleanProcessor implements QuestionProcessor {
       primary: 'donut',
       showAverage: false,
       colors: {
-        1: '#22c55e',
-        2: '#ef4444'
+        'yes': '#22c55e',
+        'no': '#ef4444'
       }
     }
   };

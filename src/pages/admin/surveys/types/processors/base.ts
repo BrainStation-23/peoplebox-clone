@@ -6,35 +6,20 @@ export type ProcessedData = {
   data: any;
 };
 
-export type NpsConfig = {
-  type: 'nps';
-  visualization: {
-    primary: 'nps-combined';
-    score: boolean;
-    distribution: boolean;
-    colors: {
-      detractor: string;
-      passive: string;
-      promoter: string;
-    };
-  };
-};
-
-export type SatisfactionConfig = {
-  type: 'satisfaction';
-  visualization: {
-    primary: 'bar';
-    showAverage: boolean;
-    colors: {
-      [key: number]: string;
-    };
+export type VisualizationConfig = {
+  primary: ChartType;
+  showAverage?: boolean;
+  score?: boolean;
+  distribution?: boolean;
+  colors: {
+    [key: string]: string;
   };
 };
 
 export type ProcessorConfig = {
   categories: string[];
   colors: string[];
-  visualization: NpsConfig['visualization'] | SatisfactionConfig['visualization'];
+  visualization: VisualizationConfig;
 };
 
 export interface QuestionProcessor {
