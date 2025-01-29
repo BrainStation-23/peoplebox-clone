@@ -207,33 +207,6 @@ export default function UsersPage() {
           onBulkCreate={() => setIsImportDialogOpen(true)}
         />
 
-        {selectedUsers.length > 0 && (
-          <div className="flex items-center gap-2">
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="sm">
-                  Bulk Actions <MoreHorizontal className="ml-2 h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent>
-                <DropdownMenuItem onClick={handleBulkStatusToggle}>
-                  <Power className="mr-2 h-4 w-4" />
-                  Toggle Status
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  className="text-destructive"
-                  onClick={handleBulkDelete}
-                >
-                  Delete Selected
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-            <span className="text-sm text-muted-foreground">
-              {selectedUsers.length} selected
-            </span>
-          </div>
-        )}
-
         <UserGrid
           users={data?.users || []}
           selectedUsers={selectedUsers}
@@ -249,6 +222,8 @@ export default function UsersPage() {
           onPasswordChange={() => {}}
           onRoleToggle={() => {}}
           onStatusToggle={() => {}}
+          onBulkStatusToggle={handleBulkStatusToggle}
+          onBulkDelete={handleBulkDelete}
           currentPage={currentPage}
           totalPages={totalPages}
           onPageChange={setCurrentPage}
