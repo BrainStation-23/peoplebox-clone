@@ -1,13 +1,15 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { QUESTION_PROCESSORS } from "../types/processors";
-import type { ProcessedData } from "./useResponseProcessing";
+import type { ProcessedResponse } from "./useResponseProcessing";
 
 interface ProcessedQuestion {
   name: string;
   title: string;
   type: string;
-  data: ProcessedData;
+  data: {
+    responses: ProcessedResponse[];
+  };
 }
 
 interface UseProcessedResponsesResult {
@@ -79,11 +81,58 @@ export function useProcessedResponses(campaignId: string, instanceId?: string): 
           answer: r.response_data[question.name]
         }));
 
+        const processedData = processor.process(questionResponses);
+
+        // Transform the data based on question type
+        let transformedData;
+        switch (question.type) {
+          case 'boolean':
+            transformedData = {
+              yes: processedData.data.filter((r: any) => r.answer === true).length,
+              no: processedData.data.filter((r: any) => r.answer === false).length
+            };
+            break;
+          case 'nps':
+          case 'rating':
+            transformedData = Array.from({ length: 11 }, (_, i) => ({
+              rating: i,
+              count: processedData.data.filter((r: any) => r.answer === i).length
+            }));
+            break;
+          case 'text':
+          case 'comment':
+            // Process text responses into word frequency
+            const words = processedData.data
+              .map((r: any) => r.answer)
+              .filter((text: string) => text)
+              .flatMap((text: string) => 
+                text.toLowerCase()
+                .replace(/[^\w\s]/g, '')
+                .split(/\s+/)
+              )
+              .filter((word: string) => word.length > 2);
+
+            const wordFreq: Record<string, number> = {};
+            words.forEach((word: string) => {
+              wordFreq[word] = (wordFreq[word] || 0) + 1;
+            });
+
+            transformedData = Object.entries(wordFreq)
+              .map(([text, value]) => ({ text, value }))
+              .sort((a, b) => b.value - a.value)
+              .slice(0, 50);
+            break;
+          default:
+            transformedData = processedData.data;
+        }
+
         return {
           name: question.name,
           title: question.title,
           type: question.type,
-          data: processor.process(questionResponses)
+          data: {
+            responses: transformedData
+          }
         };
       }).filter(Boolean);
 
