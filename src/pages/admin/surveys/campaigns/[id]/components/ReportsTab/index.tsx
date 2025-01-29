@@ -8,6 +8,7 @@ import { BarChart } from "./charts/BarChart";
 import { DonutChart } from "./charts/DonutChart";
 import { LineChart } from "./charts/LineChart";
 import { useToast } from "@/hooks/use-toast";
+import { useProcessedResponses } from "@/pages/admin/surveys/hooks/useProcessedResponses";
 
 interface ReportsTabProps {
   campaignId: string;
@@ -75,11 +76,6 @@ export function ReportsTab({ campaignId, instanceId }: ReportsTabProps) {
     const processor = QUESTION_PROCESSORS[question.type]?.();
     if (!processor) {
       console.warn(`[ReportsTab] No processor found for question type: ${question.type}`);
-      toast({
-        title: "Visualization Error",
-        description: `Unable to process question type: ${question.type}`,
-        variant: "destructive",
-      });
       return null;
     }
 
