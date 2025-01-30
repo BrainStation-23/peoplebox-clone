@@ -43,14 +43,14 @@ export function ResponsesTab({ instanceId }: ResponsesTabProps) {
             first_name,
             last_name,
             email,
-            user_sbus:user_sbus(
+            user_sbus (
               is_primary,
               sbu:sbus(
                 id,
                 name
               )
             ),
-            user_supervisors:user_supervisors(
+            user_supervisors!user_supervisors_user_id_fkey (
               is_primary,
               supervisor:profiles!user_supervisors_supervisor_id_fkey(
                 id,
