@@ -92,7 +92,7 @@ export default function CampaignDetailsPage() {
             surveyId={campaign?.survey_id}
           />
         </TabPanel>
-        {!campaign?.anonymous && (
+        {(
           <TabPanel value="responses">
             <ResponsesTab instanceId={selectedInstanceId} />
           </TabPanel>
