@@ -8,7 +8,7 @@ export type BatchProgress = {
   currentBatch: number;
   totalBatches: number;
   estimatedTimeRemaining: number;
-  errors: ImportError[];  // Added this line to match the interface
+  errors: ImportError[];
 };
 
 type BatchProcessorOptions = {
@@ -34,7 +34,7 @@ async function* updateBatchProcessor(
   const totalBatches = Math.ceil(total / batchSize);
   let processed = 0;
   let startTime = Date.now();
-  const errors: ImportError[] = []; // Added to track errors
+  const errors: ImportError[] = [];
 
   for (let batchNum = 0; batchNum < totalBatches; batchNum++) {
     if (signal?.aborted) {
@@ -63,7 +63,8 @@ async function* updateBatchProcessor(
             date_of_birth: user.dateOfBirth,
             employee_role: user.employeeRole,
             employee_type: user.employeeType,
-            sbus: user.sbus
+            sbus: user.sbus,
+            supervisor_email: user.supervisorEmail
           }))
         }
       });
@@ -100,7 +101,7 @@ async function* updateBatchProcessor(
         currentBatch: batchNum + 1,
         totalBatches,
         estimatedTimeRemaining,
-        errors, // Added errors to the progress object
+        errors,
       };
 
       onProgress?.(progress);

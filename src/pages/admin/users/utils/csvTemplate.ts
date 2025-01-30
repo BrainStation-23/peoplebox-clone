@@ -30,7 +30,8 @@ export const UPDATE_CSV_HEADERS = [
   "Employment Type",
   "Employee Role",
   "Employee Type",
-  "SBUs"
+  "SBUs",
+  "Supervisor Email"
 ];
 
 // Template rows
@@ -65,7 +66,8 @@ export const UPDATE_CSV_TEMPLATE_ROW = [
   "Full Time",
   "Developer",
   "Regular",
-  "SBU1;SBU2"
+  "SBU1;SBU2",
+  "supervisor@example.com"
 ];
 
 // Guidelines
@@ -100,7 +102,8 @@ export const UPDATE_CSV_GUIDELINES = [
   "Employment Type: Optional, must match an existing employment type name",
   "Employee Role: Optional, must match an existing employee role name",
   "Employee Type: Optional, must match an existing employee type name",
-  "SBUs: Optional, multiple SBUs should be separated by semicolons (;), overwrites existing assignments"
+  "SBUs: Optional, multiple SBUs should be separated by semicolons (;), overwrites existing assignments",
+  "Supervisor Email: Optional, must be a valid email of an existing user, will be set as primary supervisor"
 ];
 
 export function generateImportTemplateCSV(): string {
