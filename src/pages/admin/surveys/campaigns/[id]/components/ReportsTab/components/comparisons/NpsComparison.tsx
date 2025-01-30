@@ -18,8 +18,12 @@ export function NpsComparison({
     const groupedData = new Map();
 
     responses.forEach((response) => {
-      const answer = response.answers[questionName]?.answer;
-      if (typeof answer !== "number") return;
+      const questionData = response.answers[questionName];
+      if (!questionData || typeof questionData.answer !== "number") return;
+
+      const answer = questionData.answer;
+      const isNpsQuestion = questionData.questionType === "rating" && 
+                           response.answers[questionName]?.rateCount === 10;
 
       let dimensionValue = "Unknown";
       switch (dimension) {
@@ -45,12 +49,18 @@ export function NpsComparison({
           satisfied: 0,
           total: 0,
           ratings: [],
+          isNps: isNpsQuestion
         });
       }
 
       const group = groupedData.get(dimensionValue);
       group.total += 1;
       group.ratings.push(answer);
+
+      if (isNpsQuestion) {
+        // NPS ratings are already handled by the NpsChart component
+        return;
+      }
 
       // For satisfaction ratings (1-5)
       if (answer <= 3) {
@@ -65,14 +75,8 @@ export function NpsComparison({
     return Array.from(groupedData.values());
   };
 
-  const isSatisfactionRating = (ratings: number[]) => {
-    return ratings.every(rating => rating >= 1 && rating <= 5);
-  };
-
   const data = processResponses();
-  const isNpsQuestion = data.length > 0 && data[0].ratings.length > 0 && 
-    !isSatisfactionRating(data[0].ratings);
-
+  
   if (data.length === 0) {
     return (
       <Card>
@@ -83,6 +87,10 @@ export function NpsComparison({
     );
   }
 
+  // Check if this is an NPS question by looking at the first response
+  const firstResponse = responses.find(r => r.answers[questionName])?.answers[questionName];
+  const isNpsQuestion = firstResponse?.questionType === "rating" && firstResponse?.rateCount === 10;
+
   return (
     <Card>
       <CardHeader>
@@ -90,9 +98,15 @@ export function NpsComparison({
       </CardHeader>
       <CardContent>
         {isNpsQuestion ? (
-          <NpsChart data={data.flatMap(group => 
-            group.ratings.map(rating => ({ rating, group: group.dimension }))
-          )} />
+          <NpsChart 
+            data={data.flatMap(group => 
+              group.ratings.map(rating => ({ 
+                rating, 
+                count: 1,
+                group: group.dimension 
+              }))
+            )} 
+          />
         ) : (
           <HeatMapChart data={data} />
         )}
