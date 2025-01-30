@@ -33,14 +33,14 @@ export function WordCloud({ words }: WordCloudProps) {
   }));
 
   const getRotation = useCallback(() => {
-    return Math.random() * 60 - 30;
+    return 0; // Fixed rotation for better readability
   }, []);
 
   const getFontSize = useCallback((word: WordData) => {
     const maxSize = Math.max(...words.map((w) => w.value));
     const minSize = Math.min(...words.map((w) => w.value));
     const scale = (word.size - minSize) / (maxSize - minSize || 1);
-    return 12 + scale * 20; // Scale between 12px and 32px
+    return 14 + scale * 36; // Scale between 14px and 50px
   }, [words]);
 
   const getColor = useCallback((word: WordData) => {
@@ -50,19 +50,19 @@ export function WordCloud({ words }: WordCloudProps) {
   }, [words]);
 
   return (
-    <div ref={containerRef} className="w-full h-[400px] relative">
+    <div ref={containerRef} className="w-full h-[500px] flex items-center justify-center p-4">
       <Wordcloud
         words={formattedWords}
-        width={containerRef.current?.clientWidth || 600}
-        height={400}
+        width={containerRef.current?.clientWidth || 800}
+        height={500}
         fontSize={(w) => getFontSize(w as WordData)}
         font={"Inter"}
-        padding={2}
+        padding={3}
         rotate={getRotation}
-        spiral="rectangular"
+        spiral="archimedean"
       >
         {(cloudWords) => (
-          <g transform={`translate(${(containerRef.current?.clientWidth || 600) / 2},200)`}>
+          <g transform={`translate(${(containerRef.current?.clientWidth || 800) / 2},250)`}>
             {cloudWords.map((w, i) => (
               <text
                 key={i}
