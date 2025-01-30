@@ -24,7 +24,6 @@ export const exportUsers = async (users: User[], onProgress?: ProgressCallback) 
     "Employee Type",
     "SBUs",
     "Supervisor Email",
-    "Supervisor Name",
     "ID" // Hidden technical field for import/update
   ];
 
@@ -39,11 +38,6 @@ export const exportUsers = async (users: User[], onProgress?: ProgressCallback) 
         ?.sort((a, b) => (b.is_primary ? 1 : 0) - (a.is_primary ? 1 : 0))
         ?.map(sbu => sbu.sbu.name)
         ?.join(";") || "";
-
-      // Format supervisor name
-      const supervisorName = user.primary_supervisor
-        ? `${user.primary_supervisor.first_name || ''} ${user.primary_supervisor.last_name || ''}`.trim()
-        : '';
 
       const row = [
         user.email,
@@ -61,7 +55,6 @@ export const exportUsers = async (users: User[], onProgress?: ProgressCallback) 
         user.employee_type || "",
         allSbus,
         user.primary_supervisor?.email || "",
-        supervisorName,
         user.id
       ];
       console.log("Generated row for user:", row);
