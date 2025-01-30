@@ -12,6 +12,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { Separator } from "@/components/ui/separator";
 
 const emailLoginSchema = z.object({
   email: z.string().email("Please enter a valid email address"),
@@ -156,6 +157,39 @@ export default function Login() {
     }
   };
 
+  const handleMicrosoftLogin = async () => {
+    try {
+      setIsLoading(true);
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'azure',
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback`,
+          skipCreateUser: true, // Prevents auto user creation
+        },
+      });
+
+      if (error) {
+        console.error("Microsoft login error:", error);
+        toast({
+          variant: "destructive",
+          title: "Login failed",
+          description: error.message === "User not found" 
+            ? "This email is not registered in our system. Please contact your administrator."
+            : "Failed to login with Microsoft. Please try again.",
+        });
+      }
+    } catch (error: any) {
+      console.error("Microsoft login error:", error);
+      toast({
+        variant: "destructive",
+        title: "Login failed",
+        description: "An unexpected error occurred. Please try again.",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50">
       <Card className="w-full max-w-md">
@@ -163,7 +197,7 @@ export default function Login() {
           <CardTitle className="text-2xl font-bold">Welcome back</CardTitle>
           <CardDescription>Choose your preferred login method</CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="space-y-4">
           <Tabs defaultValue="email" className="space-y-4">
             <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="email">Email & Password</TabsTrigger>
@@ -247,6 +281,36 @@ export default function Login() {
               </Form>
             </TabsContent>
           </Tabs>
+
+          <div className="relative">
+            <div className="absolute inset-0 flex items-center">
+              <Separator className="w-full" />
+            </div>
+            <div className="relative flex justify-center text-xs uppercase">
+              <span className="bg-background px-2 text-muted-foreground">
+                Or continue with
+              </span>
+            </div>
+          </div>
+
+          <Button
+            variant="outline"
+            className="w-full"
+            onClick={handleMicrosoftLogin}
+            disabled={isLoading}
+          >
+            <svg
+              className="mr-2 h-4 w-4"
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 48 48"
+            >
+              <path fill="#f35325" d="M6 6h17v17H6z"/>
+              <path fill="#81bc06" d="M24 6h17v17H24z"/>
+              <path fill="#05a6f0" d="M6 24h17v17H6z"/>
+              <path fill="#ffba08" d="M24 24h17v17H24z"/>
+            </svg>
+            {isLoading ? "Signing in..." : "Sign in with Microsoft"}
+          </Button>
         </CardContent>
       </Card>
 
