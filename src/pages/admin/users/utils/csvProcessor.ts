@@ -20,6 +20,7 @@ const csvRowSchema = z.object({
   employmentType: z.string().optional(),
   employeeRole: z.string().optional(),
   employeeType: z.string().optional(),
+  supervisorEmail: z.string().email("Invalid supervisor email format").optional(),
 });
 
 export type CSVRow = z.infer<typeof csvRowSchema>;
