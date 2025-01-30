@@ -116,7 +116,7 @@ export function ReportsTab({ campaignId, instanceId }: ReportsTabProps) {
         );
 
         return (
-          <Card key={question.name} className="max-w-full">
+          <Card key={question.name} className="w-full overflow-hidden">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle>{question.title}</CardTitle>
               <ComparisonSelector
