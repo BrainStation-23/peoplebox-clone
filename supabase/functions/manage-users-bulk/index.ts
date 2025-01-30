@@ -107,6 +107,22 @@ async function getSbuIdByName(supabase: any, name: string): Promise<string | nul
   return data?.id;
 }
 
+async function getSupervisorIdByEmail(supabase: any, email: string): Promise<string | null> {
+  if (!email?.trim()) return null;
+
+  const { data, error } = await supabase
+    .from('profiles')
+    .select('id')
+    .eq('email', email.trim())
+    .maybeSingle();
+
+  if (error) {
+    console.error('Error finding supervisor:', email, error);
+    return null;
+  }
+  return data?.id;
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders })
@@ -137,12 +153,14 @@ serve(async (req) => {
           employmentTypeId,
           employeeRoleId,
           employeeTypeId,
+          supervisorId,
         ] = await Promise.all([
           getLevelIdByName(supabase, user.level),
           getLocationIdByName(supabase, user.location),
           getEmploymentTypeIdByName(supabase, user.employment_type),
           getEmployeeRoleIdByName(supabase, user.employee_role),
           getEmployeeTypeIdByName(supabase, user.employee_type),
+          getSupervisorIdByEmail(supabase, user.supervisor_email),
         ]);
 
         console.log('Looked up IDs:', {
@@ -151,6 +169,7 @@ serve(async (req) => {
           employmentTypeId,
           employeeRoleId,
           employeeTypeId,
+          supervisorId,
         });
 
         // Prepare update data with found IDs
@@ -191,6 +210,54 @@ serve(async (req) => {
 
           if (roleError) {
             throw roleError;
+          }
+        }
+
+        // Handle supervisor assignment if provided
+        if (supervisorId) {
+          // Prevent self-supervision
+          if (supervisorId === user.id) {
+            console.warn('Attempted self-supervision:', user.email);
+          } else {
+            // Remove existing primary supervisor
+            await supabase
+              .from('user_supervisors')
+              .update({ is_primary: false })
+              .eq('user_id', user.id)
+              .eq('is_primary', true);
+
+            // Check if relationship exists
+            const { data: existingRelation } = await supabase
+              .from('user_supervisors')
+              .select()
+              .eq('user_id', user.id)
+              .eq('supervisor_id', supervisorId)
+              .maybeSingle();
+
+            if (existingRelation) {
+              // Update existing to primary
+              const { error: updateError } = await supabase
+                .from('user_supervisors')
+                .update({ is_primary: true })
+                .eq('id', existingRelation.id);
+
+              if (updateError) {
+                console.error('Error updating supervisor relation:', updateError);
+              }
+            } else {
+              // Create new primary relationship
+              const { error: insertError } = await supabase
+                .from('user_supervisors')
+                .insert({
+                  user_id: user.id,
+                  supervisor_id: supervisorId,
+                  is_primary: true
+                });
+
+              if (insertError) {
+                console.error('Error creating supervisor relation:', insertError);
+              }
+            }
           }
         }
 
