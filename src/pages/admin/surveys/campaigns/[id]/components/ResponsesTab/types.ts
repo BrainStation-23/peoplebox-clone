@@ -6,10 +6,30 @@ export type Response = Database["public"]["Tables"]["survey_responses"]["Row"] &
     first_name: string | null;
     last_name: string | null;
     email: string;
+    user_sbus: {
+      is_primary: boolean;
+      sbu: {
+        id: string;
+        name: string;
+      };
+    }[];
+    user_supervisors: {
+      is_primary: boolean;
+      supervisor: {
+        id: string;
+        first_name: string | null;
+        last_name: string | null;
+        email: string;
+      };
+    }[];
   };
   assignment: {
     id: string;
     campaign_id: string;
+    campaign: {
+      id: string;
+      anonymous: boolean;
+    };
   };
 };
 

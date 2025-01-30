@@ -42,11 +42,31 @@ export function ResponsesTab({ instanceId }: ResponsesTabProps) {
             id,
             first_name,
             last_name,
-            email
+            email,
+            user_sbus:user_sbus(
+              is_primary,
+              sbu:sbus(
+                id,
+                name
+              )
+            ),
+            user_supervisors:user_supervisors(
+              is_primary,
+              supervisor:profiles!user_supervisors_supervisor_id_fkey(
+                id,
+                first_name,
+                last_name,
+                email
+              )
+            )
           ),
           assignment:survey_assignments!survey_responses_assignment_id_fkey (
             id,
-            campaign_id
+            campaign_id,
+            campaign:survey_campaigns(
+              id,
+              anonymous
+            )
           )
         `);
 
@@ -79,6 +99,12 @@ export function ResponsesTab({ instanceId }: ResponsesTabProps) {
   const filteredResponses = responses?.filter((response) => {
     if (!filters.search) return true;
     const searchTerm = filters.search.toLowerCase();
+    
+    // Don't search by name if anonymous
+    if (response.assignment.campaign.anonymous) {
+      return false; // Skip name-based search for anonymous responses
+    }
+    
     const userName = `${response.user.first_name || ''} ${response.user.last_name || ''} ${response.user.email}`.toLowerCase();
     return userName.includes(searchTerm);
   }) || [];
