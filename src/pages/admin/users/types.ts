@@ -24,6 +24,12 @@ export interface User {
     role: UserRole;
   };
   user_sbus?: UserSBU[];
+  primary_supervisor?: {
+    id: string;
+    email: string;
+    first_name: string | null;
+    last_name: string | null;
+  } | null;
 }
 
 export interface UserSBU {
