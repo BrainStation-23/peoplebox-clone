@@ -164,7 +164,8 @@ export default function Login() {
         provider: 'azure',
         options: {
           redirectTo: `${window.location.origin}/auth/callback`,
-          skipCreateUser: true, // Prevents auto user creation
+          // Instead of skipCreateUser, we'll handle the "User not found" error
+          // in the error handling section
         },
       });
 
