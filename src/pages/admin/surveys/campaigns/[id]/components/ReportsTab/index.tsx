@@ -126,7 +126,7 @@ export function ReportsTab({ campaignId, instanceId }: ReportsTabProps) {
                 }
               />
             </CardHeader>
-            <CardContent className="min-h-[500px] flex items-center justify-center p-0">
+            <CardContent className="space-y-4">
               {currentDimension === "none" && (
                 <>
                   {question.type === "boolean" && (
@@ -153,11 +153,9 @@ export function ReportsTab({ campaignId, instanceId }: ReportsTabProps) {
                     </>
                   )}
                   {(question.type === "text" || question.type === "comment") && (
-                    <div className="w-full h-full flex items-center justify-center">
-                      <WordCloud
-                        words={processedData as { text: string; value: number }[]}
-                      />
-                    </div>
+                    <WordCloud
+                      words={processedData as { text: string; value: number }[]}
+                    />
                   )}
                 </>
               )}
