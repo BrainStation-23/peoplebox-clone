@@ -71,7 +71,7 @@ export function TextComparison({
   }, [groupedWords]);
 
   return (
-    <div className="grid gap-4 md:grid-cols-2">
+    <div className="grid gap-4">
       {groupedWords.map(({ group, words }) => (
         <Card key={group} className="p-4">
           <h3 className="mb-4 text-lg font-semibold">{group}</h3>
