@@ -1,28 +1,17 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
+import { Download } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { ResponseGroup } from "./ResponseGroup";
-import type { FilterOptions, Response } from "./types";
+import { unparse } from "papaparse";
+import type { Response } from "./types";
 
 interface ResponsesTabProps {
   instanceId?: string;
 }
 
 export function ResponsesTab({ instanceId }: ResponsesTabProps) {
-  const [filters, setFilters] = useState<FilterOptions>({
-    search: "",
-    sortBy: "date",
-    sortDirection: "desc",
-  });
-
   const { data: responses, isLoading } = useQuery({
     queryKey: ["campaign-responses", instanceId],
     queryFn: async () => {
@@ -65,7 +54,8 @@ export function ResponsesTab({ instanceId }: ResponsesTabProps) {
             campaign_id,
             campaign:survey_campaigns(
               id,
-              anonymous
+              anonymous,
+              name
             )
           )
         `);
@@ -86,6 +76,53 @@ export function ResponsesTab({ instanceId }: ResponsesTabProps) {
     enabled: !!instanceId,
   });
 
+  const handleExport = () => {
+    if (!responses?.length) return;
+
+    const isAnonymous = responses[0].assignment.campaign.anonymous;
+    
+    const csvData = responses.map(response => {
+      const baseData = {
+        "Submission Date": response.submitted_at ? new Date(response.submitted_at).toLocaleString() : "Not submitted",
+        "Primary SBU": response.user.user_sbus.find(us => us.is_primary)?.sbu.name || "N/A",
+        "Primary Manager": (() => {
+          const primarySupervisor = response.user.user_supervisors.find(us => us.is_primary);
+          if (!primarySupervisor) return "N/A";
+          const { first_name, last_name } = primarySupervisor.supervisor;
+          return first_name && last_name ? `${first_name} ${last_name}` : "N/A";
+        })(),
+      };
+
+      // Add respondent info only if not anonymous
+      if (!isAnonymous) {
+        Object.assign(baseData, {
+          "Respondent Name": response.user.first_name && response.user.last_name
+            ? `${response.user.first_name} ${response.user.last_name}`
+            : "N/A",
+          "Respondent Email": response.user.email,
+        });
+      }
+
+      // Add response data
+      const responseData = response.response_data as Record<string, any>;
+      Object.entries(responseData).forEach(([key, value]) => {
+        baseData[key] = typeof value === 'object' ? JSON.stringify(value) : value;
+      });
+
+      return baseData;
+    });
+
+    const csv = unparse(csvData);
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const campaignName = responses[0].assignment.campaign.name.toLowerCase().replace(/\s+/g, '-');
+    
+    link.href = window.URL.createObjectURL(blob);
+    link.download = `${campaignName}-responses${instanceId ? `-period-${instanceId}` : ''}.csv`;
+    link.click();
+    window.URL.revokeObjectURL(link.href);
+  };
+
   if (isLoading) {
     return (
       <div className="space-y-4">
@@ -95,62 +132,20 @@ export function ResponsesTab({ instanceId }: ResponsesTabProps) {
     );
   }
 
-  // Filter responses
-  const filteredResponses = responses?.filter((response) => {
-    if (!filters.search) return true;
-    const searchTerm = filters.search.toLowerCase();
-    
-    // Don't search by name if anonymous
-    if (response.assignment.campaign.anonymous) {
-      return false; // Skip name-based search for anonymous responses
-    }
-    
-    const userName = `${response.user.first_name || ''} ${response.user.last_name || ''} ${response.user.email}`.toLowerCase();
-    return userName.includes(searchTerm);
-  }) || [];
-
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row gap-4">
-        <Input
-          placeholder="Search respondents..."
-          value={filters.search}
-          onChange={(e) => setFilters(prev => ({ ...prev, search: e.target.value }))}
-          className="flex-1"
-        />
-        <Select
-          value={filters.sortBy}
-          onValueChange={(value) => setFilters(prev => ({ 
-            ...prev, 
-            sortBy: value as FilterOptions["sortBy"]
-          }))}
+      <div className="flex justify-end">
+        <Button
+          variant="outline"
+          onClick={handleExport}
+          disabled={!responses?.length}
         >
-          <SelectTrigger className="w-[180px]">
-            <SelectValue placeholder="Sort by" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="date">Date</SelectItem>
-            <SelectItem value="name">Name</SelectItem>
-          </SelectContent>
-        </Select>
-        <Select
-          value={filters.sortDirection}
-          onValueChange={(value) => setFilters(prev => ({ 
-            ...prev, 
-            sortDirection: value as FilterOptions["sortDirection"] 
-          }))}
-        >
-          <SelectTrigger className="w-[180px]">
-            <SelectValue placeholder="Sort direction" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="asc">Ascending</SelectItem>
-            <SelectItem value="desc">Descending</SelectItem>
-          </SelectContent>
-        </Select>
+          <Download className="mr-2 h-4 w-4" />
+          Export Responses
+        </Button>
       </div>
 
-      <ResponseGroup responses={filteredResponses} />
+      <ResponseGroup responses={responses || []} />
     </div>
   );
 }
