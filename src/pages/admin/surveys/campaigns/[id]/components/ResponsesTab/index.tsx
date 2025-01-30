@@ -21,6 +21,7 @@ export function ResponsesTab({ instanceId }: ResponsesTabProps) {
         .select(`
           id,
           response_data,
+          state_data,
           submitted_at,
           created_at,
           updated_at,

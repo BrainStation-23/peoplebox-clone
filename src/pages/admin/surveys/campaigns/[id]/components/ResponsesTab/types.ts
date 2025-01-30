@@ -28,6 +28,7 @@ export type Response = Database["public"]["Tables"]["survey_responses"]["Row"] &
     campaign_id: string;
     campaign: {
       id: string;
+      name: string;
       anonymous: boolean;
     };
   };
