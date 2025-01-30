@@ -62,7 +62,7 @@ export function WordCloud({ words }: WordCloudProps) {
         spiral="archimedean"
       >
         {(cloudWords) => (
-          <g transform={`translate(${(containerRef.current?.clientWidth || 800) / 2},250)`}>
+          <g>
             {cloudWords.map((w, i) => (
               <text
                 key={i}
