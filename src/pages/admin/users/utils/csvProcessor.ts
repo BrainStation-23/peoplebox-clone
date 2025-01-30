@@ -160,6 +160,7 @@ export async function processCSVFile(file: File): Promise<ProcessingResult> {
               employmentType: row['Employment Type']?.trim(),
               employeeRole: row['Employee Role']?.trim(),
               employeeType: row['Employee Type']?.trim(),
+              supervisorEmail: row['Supervisor Email']?.trim(),
             };
 
             try {
