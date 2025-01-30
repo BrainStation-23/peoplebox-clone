@@ -46,10 +46,13 @@ export function WordCloud({ words }: WordCloudProps) {
   }, [words]);
 
   const getColor = useCallback((word: WordData) => {
-    const maxSize = Math.max(...words.map((w) => w.value));
-    const index = Math.floor((word.size / maxSize) * colors.length);
-    return colors[Math.min(index, colors.length - 1)];
-  }, [words]);
+    // Use the word's text to generate a consistent but random index
+    const index = Math.abs(word.text.split('').reduce((acc, char) => {
+      return char.charCodeAt(0) + ((acc << 5) - acc);
+    }, 0)) % colors.length;
+    return colors[index];
+  }, []);
+
 
   return (
     <div ref={containerRef} className="w-full h-[500px] flex items-center justify-center p-4">
