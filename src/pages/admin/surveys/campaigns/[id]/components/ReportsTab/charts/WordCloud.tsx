@@ -16,10 +16,12 @@ interface WordData {
 export function WordCloud({ words }: WordCloudProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const colors = [
-    "#2563eb", // blue-600
-    "#3b82f6", // blue-500
-    "#60a5fa", // blue-400
-    "#93c5fd", // blue-300
+    "#9b87f5",  // Primary Purple
+    "#F97316",  // Bright Orange
+    "#0EA5E9",  // Ocean Blue
+    "#D946EF",  // Magenta Pink
+    "#8B5CF6",  // Vivid Purple
+    "#D6BCFA",  // Light Purple
   ];
 
   useEffect(() => {
