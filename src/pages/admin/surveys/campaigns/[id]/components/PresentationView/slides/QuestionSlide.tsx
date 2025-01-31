@@ -26,6 +26,7 @@ export function QuestionSlide({
     if (!data?.responses) return null;
 
     const responses = data.responses;
+    const question = data.questions.find(q => q.name === questionName);
 
     switch (questionType) {
       case "boolean": {
@@ -44,7 +45,7 @@ export function QuestionSlide({
           .filter(r => typeof r.answers[questionName]?.answer === 'number')
           .map(r => r.answers[questionName].answer);
 
-        const isNps = data.questions.find(q => q.name === questionName)?.rateCount === 10;
+        const isNps = question?.rateCount === 10;
         
         if (isNps) {
           // Process as NPS (0-10)

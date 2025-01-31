@@ -29,7 +29,12 @@ export function usePresentationResponses(campaignId: string, instanceId?: string
 
       const surveyQuestions = surveyData.pages?.flatMap(
         (page: any) => page.elements || []
-      ) || [];
+      ).map((q: any) => ({
+        name: q.name,
+        title: q.title,
+        type: q.type,
+        rateCount: q.rateMax === 10 ? 10 : q.rateMax // Add rateCount based on rateMax
+      })) || [];
 
       // Build the query for responses with extended user metadata
       let query = supabase
@@ -80,7 +85,7 @@ export function usePresentationResponses(campaignId: string, instanceId?: string
         const answers: Record<string, any> = {};
 
         // Map each question to its answer
-        surveyQuestions.forEach((question: any) => {
+        surveyQuestions.forEach((question: Question) => {
           const answer = response.response_data[question.name];
           answers[question.name] = {
             question: question.title,
@@ -112,11 +117,7 @@ export function usePresentationResponses(campaignId: string, instanceId?: string
       });
 
       return {
-        questions: surveyQuestions.map((q: any) => ({
-          name: q.name,
-          title: q.title,
-          type: q.type,
-        })),
+        questions: surveyQuestions,
         responses: processedResponses,
       };
     },
