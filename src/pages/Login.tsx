@@ -250,6 +250,7 @@ export default function Login() {
                   variant="link" 
                   className="text-sm"
                   onClick={() => setForgotPasswordOpen(true)}
+                  type="button"
                 >
                   Forgot your password?
                 </Button>
@@ -294,7 +295,9 @@ export default function Login() {
             </div>
           </div>
 
+          {/* Microsoft login button moved outside of any form */}
           <Button
+            type="button"
             variant="outline"
             className="w-full"
             onClick={handleMicrosoftLogin}
@@ -315,6 +318,7 @@ export default function Login() {
         </CardContent>
       </Card>
 
+      {/* Keep the forgot password dialog */}
       <Dialog open={forgotPasswordOpen} onOpenChange={setForgotPasswordOpen}>
         <DialogContent>
           <DialogHeader>
