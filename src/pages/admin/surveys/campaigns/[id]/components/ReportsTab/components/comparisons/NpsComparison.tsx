@@ -11,6 +11,19 @@ interface NpsComparisonProps {
   layout?: 'grid' | 'vertical';
 }
 
+interface HeatMapData {
+  dimension: string;
+  unsatisfied: number;
+  neutral: number;
+  satisfied: number;
+  total: number;
+}
+
+interface NpsData {
+  dimension: string;
+  ratings: { rating: number; count: number; }[];
+}
+
 export function NpsComparison({
   responses,
   questionName,
@@ -67,16 +80,10 @@ export function NpsComparison({
       return Array.from(dimensionData.entries()).map(([dimension, ratings]) => ({
         dimension,
         ratings: ratings.map((count, rating) => ({ rating, count }))
-      }));
+      })) as NpsData[];
     }
 
-    const dimensionData = new Map<string, {
-      dimension: string;
-      unsatisfied: number;
-      neutral: number;
-      satisfied: number;
-      total: number;
-    }>();
+    const dimensionData = new Map<string, HeatMapData>();
 
     responses.forEach((response) => {
       const questionData = response.answers[questionName];
@@ -140,19 +147,13 @@ export function NpsComparison({
   if (isNps) {
     return (
       <div className={layout === 'grid' ? 'grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4' : 'space-y-4'}>
-        {data.map((groupData) => (
+        {(data as NpsData[]).map((groupData) => (
           <Card key={groupData.dimension}>
             <CardHeader>
               <CardTitle className="text-lg">{groupData.dimension}</CardTitle>
             </CardHeader>
             <CardContent>
-              <NpsChart 
-                data={groupData.ratings.map(rating => ({ 
-                  rating, 
-                  count: 1,
-                  group: groupData.dimension 
-                }))} 
-              />
+              <NpsChart data={groupData.ratings} />
             </CardContent>
           </Card>
         ))}
@@ -166,7 +167,7 @@ export function NpsComparison({
         <CardTitle>{getDimensionTitle(dimension)}</CardTitle>
       </CardHeader>
       <CardContent>
-        <HeatMapChart data={data} />
+        <HeatMapChart data={data as HeatMapData[]} />
       </CardContent>
     </Card>
   );
