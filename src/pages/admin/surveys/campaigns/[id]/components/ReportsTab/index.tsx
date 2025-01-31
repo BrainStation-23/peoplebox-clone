@@ -114,6 +114,7 @@ export function ReportsTab({ campaignId, instanceId }: ReportsTabProps) {
           question.type,
           question
         );
+        const isNpsQuestion = question.type === "rating" && question.rateCount === 10;
 
         return (
           <Card key={question.name} className="w-full overflow-hidden">
@@ -136,7 +137,7 @@ export function ReportsTab({ campaignId, instanceId }: ReportsTabProps) {
                   )}
                   {(question.type === "nps" || question.type === "rating") && (
                     <>
-                      {question.rateCount === 10 ? (
+                      {isNpsQuestion ? (
                         <NpsChart
                           data={processedData as { rating: number; count: number }[]}
                         />
@@ -174,6 +175,7 @@ export function ReportsTab({ campaignId, instanceId }: ReportsTabProps) {
                       responses={data.responses}
                       questionName={question.name}
                       dimension={currentDimension}
+                      isNps={isNpsQuestion}
                     />
                   )}
                   {(question.type === "text" || question.type === "comment") && (
