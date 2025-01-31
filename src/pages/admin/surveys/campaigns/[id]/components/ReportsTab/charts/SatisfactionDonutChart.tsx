@@ -17,6 +17,7 @@ interface CustomTooltipProps {
     name: string;
     value: number;
     dataKey: string;
+    fill: string;  // Add this to use the segment color
   }[];
 }
 
@@ -36,10 +37,16 @@ export function SatisfactionDonutChart({ data }: SatisfactionDonutChartProps) {
 
   const CustomTooltip = ({ active, payload }: CustomTooltipProps) => {
     if (active && payload && payload.length) {
-      const hoveredSegment = payload[0];
+      const hoveredSegment = payload[0];  // This is the currently hovered segment
       return (
         <div className="bg-white p-2 border rounded shadow-sm">
-          <p className="font-medium">{hoveredSegment.name}</p>
+          <div className="flex items-center gap-2">
+            <div 
+              className="w-3 h-3 rounded-full" 
+              style={{ backgroundColor: hoveredSegment.fill }}
+            />
+            <p className="font-medium">{hoveredSegment.name}</p>
+          </div>
           <p className="text-sm">
             {hoveredSegment.value} responses ({getPercentage(hoveredSegment.value)}%)
           </p>
@@ -47,7 +54,8 @@ export function SatisfactionDonutChart({ data }: SatisfactionDonutChartProps) {
       );
     }
     return null;
-  };
+};
+
 
   const CustomLabel = (props: any) => {
     const { x, y, width, value } = props;
