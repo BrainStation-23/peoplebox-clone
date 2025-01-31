@@ -3,8 +3,8 @@ import { cn } from "@/lib/utils";
 import { BooleanCharts } from "../../ReportsTab/charts/BooleanCharts";
 import { NpsChart } from "../../ReportsTab/charts/NpsChart";
 import { WordCloud } from "../../ReportsTab/charts/WordCloud";
+import { SatisfactionDonutChart } from "../../ReportsTab/charts/SatisfactionDonutChart";
 import { usePresentationResponses } from "../hooks/usePresentationResponses";
-import { QuestionResponseData } from "../types/responses";
 
 interface QuestionSlideProps extends SlideProps {
   questionName: string;
@@ -21,7 +21,7 @@ export function QuestionSlide({
 }: QuestionSlideProps) {
   const { data } = usePresentationResponses(campaign.id, campaign.instance?.id);
   
-  const processAnswers = (): QuestionResponseData | null => {
+  const processAnswers = () => {
     if (!data?.responses) return null;
 
     const responses = data.responses;
@@ -33,31 +33,41 @@ export function QuestionSlide({
           .map(r => r.answers[questionName].answer);
         
         return {
-          type: 'boolean',
-          data: {
-            yes: answers.filter((a) => a === true).length,
-            no: answers.filter((a) => a === false).length,
-          }
+          yes: answers.filter((a) => a === true).length,
+          no: answers.filter((a) => a === false).length,
         };
       }
 
-      case "nps":
       case "rating": {
         const answers = responses
           .filter(r => typeof r.answers[questionName]?.answer === 'number')
           .map(r => r.answers[questionName].answer);
+
+        const isNps = data.questions.find(q => q.name === questionName)?.rateCount === 10;
         
-        const ratingCounts = new Array(11).fill(0);
-        answers.forEach((rating) => {
-          if (typeof rating === "number" && rating >= 0 && rating <= 10) {
-            ratingCounts[rating]++;
-          }
-        });
-        
-        return {
-          type: 'rating',
-          data: ratingCounts.map((count, rating) => ({ rating, count }))
-        };
+        if (isNps) {
+          // Process as NPS (0-10)
+          const ratingCounts = new Array(11).fill(0);
+          answers.forEach((rating) => {
+            if (typeof rating === "number" && rating >= 0 && rating <= 10) {
+              ratingCounts[rating]++;
+            }
+          });
+
+          return ratingCounts.map((count, rating) => ({ rating, count }));
+        } else {
+          // Process as satisfaction (1-5)
+          const validAnswers = answers.filter(
+            (rating) => typeof rating === "number" && rating >= 1 && rating <= 5
+          );
+          
+          return {
+            unsatisfied: validAnswers.filter((r) => r <= 3).length,
+            neutral: validAnswers.filter((r) => r === 4).length,
+            satisfied: validAnswers.filter((r) => r === 5).length,
+            total: validAnswers.length,
+          };
+        }
       }
 
       case "text":
@@ -78,13 +88,10 @@ export function QuestionSlide({
           }
         });
 
-        return {
-          type: 'text',
-          data: Object.entries(wordFrequency)
-            .map(([text, value]) => ({ text, value }))
-            .sort((a, b) => b.value - a.value)
-            .slice(0, 50)
-        };
+        return Object.entries(wordFrequency)
+          .map(([text, value]) => ({ text, value }))
+          .sort((a, b) => b.value - a.value)
+          .slice(0, 50);
       }
 
       default:
@@ -93,6 +100,8 @@ export function QuestionSlide({
   };
 
   const processedData = processAnswers();
+  const question = data?.questions.find(q => q.name === questionName);
+  const isNpsQuestion = question?.type === 'rating' && question?.rateCount === 10;
 
   return (
     <div 
@@ -117,16 +126,20 @@ export function QuestionSlide({
 
         <div className="flex-1 flex items-center justify-center">
           {processedData && (
-            <div className="w-full max-w-3xl">
-              {processedData.type === "boolean" && (
-                <BooleanCharts data={processedData.data} />
+            <div className="w-full max-w-4xl">
+              {questionType === "boolean" && (
+                <BooleanCharts data={processedData} />
               )}
-              {processedData.type === "rating" && (
-                <NpsChart data={processedData.data} />
+              {questionType === "rating" && (
+                isNpsQuestion ? (
+                  <NpsChart data={processedData} />
+                ) : (
+                  <SatisfactionDonutChart data={processedData} />
+                )
               )}
-              {processedData.type === "text" && (
+              {(questionType === "text" || questionType === "comment") && (
                 <div className="min-h-[400px]">
-                  <WordCloud words={processedData.data} />
+                  <WordCloud words={processedData} />
                 </div>
               )}
             </div>
