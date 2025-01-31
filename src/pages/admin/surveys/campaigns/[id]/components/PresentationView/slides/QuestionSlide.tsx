@@ -15,8 +15,7 @@ interface QuestionSlideProps extends SlideProps {
   slideType: 'main' | ComparisonDimension;
 }
 
-interface HeatMapData {
-  dimension: string;
+interface SatisfactionData {
   unsatisfied: number;
   neutral: number;
   satisfied: number;
@@ -88,12 +87,13 @@ export function QuestionSlide({
               (rating) => typeof rating === "number" && rating >= 1 && rating <= 5
             );
             
-            return {
+            const result: SatisfactionData = {
               unsatisfied: validAnswers.filter((r) => r <= 2).length,
               neutral: validAnswers.filter((r) => r === 3).length,
               satisfied: validAnswers.filter((r) => r >= 4).length,
               total: validAnswers.length,
             };
+            return result;
           }
         }
 
@@ -173,7 +173,7 @@ export function QuestionSlide({
 
         return Array.from(dimensionData.values());
       } else {
-        const dimensionData = new Map<string, HeatMapData>();
+        const dimensionData = new Map<string, SatisfactionData>();
 
         responses.forEach((response) => {
           const answer = response.answers[questionName]?.answer;
@@ -197,7 +197,6 @@ export function QuestionSlide({
 
           if (!dimensionData.has(dimensionValue)) {
             dimensionData.set(dimensionValue, {
-              dimension: dimensionValue,
               unsatisfied: 0,
               neutral: 0,
               satisfied: 0,
@@ -225,6 +224,14 @@ export function QuestionSlide({
   const processedData = processAnswers();
   const question = data?.questions.find(q => q.name === questionName);
   const isNps = question?.type === 'rating' && question?.rateCount === 10;
+
+  const isSatisfactionData = (data: any): data is SatisfactionData => {
+    return data && 'unsatisfied' in data && 'neutral' in data && 'satisfied' in data && 'total' in data;
+  };
+
+  const isSatisfactionDataArray = (data: any): data is SatisfactionData[] => {
+    return Array.isArray(data) && data.length > 0 && isSatisfactionData(data[0]);
+  };
 
   return (
     <div 
@@ -262,7 +269,9 @@ export function QuestionSlide({
                 isNps ? (
                   <NpsChart data={processedData as RatingResponseData} />
                 ) : (
-                  <SatisfactionDonutChart data={processedData} />
+                  isSatisfactionData(processedData) && (
+                    <SatisfactionDonutChart data={processedData} />
+                  )
                 )
               )}
               {(questionType === "text" || questionType === "comment") && processedData && (
@@ -279,11 +288,13 @@ export function QuestionSlide({
                   showComparison={true}
                 />
               ) : (
-                <SatisfactionDonutChart 
-                  data={processedData} 
-                  showComparison={true}
-                  title={getDimensionTitle(slideType)}
-                />
+                isSatisfactionDataArray(processedData) && (
+                  <SatisfactionDonutChart 
+                    data={processedData[0]} 
+                    showComparison={true}
+                    title={getDimensionTitle(slideType)}
+                  />
+                )
               )}
             </div>
           )}
