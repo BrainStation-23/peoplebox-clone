@@ -90,7 +90,11 @@ export function ResponsesTab({ instanceId }: ResponsesTabProps) {
           const primarySupervisor = response.user.user_supervisors.find(us => us.is_primary);
           if (!primarySupervisor) return "N/A";
           const { first_name, last_name } = primarySupervisor.supervisor;
-          return first_name && last_name ? `${first_name} ${last_name}` : "N/A";
+          const fullName = [first_name, last_name]
+            .filter(name => name && name.trim())
+            .join(" ")
+            .trim();
+          return fullName || "N/A";
         })(),
       };
 
