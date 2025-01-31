@@ -7,12 +7,14 @@ interface NpsComparisonProps {
   responses: ProcessedResponse[];
   questionName: string;
   dimension: "sbu" | "gender" | "location" | "employment_type" | "none";
+  isNps: boolean;
 }
 
 export function NpsComparison({
   responses,
   questionName,
   dimension,
+  isNps,
 }: NpsComparisonProps) {
   const processResponses = () => {
     const groupedData = new Map();
@@ -22,8 +24,6 @@ export function NpsComparison({
       if (!questionData || typeof questionData.answer !== "number") return;
 
       const answer = questionData.answer;
-      const isNpsQuestion = questionData.questionType === "rating" && 
-                           response.answers[questionName]?.rateCount === 10;
 
       let dimensionValue = "Unknown";
       switch (dimension) {
@@ -49,7 +49,7 @@ export function NpsComparison({
           satisfied: 0,
           total: 0,
           ratings: [],
-          isNps: isNpsQuestion
+          isNps: isNps
         });
       }
 
@@ -57,18 +57,15 @@ export function NpsComparison({
       group.total += 1;
       group.ratings.push(answer);
 
-      if (isNpsQuestion) {
-        // NPS ratings are already handled by the NpsChart component
-        return;
-      }
-
-      // For satisfaction ratings (1-5)
-      if (answer <= 3) {
-        group.unsatisfied += 1;
-      } else if (answer === 4) {
-        group.neutral += 1;
-      } else {
-        group.satisfied += 1;
+      if (!isNps) {
+        // For satisfaction ratings (1-5)
+        if (answer <= 3) {
+          group.unsatisfied += 1;
+        } else if (answer === 4) {
+          group.neutral += 1;
+        } else {
+          group.satisfied += 1;
+        }
       }
     });
 
@@ -87,17 +84,13 @@ export function NpsComparison({
     );
   }
 
-  // Check if this is an NPS question by looking at the first response
-  const firstResponse = responses.find(r => r.answers[questionName])?.answers[questionName];
-  const isNpsQuestion = firstResponse?.questionType === "rating" && firstResponse?.rateCount === 10;
-
   return (
     <Card>
       <CardHeader>
         <CardTitle>Response Distribution by {dimension.toUpperCase()}</CardTitle>
       </CardHeader>
       <CardContent>
-        {isNpsQuestion ? (
+        {isNps ? (
           <NpsChart 
             data={data.flatMap(group => 
               group.ratings.map(rating => ({ 

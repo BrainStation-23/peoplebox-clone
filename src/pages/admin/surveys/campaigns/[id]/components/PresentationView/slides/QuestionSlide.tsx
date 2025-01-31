@@ -132,6 +132,7 @@ export function QuestionSlide({
             responses={data.responses}
             questionName={questionName}
             dimension={slideType as ComparisonDimension}
+            isNps={isNpsQuestion}
           />
         );
       case "text":
