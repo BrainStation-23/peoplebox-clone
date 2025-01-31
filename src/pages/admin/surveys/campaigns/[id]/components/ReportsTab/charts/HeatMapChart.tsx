@@ -13,7 +13,16 @@ interface HeatMapChartProps {
   title?: string;
 }
 
-export function HeatMapChart({ data, title }: HeatMapChartProps) {
+export function HeatMapChart({ data = [], title }: HeatMapChartProps) {
+  // Return early if no data is provided
+  if (!data || data.length === 0) {
+    return (
+      <div className="w-full p-4 text-center text-muted-foreground">
+        No data available
+      </div>
+    );
+  }
+
   const getColorIntensity = (percentage: number) => {
     const opacity = Math.round((percentage / 100) * 255).toString(16).padStart(2, '0');
     return opacity;
