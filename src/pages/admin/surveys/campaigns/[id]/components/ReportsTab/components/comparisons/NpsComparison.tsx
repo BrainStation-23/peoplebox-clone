@@ -30,13 +30,7 @@ export function NpsComparison({
 
   const processResponses = () => {
     if (isNps) {
-      const dimensionData = new Map<string, {
-        dimension: string;
-        unsatisfied: number;
-        neutral: number;
-        satisfied: number;
-        total: number;
-      }>();
+      const dimensionData = new Map<string, number[]>();
 
       responses.forEach((response) => {
         const questionData = response.answers[questionName];
@@ -61,28 +55,19 @@ export function NpsComparison({
         }
 
         if (!dimensionData.has(dimensionValue)) {
-          dimensionData.set(dimensionValue, {
-            dimension: dimensionValue,
-            unsatisfied: 0,
-            neutral: 0,
-            satisfied: 0,
-            total: 0
-          });
+          dimensionData.set(dimensionValue, new Array(11).fill(0));
         }
 
-        const group = dimensionData.get(dimensionValue)!;
-        group.total += 1;
-
-        if (answer <= 3) {
-          group.unsatisfied += 1;
-        } else if (answer === 4) {
-          group.neutral += 1;
-        } else {
-          group.satisfied += 1;
+        const ratings = dimensionData.get(dimensionValue)!;
+        if (answer >= 0 && answer <= 10) {
+          ratings[answer]++;
         }
       });
 
-      return Array.from(dimensionData.values());
+      return Array.from(dimensionData.entries()).map(([dimension, ratings]) => ({
+        dimension,
+        ratings: ratings.map((count, rating) => ({ rating, count }))
+      }));
     }
 
     const dimensionData = new Map<string, {

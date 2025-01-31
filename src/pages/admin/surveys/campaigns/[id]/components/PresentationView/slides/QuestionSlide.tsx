@@ -6,12 +6,21 @@ import { WordCloud } from "../../ReportsTab/charts/WordCloud";
 import { HeatMapChart } from "../../ReportsTab/charts/HeatMapChart";
 import { usePresentationResponses } from "../hooks/usePresentationResponses";
 import { ComparisonDimension } from "../../ReportsTab/types/comparison";
+import { BooleanResponseData, RatingResponseData, TextResponseData } from "../types/responses";
 
 interface QuestionSlideProps extends SlideProps {
   questionName: string;
   questionTitle: string;
   questionType: string;
   slideType: 'main' | ComparisonDimension;
+}
+
+interface HeatMapData {
+  dimension: string;
+  unsatisfied: number;
+  neutral: number;
+  satisfied: number;
+  total: number;
 }
 
 export function QuestionSlide({ 
@@ -47,10 +56,11 @@ export function QuestionSlide({
             .filter(r => r.answers[questionName]?.answer !== undefined)
             .map(r => r.answers[questionName].answer);
           
-          return {
+          const result: BooleanResponseData = {
             yes: answers.filter((a) => a === true).length,
             no: answers.filter((a) => a === false).length,
           };
+          return result;
         }
 
         case "rating": {
@@ -61,17 +71,11 @@ export function QuestionSlide({
           const isNps = question?.rateCount === 10;
           
           if (isNps) {
-            const ratingCounts = new Array(11).fill(0);
-            answers.forEach((rating) => {
-              if (typeof rating === "number" && rating >= 0 && rating <= 10) {
-                ratingCounts[rating]++;
-              }
-            });
-
-            return ratingCounts.map((count, rating) => ({ 
-              rating, 
-              count,
+            const ratingCounts: RatingResponseData = new Array(11).fill(0).map((_, rating) => ({
+              rating,
+              count: answers.filter(a => a === rating).length
             }));
+            return ratingCounts;
           } else {
             const validAnswers = answers.filter(
               (rating) => typeof rating === "number" && rating >= 1 && rating <= 5
@@ -104,23 +108,18 @@ export function QuestionSlide({
             }
           });
 
-          return Object.entries(wordFrequency)
+          const result: TextResponseData = Object.entries(wordFrequency)
             .map(([text, value]) => ({ text, value }))
             .sort((a, b) => b.value - a.value)
             .slice(0, 50);
+          return result;
         }
 
         default:
           return null;
       }
     } else {
-      const dimensionData = new Map<string, {
-        dimension: string;
-        unsatisfied: number;
-        neutral: number;
-        satisfied: number;
-        total: number;
-      }>();
+      const dimensionData = new Map<string, HeatMapData>();
 
       responses.forEach((response) => {
         const answer = response.answers[questionName]?.answer;
@@ -201,29 +200,29 @@ export function QuestionSlide({
         <div className="flex-1 flex items-center justify-center overflow-auto">
           {slideType === 'main' ? (
             <div className="w-full max-w-4xl">
-              {questionType === "boolean" && (
-                <BooleanCharts data={processedData} />
+              {questionType === "boolean" && processedData && (
+                <BooleanCharts data={processedData as BooleanResponseData} />
               )}
-              {questionType === "rating" && (
+              {questionType === "rating" && processedData && (
                 isNpsQuestion ? (
-                  <NpsChart data={processedData} />
+                  <NpsChart data={processedData as RatingResponseData} />
                 ) : (
                   <HeatMapChart 
-                    data={[processedData]} 
+                    data={[processedData as HeatMapData]} 
                     title="Overall Satisfaction Distribution"
                   />
                 )
               )}
-              {(questionType === "text" || questionType === "comment") && (
+              {(questionType === "text" || questionType === "comment") && processedData && (
                 <div className="min-h-[400px]">
-                  <WordCloud words={processedData} />
+                  <WordCloud words={processedData as TextResponseData} />
                 </div>
               )}
             </div>
           ) : (
             <div className="w-full max-w-[1400px]">
               <HeatMapChart 
-                data={processedData} 
+                data={processedData as HeatMapData[]} 
                 title={getDimensionTitle(slideType)}
               />
             </div>
