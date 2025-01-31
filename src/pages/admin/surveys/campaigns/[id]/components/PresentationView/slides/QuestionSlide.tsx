@@ -23,6 +23,14 @@ interface HeatMapData {
   total: number;
 }
 
+interface NpsComparisonData {
+  dimension: string;
+  detractors: number;
+  passives: number;
+  promoters: number;
+  total: number;
+}
+
 export function QuestionSlide({ 
   campaign, 
   isActive, 
@@ -48,6 +56,7 @@ export function QuestionSlide({
 
     const responses = data.responses;
     const question = data.questions.find(q => q.name === questionName);
+    const isNps = question?.rateCount === 10;
 
     if (slideType === 'main') {
       switch (questionType) {
@@ -67,8 +76,6 @@ export function QuestionSlide({
           const answers = responses
             .filter(r => typeof r.answers[questionName]?.answer === 'number')
             .map(r => r.answers[questionName].answer);
-
-          const isNps = question?.rateCount === 10;
           
           if (isNps) {
             const ratingCounts: RatingResponseData = new Array(11).fill(0).map((_, rating) => ({
@@ -119,57 +126,105 @@ export function QuestionSlide({
           return null;
       }
     } else {
-      const dimensionData = new Map<string, HeatMapData>();
+      if (isNps) {
+        const dimensionData = new Map<string, NpsComparisonData>();
 
-      responses.forEach((response) => {
-        const answer = response.answers[questionName]?.answer;
-        if (typeof answer !== 'number') return;
+        responses.forEach((response) => {
+          const answer = response.answers[questionName]?.answer;
+          if (typeof answer !== 'number') return;
 
-        let dimensionValue = "Unknown";
-        switch (slideType) {
-          case "sbu":
-            dimensionValue = response.respondent.sbu?.name || "Unknown";
-            break;
-          case "gender":
-            dimensionValue = response.respondent.gender || "Unknown";
-            break;
-          case "location":
-            dimensionValue = response.respondent.location?.name || "Unknown";
-            break;
-          case "employment_type":
-            dimensionValue = response.respondent.employment_type?.name || "Unknown";
-            break;
-        }
+          let dimensionValue = "Unknown";
+          switch (slideType) {
+            case "sbu":
+              dimensionValue = response.respondent.sbu?.name || "Unknown";
+              break;
+            case "gender":
+              dimensionValue = response.respondent.gender || "Unknown";
+              break;
+            case "location":
+              dimensionValue = response.respondent.location?.name || "Unknown";
+              break;
+            case "employment_type":
+              dimensionValue = response.respondent.employment_type?.name || "Unknown";
+              break;
+          }
 
-        if (!dimensionData.has(dimensionValue)) {
-          dimensionData.set(dimensionValue, {
-            dimension: dimensionValue,
-            unsatisfied: 0,
-            neutral: 0,
-            satisfied: 0,
-            total: 0
-          });
-        }
+          if (!dimensionData.has(dimensionValue)) {
+            dimensionData.set(dimensionValue, {
+              dimension: dimensionValue,
+              detractors: 0,
+              passives: 0,
+              promoters: 0,
+              total: 0
+            });
+          }
 
-        const group = dimensionData.get(dimensionValue)!;
-        group.total += 1;
+          const group = dimensionData.get(dimensionValue)!;
+          group.total += 1;
 
-        if (answer <= 3) {
-          group.unsatisfied += 1;
-        } else if (answer === 4) {
-          group.neutral += 1;
-        } else {
-          group.satisfied += 1;
-        }
-      });
+          if (answer <= 6) {
+            group.detractors += 1;
+          } else if (answer <= 8) {
+            group.passives += 1;
+          } else {
+            group.promoters += 1;
+          }
+        });
 
-      return Array.from(dimensionData.values());
+        return Array.from(dimensionData.values());
+      } else {
+        const dimensionData = new Map<string, HeatMapData>();
+
+        responses.forEach((response) => {
+          const answer = response.answers[questionName]?.answer;
+          if (typeof answer !== 'number') return;
+
+          let dimensionValue = "Unknown";
+          switch (slideType) {
+            case "sbu":
+              dimensionValue = response.respondent.sbu?.name || "Unknown";
+              break;
+            case "gender":
+              dimensionValue = response.respondent.gender || "Unknown";
+              break;
+            case "location":
+              dimensionValue = response.respondent.location?.name || "Unknown";
+              break;
+            case "employment_type":
+              dimensionValue = response.respondent.employment_type?.name || "Unknown";
+              break;
+          }
+
+          if (!dimensionData.has(dimensionValue)) {
+            dimensionData.set(dimensionValue, {
+              dimension: dimensionValue,
+              unsatisfied: 0,
+              neutral: 0,
+              satisfied: 0,
+              total: 0
+            });
+          }
+
+          const group = dimensionData.get(dimensionValue)!;
+          group.total += 1;
+
+          if (answer <= 3) {
+            group.unsatisfied += 1;
+          } else if (answer === 4) {
+            group.neutral += 1;
+          } else {
+            group.satisfied += 1;
+          }
+        });
+
+        return Array.from(dimensionData.values());
+      }
     }
   };
 
   const processedData = processAnswers();
   const question = data?.questions.find(q => q.name === questionName);
-  const isNpsQuestion = question?.type === 'rating' && question?.rateCount === 10;
+  const isNps = question?.type === 'rating' && question?.rateCount === 10;
 
   return (
     <div 
@@ -204,7 +259,7 @@ export function QuestionSlide({
                 <BooleanCharts data={processedData as BooleanResponseData} />
               )}
               {questionType === "rating" && processedData && (
-                isNpsQuestion ? (
+                isNps ? (
                   <NpsChart data={processedData as RatingResponseData} />
                 ) : (
                   <HeatMapChart 
@@ -221,10 +276,17 @@ export function QuestionSlide({
             </div>
           ) : (
             <div className="w-full max-w-[1400px]">
-              <HeatMapChart 
-                data={processedData as HeatMapData[]} 
-                title={getDimensionTitle(slideType)}
-              />
+              {isNps ? (
+                <NpsChart 
+                  data={processedData as RatingResponseData} 
+                  showComparison={true}
+                />
+              ) : (
+                <HeatMapChart 
+                  data={processedData as HeatMapData[]} 
+                  title={getDimensionTitle(slideType)}
+                />
+              )}
             </div>
           )}
         </div>
