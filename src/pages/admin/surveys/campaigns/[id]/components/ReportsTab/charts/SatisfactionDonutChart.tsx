@@ -11,16 +11,6 @@ interface SatisfactionDonutChartProps {
   };
 }
 
-interface CustomTooltipProps {
-  active?: boolean;
-  payload?: {
-    name: string;
-    value: number;
-    dataKey: string;
-    fill: string;  // Add this to use the segment color
-  }[];
-}
-
 export function SatisfactionDonutChart({ data }: SatisfactionDonutChartProps) {
   const chartData = [
     {
@@ -35,27 +25,11 @@ export function SatisfactionDonutChart({ data }: SatisfactionDonutChartProps) {
     return Math.round((value / data.total) * 100);
   };
 
-  const CustomTooltip = ({ active, payload }: CustomTooltipProps) => {
-    if (active && payload && payload.length) {
-      const hoveredSegment = payload[0];  // This is the currently hovered segment
-      return (
-        <div className="bg-white p-2 border rounded shadow-sm">
-          <div className="flex items-center gap-2">
-            <div 
-              className="w-3 h-3 rounded-full" 
-              style={{ backgroundColor: hoveredSegment.fill }}
-            />
-            <p className="font-medium">{hoveredSegment.name}</p>
-          </div>
-          <p className="text-sm">
-            {hoveredSegment.value} responses ({getPercentage(hoveredSegment.value)}%)
-          </p>
-        </div>
-      );
-    }
-    return null;
-};
-
+  const calculateAverage = () => {
+    // Assuming: Unsatisfied = 1-2, Neutral = 3, Satisfied = 4-5
+    const weightedSum = (data.unsatisfied * 1.5) + (data.neutral * 3) + (data.satisfied * 4.5);
+    return (weightedSum / data.total).toFixed(1);
+  };
 
   const CustomLabel = (props: any) => {
     const { x, y, width, value } = props;
@@ -97,6 +71,12 @@ export function SatisfactionDonutChart({ data }: SatisfactionDonutChartProps) {
             </div>
             <div className="text-sm text-muted-foreground">Median Score</div>
           </div>
+          <div className="text-right">
+            <div className="text-2xl font-bold text-purple-600">
+              {calculateAverage()}
+            </div>
+            <div className="text-sm text-muted-foreground">Average Score</div>
+          </div>
         </div>
       </div>
 
@@ -113,7 +93,12 @@ export function SatisfactionDonutChart({ data }: SatisfactionDonutChartProps) {
               tickFormatter={(value) => `${Math.round(value * 100)}%`}
             />
             <YAxis type="category" hide />
-            <Tooltip content={<CustomTooltip />} />
+            <Tooltip 
+              formatter={(value: number) => [
+                `${value} responses (${getPercentage(value)}%)`,
+                "Responses"
+              ]}
+            />
             <Legend 
               verticalAlign="bottom"
               height={36}
