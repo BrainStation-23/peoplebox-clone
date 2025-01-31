@@ -11,6 +11,15 @@ interface SatisfactionDonutChartProps {
   };
 }
 
+interface CustomTooltipProps {
+  active?: boolean;
+  payload?: {
+    name: string;
+    value: number;
+    dataKey: string;
+  }[];
+}
+
 export function SatisfactionDonutChart({ data }: SatisfactionDonutChartProps) {
   const chartData = [
     {
@@ -25,14 +34,14 @@ export function SatisfactionDonutChart({ data }: SatisfactionDonutChartProps) {
     return Math.round((value / data.total) * 100);
   };
 
-  const CustomTooltip = ({ active, payload }: any) => {
+  const CustomTooltip = ({ active, payload }: CustomTooltipProps) => {
     if (active && payload && payload.length) {
-      const { dataKey, value } = payload[0];
+      const hoveredSegment = payload[0];
       return (
         <div className="bg-white p-2 border rounded shadow-sm">
-          <p className="font-medium">{dataKey}</p>
+          <p className="font-medium">{hoveredSegment.name}</p>
           <p className="text-sm">
-            {value} responses ({getPercentage(value)}%)
+            {hoveredSegment.value} responses ({getPercentage(hoveredSegment.value)}%)
           </p>
         </div>
       );
@@ -103,34 +112,28 @@ export function SatisfactionDonutChart({ data }: SatisfactionDonutChartProps) {
               formatter={(value) => `${value} (${getPercentage(data[value.toLowerCase()])}%)`}
             />
             <Bar
+              name="Unsatisfied"
               dataKey="Unsatisfied"
               fill="#ef4444"
               stackId="stack"
             >
-              <LabelList
-                content={<CustomLabel />}
-                position="center"
-              />
+              <LabelList content={<CustomLabel />} position="center" />
             </Bar>
             <Bar
+              name="Neutral"
               dataKey="Neutral"
               fill="#eab308"
               stackId="stack"
             >
-              <LabelList
-                content={<CustomLabel />}
-                position="center"
-              />
+              <LabelList content={<CustomLabel />} position="center" />
             </Bar>
             <Bar
+              name="Satisfied"
               dataKey="Satisfied"
               fill="#22c55e"
               stackId="stack"
             >
-              <LabelList
-                content={<CustomLabel />}
-                position="center"
-              />
+              <LabelList content={<CustomLabel />} position="center" />
             </Bar>
           </BarChart>
         </ResponsiveContainer>
