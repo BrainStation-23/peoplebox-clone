@@ -86,7 +86,11 @@ export function NpsComparison({
   }
 
   return (
-    <div className={layout === 'grid' ? 'grid grid-cols-1 gap-4' : 'space-y-4'}>
+    <div className={
+      layout === 'grid' 
+        ? 'grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 p-4' 
+        : 'space-y-4'
+    }>
       {data.map((groupData) => (
         <Card key={groupData.dimension}>
           <CardHeader>
@@ -94,7 +98,7 @@ export function NpsComparison({
           </CardHeader>
           <CardContent>
             {isNps ? (
-              <div className="h-[300px]">
+              <div className="h-[280px]">
                 <NpsChart 
                   data={groupData.ratings.map(rating => ({ 
                     rating, 
@@ -104,7 +108,7 @@ export function NpsComparison({
                 />
               </div>
             ) : (
-              <div className="h-[300px]">
+              <div className="h-[280px]">
                 <HeatMapChart data={[groupData]} />
               </div>
             )}

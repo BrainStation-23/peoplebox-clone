@@ -120,7 +120,7 @@ export function QuestionSlide({
     switch (questionType) {
       case "boolean":
         return (
-          <div className="w-full max-w-6xl mx-auto">
+          <div className="w-full max-w-[1400px] mx-auto">
             <BooleanComparison
               responses={data.responses}
               questionName={questionName}
@@ -131,7 +131,7 @@ export function QuestionSlide({
         );
       case "rating":
         return (
-          <div className="w-full max-w-6xl mx-auto">
+          <div className="w-full max-w-[1400px] mx-auto">
             <NpsComparison
               responses={data.responses}
               questionName={questionName}
@@ -144,7 +144,7 @@ export function QuestionSlide({
       case "text":
       case "comment":
         return (
-          <div className="w-full max-w-6xl mx-auto">
+          <div className="w-full max-w-[1400px] mx-auto">
             <TextComparison
               responses={data.responses}
               questionName={questionName}
@@ -187,22 +187,22 @@ export function QuestionSlide({
       className={cn(
         "absolute inset-0 transition-opacity duration-500 ease-in-out",
         "bg-gradient-to-br from-white to-gray-50",
-        "rounded-lg shadow-lg p-8",
+        "rounded-lg shadow-lg p-4 md:p-6 lg:p-8",
         isActive ? "opacity-100" : "opacity-0 pointer-events-none"
       )}
     >
       <div className="h-full flex flex-col">
-        <div className="mb-8">
-          <h2 className="text-3xl font-bold text-gray-900">
+        <div className="mb-6 md:mb-8">
+          <h2 className="text-2xl md:text-3xl font-bold text-gray-900">
             {questionTitle}
             {campaign.instance && (
-              <span className="text-lg font-normal text-gray-600 ml-2">
+              <span className="text-base md:text-lg font-normal text-gray-600 ml-2">
                 (Period {campaign.instance.period_number})
               </span>
             )}
           </h2>
           {slideType !== 'main' && (
-            <p className="text-lg text-muted-foreground mt-2">
+            <p className="text-base md:text-lg text-muted-foreground mt-2">
               Comparison by {slideType.toUpperCase()}
             </p>
           )}

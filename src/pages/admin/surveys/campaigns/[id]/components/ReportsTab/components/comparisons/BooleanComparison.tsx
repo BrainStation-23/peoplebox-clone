@@ -62,11 +62,15 @@ export function BooleanComparison({
   const colors = ["#22c55e", "#ef4444"]; // Green for Yes, Red for No
 
   return (
-    <div className={layout === 'grid' ? 'grid grid-cols-1 gap-4' : 'space-y-4'}>
+    <div className={
+      layout === 'grid' 
+        ? 'grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 p-4' 
+        : 'space-y-4'
+    }>
       {data.map((groupData, index) => (
-        <Card key={groupData.name} className="p-4">
+        <Card key={groupData.name} className="p-6">
           <h3 className="mb-4 text-lg font-semibold">{groupData.name}</h3>
-          <div className="h-[300px]">
+          <div className="h-[280px]">
             <GroupedBarChart 
               data={[groupData]} 
               keys={keys} 

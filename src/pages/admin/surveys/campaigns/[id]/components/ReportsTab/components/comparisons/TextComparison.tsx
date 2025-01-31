@@ -67,11 +67,15 @@ export function TextComparison({
   const groupedWords = processData();
 
   return (
-    <div className={layout === 'grid' ? 'grid grid-cols-1 gap-4' : 'space-y-4'}>
+    <div className={
+      layout === 'grid' 
+        ? 'grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 p-4' 
+        : 'space-y-4'
+    }>
       {groupedWords.map(({ group, words }) => (
-        <Card key={group} className="p-4">
+        <Card key={group} className="p-6">
           <h3 className="mb-4 text-lg font-semibold">{group}</h3>
-          <div className="h-[300px]">
+          <div className="h-[280px]">
             <WordCloud words={words} />
           </div>
         </Card>
