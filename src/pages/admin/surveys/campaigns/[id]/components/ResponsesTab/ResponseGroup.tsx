@@ -26,11 +26,18 @@ export function ResponseGroup({ responses }: ResponseGroupProps) {
   };
 
   const getPrimarySupervisor = (response: Response) => {
-    const primarySupervisor = response.user.user_supervisors.find(us => us.is_primary);
-    if (!primarySupervisor) return "N/A";
-    const { first_name, last_name } = primarySupervisor.supervisor;
-    return first_name && last_name ? `${first_name} ${last_name}` : "N/A";
-  };
+  const primarySupervisor = response.user.user_supervisors.find(us => us.is_primary);
+  if (!primarySupervisor) return "N/A";
+  
+  const { first_name, last_name } = primarySupervisor.supervisor;
+  const fullName = [first_name, last_name]
+    .filter(name => name && name.trim()) // Filter out empty or whitespace-only strings
+    .join(" ")
+    .trim();
+    
+  return fullName || "N/A";
+};
+
 
   const getRespondentName = (response: Response) => {
     if (response.assignment.campaign.anonymous) {
