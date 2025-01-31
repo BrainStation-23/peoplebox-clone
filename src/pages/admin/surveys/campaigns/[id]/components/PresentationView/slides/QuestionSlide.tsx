@@ -3,7 +3,7 @@ import { cn } from "@/lib/utils";
 import { BooleanCharts } from "../../ReportsTab/charts/BooleanCharts";
 import { NpsChart } from "../../ReportsTab/charts/NpsChart";
 import { WordCloud } from "../../ReportsTab/charts/WordCloud";
-import { HeatMapChart } from "../../ReportsTab/charts/HeatMapChart";
+import { SatisfactionDonutChart } from "../../ReportsTab/charts/SatisfactionDonutChart";
 import { usePresentationResponses } from "../hooks/usePresentationResponses";
 import { ComparisonDimension } from "../../ReportsTab/types/comparison";
 import { BooleanResponseData, RatingResponseData, TextResponseData } from "../types/responses";
@@ -89,9 +89,9 @@ export function QuestionSlide({
             );
             
             return {
-              unsatisfied: validAnswers.filter((r) => r <= 3).length,
-              neutral: validAnswers.filter((r) => r === 4).length,
-              satisfied: validAnswers.filter((r) => r === 5).length,
+              unsatisfied: validAnswers.filter((r) => r <= 2).length,
+              neutral: validAnswers.filter((r) => r === 3).length,
+              satisfied: validAnswers.filter((r) => r >= 4).length,
               total: validAnswers.length,
             };
           }
@@ -208,9 +208,9 @@ export function QuestionSlide({
           const group = dimensionData.get(dimensionValue)!;
           group.total += 1;
 
-          if (answer <= 3) {
+          if (answer <= 2) {
             group.unsatisfied += 1;
-          } else if (answer === 4) {
+          } else if (answer === 3) {
             group.neutral += 1;
           } else {
             group.satisfied += 1;
@@ -262,10 +262,7 @@ export function QuestionSlide({
                 isNps ? (
                   <NpsChart data={processedData as RatingResponseData} />
                 ) : (
-                  <HeatMapChart 
-                    data={[processedData as HeatMapData]} 
-                    title="Overall Satisfaction Distribution"
-                  />
+                  <SatisfactionDonutChart data={processedData} />
                 )
               )}
               {(questionType === "text" || questionType === "comment") && processedData && (
@@ -282,8 +279,9 @@ export function QuestionSlide({
                   showComparison={true}
                 />
               ) : (
-                <HeatMapChart 
-                  data={processedData as HeatMapData[]} 
+                <SatisfactionDonutChart 
+                  data={processedData} 
+                  showComparison={true}
                   title={getDimensionTitle(slideType)}
                 />
               )}
