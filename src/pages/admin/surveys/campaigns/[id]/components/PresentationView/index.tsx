@@ -12,6 +12,9 @@ import { ResponseTrendsSlide } from "./slides/ResponseTrendsSlide";
 import { QuestionSlide } from "./slides/QuestionSlide";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
+import { ComparisonDimension } from "../ReportsTab/types/comparison";
+
+const COMPARISON_DIMENSIONS: ComparisonDimension[] = ['sbu', 'gender', 'location', 'employment_type'];
 
 export default function PresentationView() {
   const { id } = useParams();
@@ -82,7 +85,8 @@ export default function PresentationView() {
     (page) => page.elements || []
   );
 
-  const totalSlides = 4 + surveyQuestions.length;
+  // Calculate total slides including comparison slides
+  const totalSlides = 4 + (surveyQuestions.length * (1 + COMPARISON_DIMENSIONS.length));
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -122,6 +126,44 @@ export default function PresentationView() {
   const handleBack = () => {
     navigate(`/admin/surveys/campaigns/${id}`);
   };
+
+  const renderQuestionSlides = () => {
+    return surveyQuestions.map((question, index) => {
+      const baseSlideIndex = 4 + (index * (1 + COMPARISON_DIMENSIONS.length));
+      
+      // Main question slide
+      const slides = [(
+        <QuestionSlide
+          key={`${question.name}-main`}
+          campaign={campaign}
+          isActive={currentSlide === baseSlideIndex}
+          questionName={question.name}
+          questionTitle={question.title}
+          questionType={question.type}
+          slideType="main"
+        />
+      )];
+
+      // Comparison slides
+      COMPARISON_DIMENSIONS.forEach((dimension, dimIndex) => {
+        slides.push(
+          <QuestionSlide
+            key={`${question.name}-${dimension}`}
+            campaign={campaign}
+            isActive={currentSlide === baseSlideIndex + dimIndex + 1}
+            questionName={question.name}
+            questionTitle={question.title}
+            questionType={question.type}
+            slideType={dimension}
+          />
+        );
+      });
+
+      return slides;
+    });
+  };
+
+  if (!campaign) return null;
 
   return (
     <div className="h-full bg-background relative">
@@ -189,17 +231,7 @@ export default function PresentationView() {
             <CompletionRateSlide campaign={campaign} isActive={currentSlide === 1} />
             <ResponseDistributionSlide campaign={campaign} isActive={currentSlide === 2} />
             <ResponseTrendsSlide campaign={campaign} isActive={currentSlide === 3} />
-            
-            {surveyQuestions.map((question, index) => (
-              <QuestionSlide
-                key={question.name}
-                campaign={campaign}
-                isActive={currentSlide === index + 4}
-                questionName={question.name}
-                questionTitle={question.title}
-                questionType={question.type}
-              />
-            ))}
+            {renderQuestionSlides()}
           </div>
         </div>
       </div>
