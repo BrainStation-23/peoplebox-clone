@@ -6,9 +6,10 @@ interface NpsChartProps {
     count: number;
     group?: string;
   }>;
+  showComparison?: boolean;
 }
 
-export function NpsChart({ data }: NpsChartProps) {
+export function NpsChart({ data, showComparison = false }: NpsChartProps) {
   // Group data by dimension if it exists
   const groupedData = data.reduce((acc, item) => {
     const group = item.group || 'Overall';
@@ -20,7 +21,7 @@ export function NpsChart({ data }: NpsChartProps) {
   }, {} as Record<string, typeof data>);
 
   return (
-    <div className="space-y-8">
+    <div className={showComparison ? "space-y-8" : "space-y-6"}>
       {Object.entries(groupedData).map(([group, groupData]) => {
         const totalResponses = groupData.reduce((sum, item) => sum + item.count, 0);
         
@@ -46,7 +47,9 @@ export function NpsChart({ data }: NpsChartProps) {
         return (
           <div key={group} className="space-y-6">
             <div className="flex items-center justify-between">
-              <div className="text-lg font-semibold">{group}</div>
+              {showComparison && (
+                <div className="text-lg font-semibold">{group}</div>
+              )}
               <div className="text-2xl font-bold">NPS: {npsScore}</div>
             </div>
 
