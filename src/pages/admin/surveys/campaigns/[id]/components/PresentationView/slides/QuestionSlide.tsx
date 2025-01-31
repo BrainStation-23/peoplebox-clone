@@ -120,29 +120,35 @@ export function QuestionSlide({
     switch (questionType) {
       case "boolean":
         return (
-          <BooleanComparison
-            responses={data.responses}
-            questionName={questionName}
-            dimension={slideType as ComparisonDimension}
-          />
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 p-4">
+            <BooleanComparison
+              responses={data.responses}
+              questionName={questionName}
+              dimension={slideType as ComparisonDimension}
+            />
+          </div>
         );
       case "rating":
         return (
-          <NpsComparison
-            responses={data.responses}
-            questionName={questionName}
-            dimension={slideType as ComparisonDimension}
-            isNps={isNpsQuestion}
-          />
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 p-4">
+            <NpsComparison
+              responses={data.responses}
+              questionName={questionName}
+              dimension={slideType as ComparisonDimension}
+              isNps={isNpsQuestion}
+            />
+          </div>
         );
       case "text":
       case "comment":
         return (
-          <TextComparison
-            responses={data.responses}
-            questionName={questionName}
-            dimension={slideType as ComparisonDimension}
-          />
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 p-4">
+            <TextComparison
+              responses={data.responses}
+              questionName={questionName}
+              dimension={slideType as ComparisonDimension}
+            />
+          </div>
         );
       default:
         return null;
@@ -199,7 +205,7 @@ export function QuestionSlide({
           )}
         </div>
 
-        <div className="flex-1 flex items-center justify-center">
+        <div className="flex-1 flex items-center justify-center overflow-auto">
           {slideType === 'main' ? renderMainSlide() : renderComparisonSlide()}
         </div>
       </div>
