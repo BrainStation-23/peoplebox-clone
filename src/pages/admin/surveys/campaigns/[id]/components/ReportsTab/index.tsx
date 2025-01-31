@@ -157,6 +157,7 @@ export function ReportsTab({ campaignId, instanceId }: ReportsTabProps) {
                             neutral: number;
                             satisfied: number;
                             total: number;
+                            median: number;
                           }}
                         />
                       )}
