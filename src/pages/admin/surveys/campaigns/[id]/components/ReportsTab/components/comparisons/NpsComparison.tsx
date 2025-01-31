@@ -8,6 +8,7 @@ interface NpsComparisonProps {
   questionName: string;
   dimension: "sbu" | "gender" | "location" | "employment_type" | "none";
   isNps: boolean;
+  layout?: 'grid' | 'vertical';
 }
 
 export function NpsComparison({
@@ -15,6 +16,7 @@ export function NpsComparison({
   questionName,
   dimension,
   isNps,
+  layout = 'vertical'
 }: NpsComparisonProps) {
   const processResponses = () => {
     const groupedData = new Map();
@@ -58,7 +60,6 @@ export function NpsComparison({
       group.ratings.push(answer);
 
       if (!isNps) {
-        // For satisfaction ratings (1-5)
         if (answer <= 3) {
           group.unsatisfied += 1;
         } else if (answer === 4) {
@@ -85,25 +86,31 @@ export function NpsComparison({
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Response Distribution by {dimension.toUpperCase()}</CardTitle>
-      </CardHeader>
-      <CardContent>
-        {isNps ? (
-          <NpsChart 
-            data={data.flatMap(group => 
-              group.ratings.map(rating => ({ 
-                rating, 
-                count: 1,
-                group: group.dimension 
-              }))
-            )} 
-          />
-        ) : (
-          <HeatMapChart data={data} />
-        )}
-      </CardContent>
-    </Card>
+    <div className={layout === 'grid' ? 'grid grid-cols-1 gap-4' : 'space-y-4'}>
+      {data.map((groupData) => (
+        <Card key={groupData.dimension}>
+          <CardHeader>
+            <CardTitle className="text-lg">{groupData.dimension}</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {isNps ? (
+              <div className="h-[300px]">
+                <NpsChart 
+                  data={groupData.ratings.map(rating => ({ 
+                    rating, 
+                    count: 1,
+                    group: groupData.dimension 
+                  }))} 
+                />
+              </div>
+            ) : (
+              <div className="h-[300px]">
+                <HeatMapChart data={[groupData]} />
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      ))}
+    </div>
   );
 }

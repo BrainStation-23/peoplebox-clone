@@ -120,33 +120,36 @@ export function QuestionSlide({
     switch (questionType) {
       case "boolean":
         return (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 p-4">
+          <div className="w-full max-w-6xl mx-auto">
             <BooleanComparison
               responses={data.responses}
               questionName={questionName}
               dimension={slideType as ComparisonDimension}
+              layout="grid"
             />
           </div>
         );
       case "rating":
         return (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 p-4">
+          <div className="w-full max-w-6xl mx-auto">
             <NpsComparison
               responses={data.responses}
               questionName={questionName}
               dimension={slideType as ComparisonDimension}
               isNps={isNpsQuestion}
+              layout="grid"
             />
           </div>
         );
       case "text":
       case "comment":
         return (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 p-4">
+          <div className="w-full max-w-6xl mx-auto">
             <TextComparison
               responses={data.responses}
               questionName={questionName}
               dimension={slideType as ComparisonDimension}
+              layout="grid"
             />
           </div>
         );

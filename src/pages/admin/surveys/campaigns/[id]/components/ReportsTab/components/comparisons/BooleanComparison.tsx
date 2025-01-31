@@ -7,12 +7,14 @@ interface BooleanComparisonProps {
   responses: ProcessedResponse[];
   questionName: string;
   dimension: ComparisonDimension;
+  layout?: 'grid' | 'vertical';
 }
 
 export function BooleanComparison({
   responses,
   questionName,
   dimension,
+  layout = 'vertical'
 }: BooleanComparisonProps) {
   const processData = () => {
     const groupedData: Record<string, { yes: number; no: number }> = {};
@@ -48,7 +50,6 @@ export function BooleanComparison({
       }
     });
 
-    // Convert to format needed for GroupedBarChart
     return Object.entries(groupedData).map(([name, data]) => ({
       name,
       Yes: data.yes,
@@ -61,13 +62,20 @@ export function BooleanComparison({
   const colors = ["#22c55e", "#ef4444"]; // Green for Yes, Red for No
 
   return (
-    <Card className="p-4">
-      <GroupedBarChart 
-        data={data} 
-        keys={keys} 
-        colors={colors}
-        height={300} // Taller to accommodate multiple groups
-      />
-    </Card>
+    <div className={layout === 'grid' ? 'grid grid-cols-1 gap-4' : 'space-y-4'}>
+      {data.map((groupData, index) => (
+        <Card key={groupData.name} className="p-4">
+          <h3 className="mb-4 text-lg font-semibold">{groupData.name}</h3>
+          <div className="h-[300px]">
+            <GroupedBarChart 
+              data={[groupData]} 
+              keys={keys} 
+              colors={colors}
+              height={250}
+            />
+          </div>
+        </Card>
+      ))}
+    </div>
   );
 }
