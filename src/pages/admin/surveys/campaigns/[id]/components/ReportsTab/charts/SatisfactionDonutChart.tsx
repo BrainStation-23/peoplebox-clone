@@ -7,6 +7,7 @@ interface SatisfactionDonutChartProps {
     neutral: number;
     satisfied: number;
     total: number;
+    median: number;
   };
 }
 
@@ -26,10 +27,10 @@ export function SatisfactionDonutChart({ data }: SatisfactionDonutChartProps) {
 
   const CustomTooltip = ({ active, payload }: any) => {
     if (active && payload && payload.length) {
-      const { name, value } = payload[0];
+      const { dataKey, value } = payload[0];
       return (
         <div className="bg-white p-2 border rounded shadow-sm">
-          <p className="font-medium">{name}</p>
+          <p className="font-medium">{dataKey}</p>
           <p className="text-sm">
             {value} responses ({getPercentage(value)}%)
           </p>
@@ -42,7 +43,7 @@ export function SatisfactionDonutChart({ data }: SatisfactionDonutChartProps) {
   const CustomLabel = (props: any) => {
     const { x, y, width, value } = props;
     const percentage = getPercentage(value);
-    if (percentage < 10) return null; // Don't show labels for small segments
+    if (percentage < 10) return null;
 
     return (
       <text
@@ -66,11 +67,19 @@ export function SatisfactionDonutChart({ data }: SatisfactionDonutChartProps) {
             Based on {data.total} responses
           </p>
         </div>
-        <div className="text-right">
-          <div className="text-2xl font-bold text-green-600">
-            {getPercentage(data.satisfied)}%
+        <div className="flex gap-4">
+          <div className="text-right">
+            <div className="text-2xl font-bold text-green-600">
+              {getPercentage(data.satisfied)}%
+            </div>
+            <div className="text-sm text-muted-foreground">Satisfaction Rate</div>
           </div>
-          <div className="text-sm text-muted-foreground">Satisfaction Rate</div>
+          <div className="text-right">
+            <div className="text-2xl font-bold text-blue-600">
+              {data.median.toFixed(1)}
+            </div>
+            <div className="text-sm text-muted-foreground">Median Score</div>
+          </div>
         </div>
       </div>
 

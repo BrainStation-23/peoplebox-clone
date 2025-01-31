@@ -37,6 +37,16 @@ export function ReportsTab({ campaignId, instanceId }: ReportsTabProps) {
     }));
   };
 
+  const calculateMedian = (ratings: number[]) => {
+    const sorted = [...ratings].sort((a, b) => a - b);
+    const middle = Math.floor(sorted.length / 2);
+    
+    if (sorted.length % 2 === 0) {
+      return (sorted[middle - 1] + sorted[middle]) / 2;
+    }
+    return sorted[middle];
+  };
+
   const processAnswersForQuestion = (questionName: string, type: string, question: any) => {
     const answers = data.responses.map(
       (response) => response.answers[questionName]?.answer
@@ -51,7 +61,6 @@ export function ReportsTab({ campaignId, instanceId }: ReportsTabProps) {
 
       case "rating":
       case "nps": {
-        // Check if it's an NPS question (rate count of 10)
         const isNps = question.rateCount === 10;
         
         if (isNps) {
@@ -63,16 +72,16 @@ export function ReportsTab({ campaignId, instanceId }: ReportsTabProps) {
           });
           return ratingCounts.map((count, rating) => ({ rating, count }));
         } else {
-          // Process as satisfaction rating (1-5)
           const validAnswers = answers.filter(
             (rating) => typeof rating === "number" && rating >= 1 && rating <= 5
           );
           
           return {
-            unsatisfied: validAnswers.filter((r) => r <= 3).length,
-            neutral: validAnswers.filter((r) => r === 4).length,
-            satisfied: validAnswers.filter((r) => r === 5).length,
+            unsatisfied: validAnswers.filter((r) => r <= 2).length,
+            neutral: validAnswers.filter((r) => r === 3).length,
+            satisfied: validAnswers.filter((r) => r >= 4).length,
             total: validAnswers.length,
+            median: calculateMedian(validAnswers)
           };
         }
       }
