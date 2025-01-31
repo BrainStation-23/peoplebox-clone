@@ -18,6 +18,7 @@ interface ReminderRequest {
   recipientEmail: string;
   recipientName: string;
   publicAccessToken: string;
+  frontendUrl: string;
 }
 
 const handler = async (req: Request): Promise<Response> => {
@@ -86,8 +87,8 @@ const handler = async (req: Request): Promise<Response> => {
       }
     }
 
-    // Generate the public access URL
-    const publicAccessUrl = `${SUPABASE_URL.replace('.supabase.co', '')}/public/survey/${reminderRequest.publicAccessToken}`;
+    // Generate the public access URL using the provided frontend URL
+    const publicAccessUrl = `${reminderRequest.frontendUrl}/public/survey/${reminderRequest.publicAccessToken}`;
 
     // Send reminder email using Resend
     console.log("Sending email via Resend...");

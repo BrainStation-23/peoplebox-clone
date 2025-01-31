@@ -32,6 +32,18 @@ export function ResponseDetails({ response, onClose }: ResponseDetailsProps) {
     return value;
   };
 
+  const getPrimarySBU = (response: Response) => {
+    const primarySBU = response.user.user_sbus.find(us => us.is_primary);
+    return primarySBU?.sbu.name || "N/A";
+  };
+
+  const getPrimarySupervisor = (response: Response) => {
+    const primarySupervisor = response.user.user_supervisors.find(us => us.is_primary);
+    if (!primarySupervisor) return "N/A";
+    const { first_name, last_name } = primarySupervisor.supervisor;
+    return first_name && last_name ? `${first_name} ${last_name}` : "N/A";
+  };
+
   return (
     <Sheet open={!!response} onOpenChange={(open) => !open && onClose()}>
       <SheetContent className="w-full sm:max-w-xl overflow-y-auto">
@@ -46,10 +58,26 @@ export function ResponseDetails({ response, onClose }: ResponseDetailsProps) {
                 Respondent
               </h3>
               <p>
-                {response.user.first_name && response.user.last_name
+                {response.assignment.campaign.anonymous
+                  ? "Anonymous"
+                  : response.user.first_name && response.user.last_name
                   ? `${response.user.first_name} ${response.user.last_name}`
                   : response.user.email}
               </p>
+            </div>
+
+            <div className="space-y-2">
+              <h3 className="text-sm font-medium text-muted-foreground">
+                Primary SBU
+              </h3>
+              <p>{getPrimarySBU(response)}</p>
+            </div>
+
+            <div className="space-y-2">
+              <h3 className="text-sm font-medium text-muted-foreground">
+                Primary Manager
+              </h3>
+              <p>{getPrimarySupervisor(response)}</p>
             </div>
 
             <div className="space-y-2">

@@ -10,16 +10,9 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
+import { ProfileSearchInput } from "./ProfileSearchInput";
 
-// Schema for SBU form validation
 const sbuFormSchema = z.object({
   name: z.string().min(1, "Name is required"),
   profile_image_url: z.string().url().optional().or(z.literal("")),
@@ -31,12 +24,11 @@ export type SBUFormValues = z.infer<typeof sbuFormSchema>;
 
 interface SBUFormProps {
   onSubmit: (values: SBUFormValues) => void;
-  profiles?: { id: string; first_name: string; last_name: string; email: string }[];
   initialValues?: SBUFormValues;
   submitLabel?: string;
 }
 
-export function SBUForm({ onSubmit, profiles, initialValues, submitLabel = "Create SBU" }: SBUFormProps) {
+export function SBUForm({ onSubmit, initialValues, submitLabel = "Create SBU" }: SBUFormProps) {
   const form = useForm<SBUFormValues>({
     resolver: zodResolver(sbuFormSchema),
     defaultValues: initialValues || {
@@ -94,24 +86,13 @@ export function SBUForm({ onSubmit, profiles, initialValues, submitLabel = "Crea
           name="head_id"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>SBU Head</FormLabel>
-              <Select
-                onValueChange={field.onChange}
-                defaultValue={field.value}
-              >
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select a head" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  {profiles?.map((profile) => (
-                    <SelectItem key={profile.id} value={profile.id}>
-                      {profile.first_name} {profile.last_name} ({profile.email})
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <FormLabel>SBU Head (Optional)</FormLabel>
+              <FormControl>
+                <ProfileSearchInput
+                  value={field.value}
+                  onChange={field.onChange}
+                />
+              </FormControl>
               <FormMessage />
             </FormItem>
           )}

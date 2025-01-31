@@ -20,12 +20,42 @@ interface ResponseGroupProps {
 export function ResponseGroup({ responses }: ResponseGroupProps) {
   const [selectedResponse, setSelectedResponse] = useState<Response | null>(null);
 
+  const getPrimarySBU = (response: Response) => {
+    const primarySBU = response.user.user_sbus.find(us => us.is_primary);
+    return primarySBU?.sbu.name || "N/A";
+  };
+
+  const getPrimarySupervisor = (response: Response) => {
+  const primarySupervisor = response.user.user_supervisors.find(us => us.is_primary);
+  if (!primarySupervisor) return "N/A";
+  
+  const { first_name, last_name } = primarySupervisor.supervisor;
+  const fullName = [first_name, last_name]
+    .filter(name => name && name.trim()) // Filter out empty or whitespace-only strings
+    .join(" ")
+    .trim();
+    
+  return fullName || "N/A";
+};
+
+
+  const getRespondentName = (response: Response) => {
+    if (response.assignment.campaign.anonymous) {
+      return "Anonymous";
+    }
+    return response.user.first_name && response.user.last_name
+      ? `${response.user.first_name} ${response.user.last_name}`
+      : response.user.email;
+  };
+
   return (
     <>
       <Table>
         <TableHeader>
           <TableRow>
             <TableHead>Respondent</TableHead>
+            <TableHead>Primary SBU</TableHead>
+            <TableHead>Primary Manager</TableHead>
             <TableHead>Submitted At</TableHead>
             <TableHead className="text-right">Actions</TableHead>
           </TableRow>
@@ -33,11 +63,9 @@ export function ResponseGroup({ responses }: ResponseGroupProps) {
         <TableBody>
           {responses.map((response) => (
             <TableRow key={response.id}>
-              <TableCell>
-                {response.user.first_name && response.user.last_name
-                  ? `${response.user.first_name} ${response.user.last_name}`
-                  : response.user.email}
-              </TableCell>
+              <TableCell>{getRespondentName(response)}</TableCell>
+              <TableCell>{getPrimarySBU(response)}</TableCell>
+              <TableCell>{getPrimarySupervisor(response)}</TableCell>
               <TableCell>
                 {response.submitted_at
                   ? format(new Date(response.submitted_at), "PPp")

@@ -1,14 +1,14 @@
 import { Button } from "@/components/ui/button";
 import { FileDown } from "lucide-react";
-import { IMPORT_CSV_GUIDELINES, generateImportTemplateCSV } from "../../utils/csvTemplate";
+import { UPDATE_CSV_GUIDELINES, generateUpdateTemplateCSV } from "../../utils/csvTemplate";
 
 export function ImportGuidelines() {
   const downloadTemplate = () => {
-    const csvContent = generateImportTemplateCSV();
+    const csvContent = generateUpdateTemplateCSV();
     const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
     const link = document.createElement("a");
     link.href = URL.createObjectURL(blob);
-    link.setAttribute("download", "users_import_template.csv");
+    link.setAttribute("download", "users_update_template.csv");
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -28,9 +28,9 @@ export function ImportGuidelines() {
       </div>
 
       <div className="bg-muted p-4 rounded-lg space-y-2">
-        <h3 className="font-medium">Import Guidelines</h3>
+        <h3 className="font-medium">Update Guidelines</h3>
         <ul className="list-disc list-inside space-y-1 text-sm text-muted-foreground">
-          {IMPORT_CSV_GUIDELINES.map((guideline, index) => (
+          {UPDATE_CSV_GUIDELINES.map((guideline, index) => (
             <li key={index}>{guideline}</li>
           ))}
         </ul>

@@ -10,10 +10,10 @@ import CreateUserDialog from "./components/CreateUserDialog";
 import EditUserDialog from "./components/EditUserDialog";
 import { SearchFilters } from "./components/UserTable/SearchFilters";
 import { ImportDialog } from "./components/ImportDialog";
+import { BulkUpdateDialog } from "./components/BulkUpdateDialog";
 import { ExportProgress } from "./components/UserTable/ExportProgress";
-import { exportUsers } from "./utils/exportUsers";
 import { Button } from "@/components/ui/button";
-import { Power, MoreHorizontal } from "lucide-react";
+import { Power, MoreHorizontal, Upload, UserRoundPlus, FilePlus2, FileSpreadsheet, Download } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -22,12 +22,13 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { exportAllUsers } from "./utils/exportUsers";
 
 export default function UsersPage() {
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isImportDialogOpen, setIsImportDialogOpen] = useState(false);
+  const [isUpdateDialogOpen, setIsUpdateDialogOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedSBU, setSelectedSBU] = useState("all");
@@ -38,13 +39,7 @@ export default function UsersPage() {
   const [selectedEmployeeType, setSelectedEmployeeType] = useState("all");
   const [pageSize, setPageSize] = useState(10);
   const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
-  const [exportProgress, setExportProgress] = useState({
-    isOpen: false,
-    processed: 0,
-    total: 0,
-    error: "",
-    isComplete: false,
-  });
+  
   const debouncedSearch = useDebounce(searchTerm, 300);
 
   useEffect(() => {
@@ -74,44 +69,6 @@ export default function UsersPage() {
     isLoading: isLoadingFilters
   } = useFilterOptions();
   const { handleCreateSuccess, handleDelete } = useUserActions(refetch);
-
-  const handleExport = async () => {
-    if (!data?.users) return;
-    
-    setExportProgress({
-      isOpen: true,
-      processed: 0,
-      total: data.users.length,
-      error: "",
-      isComplete: false,
-    });
-
-    try {
-      await exportUsers(data.users, (processed) => {
-        setExportProgress(prev => ({
-          ...prev,
-          processed,
-        }));
-      });
-
-      setExportProgress(prev => ({
-        ...prev,
-        isComplete: true,
-      }));
-
-      setTimeout(() => {
-        setExportProgress(prev => ({
-          ...prev,
-          isOpen: false,
-        }));
-      }, 2000);
-    } catch (error) {
-      setExportProgress(prev => ({
-        ...prev,
-        error: error instanceof Error ? error.message : "Failed to export users",
-      }));
-    }
-  };
 
   const handleBulkDelete = async () => {
     try {
@@ -155,15 +112,72 @@ export default function UsersPage() {
     }
   };
 
+  const handleExportAll = async () => {
+    try {
+      setExportProgress({
+        isOpen: true,
+        processed: 0,
+        total: 0,
+        error: "",
+        isComplete: false
+      });
+
+      await exportAllUsers((processed, total) => {
+        setExportProgress(prev => ({
+          ...prev,
+          processed,
+          total
+        }));
+      });
+
+      setExportProgress(prev => ({
+        ...prev,
+        isComplete: true
+      }));
+
+      toast.success("Successfully exported all users");
+    } catch (error) {
+      console.error("Error exporting all users:", error);
+      setExportProgress(prev => ({
+        ...prev,
+        error: "Failed to export users"
+      }));
+      toast.error("Failed to export all users");
+    }
+  };
+
   const totalPages = Math.ceil((data?.total || 0) / pageSize);
+
+  const [exportProgress, setExportProgress] = useState({
+    isOpen: false,
+    processed: 0,
+    total: 0,
+    error: "",
+    isComplete: false
+  });
 
   return (
     <div className="container mx-auto py-6 space-y-4">
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-bold">Users</h1>
-        <Button onClick={() => setIsCreateDialogOpen(true)}>
-          Add User
-        </Button>
+        <div className="flex gap-2">
+          <Button onClick={() => setIsCreateDialogOpen(true)}>
+            <UserRoundPlus className="mr-2 h-4 w-4"/>
+            Add User
+          </Button>
+          <Button onClick={() => setIsImportDialogOpen(true)} variant="outline">
+            <FilePlus2 className="mr-2 h-4 w-4"/>
+            Bulk Create Users
+          </Button>
+          <Button onClick={() => setIsUpdateDialogOpen(true)} variant="outline">
+            <FileSpreadsheet className="mr-2 h-4 w-4" />
+            Bulk Update Users
+          </Button>
+          <Button onClick={handleExportAll} variant="outline">
+            <Download className="mr-2 h-4 w-4" />
+            Export All
+          </Button>
+        </div>
       </div>
 
       <div className="space-y-4">
@@ -182,8 +196,6 @@ export default function UsersPage() {
           setSelectedEmploymentType={setSelectedEmploymentType}
           setSelectedEmployeeRole={setSelectedEmployeeRole}
           setSelectedEmployeeType={setSelectedEmployeeType}
-          onExport={handleExport}
-          onImport={() => setIsImportDialogOpen(true)}
           sbus={sbus}
           levels={levels}
           locations={locations}
@@ -192,34 +204,8 @@ export default function UsersPage() {
           employeeTypes={employeeTypes}
           totalResults={data?.total}
           isSearching={isLoading || isLoadingFilters}
+          onBulkCreate={() => setIsImportDialogOpen(true)}
         />
-
-        {selectedUsers.length > 0 && (
-          <div className="flex items-center gap-2">
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="sm">
-                  Bulk Actions <MoreHorizontal className="ml-2 h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent>
-                <DropdownMenuItem onClick={handleBulkStatusToggle}>
-                  <Power className="mr-2 h-4 w-4" />
-                  Toggle Status
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  className="text-destructive"
-                  onClick={handleBulkDelete}
-                >
-                  Delete Selected
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-            <span className="text-sm text-muted-foreground">
-              {selectedUsers.length} selected
-            </span>
-          </div>
-        )}
 
         <UserGrid
           users={data?.users || []}
@@ -236,6 +222,8 @@ export default function UsersPage() {
           onPasswordChange={() => {}}
           onRoleToggle={() => {}}
           onStatusToggle={() => {}}
+          onBulkStatusToggle={handleBulkStatusToggle}
+          onBulkDelete={handleBulkDelete}
           currentPage={currentPage}
           totalPages={totalPages}
           onPageChange={setCurrentPage}
@@ -265,10 +253,19 @@ export default function UsersPage() {
         }}
       />
 
+      <BulkUpdateDialog
+        open={isUpdateDialogOpen}
+        onOpenChange={setIsUpdateDialogOpen}
+        onUpdateComplete={() => {
+          refetch();
+          setIsUpdateDialogOpen(false);
+        }}
+      />
+
       <ExportProgress
         open={exportProgress.isOpen}
-        onOpenChange={(open) =>
-          setExportProgress((prev) => ({ ...prev, isOpen: open }))
+        onOpenChange={(open) => 
+          setExportProgress(prev => ({ ...prev, isOpen: open }))
         }
         progress={exportProgress.processed}
         total={exportProgress.total}

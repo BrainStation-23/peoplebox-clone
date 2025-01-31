@@ -5,6 +5,7 @@ interface ProcessedAnswer {
   question: string;
   answer: any;
   questionType: string;
+  rateCount?: number;  // Added this property
 }
 
 export interface ProcessedResponse {
@@ -34,6 +35,7 @@ interface Question {
   name: string;
   title: string;
   type: string;
+  rateCount?: number;
 }
 
 interface ProcessedData {
@@ -125,6 +127,7 @@ export function useResponseProcessing(campaignId: string, instanceId?: string) {
             question: question.title,
             answer: answer,
             questionType: question.type,
+            rateCount: question.rateCount // Add rateCount to the processed answer
           };
         });
 
@@ -155,6 +158,7 @@ export function useResponseProcessing(campaignId: string, instanceId?: string) {
           name: q.name,
           title: q.title,
           type: q.type,
+          rateCount: q.rateCount,
         })),
         responses: processedResponses,
       };

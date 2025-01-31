@@ -19,7 +19,7 @@ export function CampaignTabs({ children, isAnonymous }: CampaignTabsProps) {
       <TabsList>
         <TabsTrigger value="overview">Overview</TabsTrigger>
         <TabsTrigger value="assignments">Assignments</TabsTrigger>
-        {!isAnonymous && <TabsTrigger value="responses">Responses</TabsTrigger>}
+        {<TabsTrigger value="responses">Responses</TabsTrigger>}
         <TabsTrigger value="activity">Activity</TabsTrigger>
         <TabsTrigger value="reports">Reports</TabsTrigger>
       </TabsList>

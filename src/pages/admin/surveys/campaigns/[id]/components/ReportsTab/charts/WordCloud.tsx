@@ -16,10 +16,12 @@ interface WordData {
 export function WordCloud({ words }: WordCloudProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const colors = [
-    "#2563eb", // blue-600
-    "#3b82f6", // blue-500
-    "#60a5fa", // blue-400
-    "#93c5fd", // blue-300
+    "#9b87f5",  // Primary Purple
+    "#F97316",  // Bright Orange
+    "#0EA5E9",  // Ocean Blue
+    "#D946EF",  // Magenta Pink
+    "#8B5CF6",  // Vivid Purple
+    "#D6BCFA",  // Light Purple
   ];
 
   useEffect(() => {
@@ -33,36 +35,39 @@ export function WordCloud({ words }: WordCloudProps) {
   }));
 
   const getRotation = useCallback(() => {
-    return Math.random() * 60 - 30;
+    return 0; // Fixed rotation for better readability
   }, []);
 
   const getFontSize = useCallback((word: WordData) => {
     const maxSize = Math.max(...words.map((w) => w.value));
     const minSize = Math.min(...words.map((w) => w.value));
     const scale = (word.size - minSize) / (maxSize - minSize || 1);
-    return 12 + scale * 20; // Scale between 12px and 32px
+    return 14 + scale * 36; // Scale between 14px and 50px
   }, [words]);
 
   const getColor = useCallback((word: WordData) => {
-    const maxSize = Math.max(...words.map((w) => w.value));
-    const index = Math.floor((word.size / maxSize) * colors.length);
-    return colors[Math.min(index, colors.length - 1)];
-  }, [words]);
+    // Use the word's text to generate a consistent but random index
+    const index = Math.abs(word.text.split('').reduce((acc, char) => {
+      return char.charCodeAt(0) + ((acc << 5) - acc);
+    }, 0)) % colors.length;
+    return colors[index];
+  }, []);
+
 
   return (
-    <div ref={containerRef} className="w-full h-[400px] relative">
+    <div ref={containerRef} className="w-full h-[500px] flex items-center justify-center p-4">
       <Wordcloud
         words={formattedWords}
-        width={containerRef.current?.clientWidth || 600}
-        height={400}
+        width={containerRef.current?.clientWidth || 800}
+        height={500}
         fontSize={(w) => getFontSize(w as WordData)}
         font={"Inter"}
-        padding={2}
+        padding={3}
         rotate={getRotation}
-        spiral="rectangular"
+        spiral="archimedean"
       >
         {(cloudWords) => (
-          <g transform={`translate(${(containerRef.current?.clientWidth || 600) / 2},200)`}>
+          <g>
             {cloudWords.map((w, i) => (
               <text
                 key={i}

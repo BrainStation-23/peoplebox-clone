@@ -2,6 +2,7 @@ import { z } from "zod";
 import { Level, User } from "../types";
 import { supabase } from "@/integrations/supabase/client";
 import { ImportError } from "./errorReporting";
+import Papa from 'papaparse';
 
 const csvRowSchema = z.object({
   id: z.string().uuid().optional(),
@@ -19,6 +20,7 @@ const csvRowSchema = z.object({
   employmentType: z.string().optional(),
   employeeRole: z.string().optional(),
   employeeType: z.string().optional(),
+  supervisorEmail: z.string().email("Invalid supervisor email format").optional(),
 });
 
 export type CSVRow = z.infer<typeof csvRowSchema>;
@@ -128,66 +130,74 @@ async function verifyExistingUser(id: string, email: string): Promise<boolean> {
 }
 
 export async function processCSVFile(file: File): Promise<ProcessingResult> {
-  const text = await file.text();
-  const rows = text.split("\n").map(row => row.split(","));
-  const headers = rows[0].map(h => h.trim());
-  
-  const result: ProcessingResult = {
-    newUsers: [],
-    existingUsers: [],
-    errors: [],
-  };
-
-  for (let i = 1; i < rows.length; i++) {
-    const row = rows[i];
-    if (row.length === 1 && !row[0]) continue;
-
-    const rowData = {
-      id: row[headers.indexOf("ID")]?.trim(),
-      email: row[headers.indexOf("Email")]?.trim(),
-      firstName: row[headers.indexOf("First Name")]?.trim(),
-      lastName: row[headers.indexOf("Last Name")]?.trim(),
-      orgId: row[headers.indexOf("Org ID")]?.trim(),
-      level: row[headers.indexOf("Level")]?.trim(),
-      sbus: row[headers.indexOf("SBUs")]?.trim(),
-      role: row[headers.indexOf("Role")]?.trim()?.toLowerCase() as "admin" | "user",
-      gender: row[headers.indexOf("Gender")]?.trim()?.toLowerCase() as "male" | "female" | "other",
-      dateOfBirth: row[headers.indexOf("Date of Birth")]?.trim(),
-      designation: row[headers.indexOf("Designation")]?.trim(),
-      location: row[headers.indexOf("Location")]?.trim(),
-      employmentType: row[headers.indexOf("Employment Type")]?.trim(),
-      employeeRole: row[headers.indexOf("Employee Role")]?.trim(),
-      employeeType: row[headers.indexOf("Employee Type")]?.trim(),
+  return new Promise((resolve, reject) => {
+    const result: ProcessingResult = {
+      newUsers: [],
+      existingUsers: [],
+      errors: [],
     };
 
-    try {
-      const validatedRow = csvRowSchema.parse(rowData);
-      
-      if (validatedRow.id) {
-        // Verify if ID exists and matches email
-        const isValid = await verifyExistingUser(validatedRow.id, validatedRow.email);
-        if (!isValid) {
-          result.errors.push({
-            row: i + 1,
-            errors: ["ID and email do not match or ID not found"],
-          });
-          continue;
-        }
-        result.existingUsers.push(validatedRow);
-      } else {
-        result.newUsers.push(validatedRow);
-      }
-    } catch (error) {
-      if (error instanceof z.ZodError) {
-        result.errors.push({
-          row: i + 1,
-          errors: error.errors.map(e => `${e.path.join(".")}: ${e.message}`),
-        });
-      }
-    }
-  }
+    Papa.parse(file, {
+      header: true,
+      skipEmptyLines: true,
+      complete: async (results) => {
+        try {
+          for (let i = 0; i < results.data.length; i++) {
+            const row = results.data[i] as Record<string, string>;
+            const rowData = {
+              id: row['ID']?.trim(),
+              email: row['Email']?.trim(),
+              firstName: row['First Name']?.trim(),
+              lastName: row['Last Name']?.trim(),
+              orgId: row['Org ID']?.trim(),
+              level: row['Level']?.trim(),
+              sbus: row['SBUs']?.trim(),
+              role: row['Role']?.trim()?.toLowerCase() as "admin" | "user",
+              gender: row['Gender']?.trim()?.toLowerCase() as "male" | "female" | "other",
+              dateOfBirth: row['Date of Birth']?.trim(),
+              designation: row['Designation']?.trim(),
+              location: row['Location']?.trim(),
+              employmentType: row['Employment Type']?.trim(),
+              employeeRole: row['Employee Role']?.trim(),
+              employeeType: row['Employee Type']?.trim(),
+              supervisorEmail: row['Supervisor Email']?.trim(),
+            };
 
-  return result;
+            try {
+              const validatedRow = csvRowSchema.parse(rowData);
+              
+              if (validatedRow.id) {
+                const isValid = await verifyExistingUser(validatedRow.id, validatedRow.email);
+                if (!isValid) {
+                  result.errors.push({
+                    row: i + 2, // +2 because Papa.parse is 0-based and we want to account for header row
+                    errors: ["ID and email do not match or ID not found"],
+                  });
+                  continue;
+                }
+                result.existingUsers.push(validatedRow);
+              } else {
+                result.newUsers.push(validatedRow);
+              }
+            } catch (error) {
+              if (error instanceof z.ZodError) {
+                result.errors.push({
+                  row: i + 2,
+                  errors: error.errors.map(e => `${e.path.join(".")}: ${e.message}`),
+                });
+              }
+            }
+          }
+          resolve(result);
+        } catch (error) {
+          reject(error);
+        }
+      },
+      error: (error) => {
+        reject(new Error(`CSV parsing error: ${error.message}`));
+      }
+    });
+  });
 }
 
 export async function importUsers(

@@ -48,3 +48,11 @@ export type QuestionResponseData =
   | { type: 'boolean'; data: { yes: number; no: number; } }
   | { type: 'rating'; data: { rating: number; count: number; }[] }
   | { type: 'text'; data: { text: string; value: number; }[] };
+
+export interface SatisfactionData {
+  unsatisfied: number;
+  neutral: number;
+  satisfied: number;
+  total: number;
+  median: number;
+}

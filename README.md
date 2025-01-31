@@ -1,29 +1,32 @@
-# Welcome to your Lovable project
+UPDATE public.readme SET content = '# SurveyFlow - Enterprise Survey Management Platform
 
-## Project info
+## Overview
+SurveyFlow is a comprehensive survey management platform designed for enterprises to create, distribute, and analyze surveys efficiently. It offers features like anonymous surveys, real-time analytics, and easy distribution mechanisms to gather valuable insights from team members.
 
-**URL**: https://lovable.dev/projects/5ceaf3e4-4de6-48d1-a7eb-05695776ba3d
+## Key Features
+- **Anonymous Surveys**: Ensure honest feedback with confidential response options
+- **Real-time Analytics**: Get instant insights with powerful analytics dashboard
+- **Easy Distribution**: Share surveys effortlessly with your team
+- **Campaign Management**: Create and manage survey campaigns with scheduling options
+- **Role-based Access**: Separate interfaces for administrators and users
+- **Public Access Links**: Share surveys with external participants without login requirements
 
-## How can I edit this code?
+## Technology Stack
+- Frontend: React + TypeScript
+- Styling: Tailwind CSS + Shadcn UI
+- Backend: Supabase
+- Build Tool: Vite
+- State Management: React Query
 
-There are several ways of editing your application.
+## Getting Started
 
-**Use Lovable**
+### Prerequisites
+- Node.js & npm - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/5ceaf3e4-4de6-48d1-a7eb-05695776ba3d) and start prompting.
-
-Changes made via Lovable will be committed automatically to this repo.
-
-**Use your preferred IDE**
-
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
+### Installation
 
 ```sh
-# Step 1: Clone the repository using the project's Git URL.
+# Step 1: Clone the repository using the project''s Git URL.
 git clone <YOUR_GIT_URL>
 
 # Step 2: Navigate to the project directory.
@@ -36,34 +39,22 @@ npm i
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+## Project Structure
+```
+src/
+├── components/     # Reusable UI components
+├── pages/         # Page components and routes
+├── hooks/         # Custom React hooks
+├── lib/           # Utility functions
+└── types/         # TypeScript type definitions
+```
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+## Available Scripts
+- `npm run dev`: Start development server
+- `npm run build`: Build for production
+- `npm run preview`: Preview production build locally
 
-**Use GitHub Codespaces**
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+---
 
-## What technologies are used for this project?
-
-This project is built with .
-
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
-
-## How can I deploy this project?
-
-Simply open [Lovable](https://lovable.dev/projects/5ceaf3e4-4de6-48d1-a7eb-05695776ba3d) and click on Share -> Publish.
-
-## I want to use a custom domain - is that possible?
-
-We don't support custom domains (yet). If you want to deploy your project under your own domain then we recommend using Netlify. Visit our docs for more details: [Custom domains](https://docs.lovable.dev/tips-tricks/custom-domain/)
+Built with ❤️ by Brain Station 23';

@@ -1,86 +1,174 @@
-import { Card } from "@/components/ui/card";
-import { ProcessedResponse } from "../../hooks/useResponseProcessing";
-import { ComparisonDimension } from "../../types/comparison";
-import { BarChart } from "../../charts/BarChart";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { HeatMapChart } from "../../charts/HeatMapChart";
+import { NpsChart } from "../../charts/NpsChart";
+import type { ProcessedResponse } from "../../hooks/useResponseProcessing";
 
 interface NpsComparisonProps {
   responses: ProcessedResponse[];
   questionName: string;
-  dimension: ComparisonDimension;
+  dimension: "sbu" | "gender" | "location" | "employment_type" | "none";
+  isNps: boolean;
+  layout?: 'grid' | 'vertical';
+}
+
+interface HeatMapData {
+  dimension: string;
+  unsatisfied: number;
+  neutral: number;
+  satisfied: number;
+  total: number;
+}
+
+interface NpsData {
+  dimension: string;
+  ratings: { rating: number; count: number; }[];
 }
 
 export function NpsComparison({
   responses,
   questionName,
   dimension,
+  isNps,
+  layout = 'vertical'
 }: NpsComparisonProps) {
-  const processData = () => {
-    const groupedData: Record<
-      string,
-      { promoters: number; passives: number; detractors: number; total: number }
-    > = {};
+  const getDimensionTitle = (dim: string) => {
+    const titles: Record<string, string> = {
+      sbu: "By Department",
+      gender: "By Gender",
+      location: "By Location",
+      employment_type: "By Employment Type"
+    };
+    return titles[dim] || dim;
+  };
+
+  const processResponses = () => {
+    if (isNps) {
+      const dimensionData = new Map<string, number[]>();
+
+      responses.forEach((response) => {
+        const questionData = response.answers[questionName];
+        if (!questionData || typeof questionData.answer !== "number") return;
+
+        const answer = questionData.answer;
+        let dimensionValue = "Unknown";
+
+        switch (dimension) {
+          case "sbu":
+            dimensionValue = response.respondent.sbu?.name || "Unknown";
+            break;
+          case "gender":
+            dimensionValue = response.respondent.gender || "Unknown";
+            break;
+          case "location":
+            dimensionValue = response.respondent.location?.name || "Unknown";
+            break;
+          case "employment_type":
+            dimensionValue = response.respondent.employment_type?.name || "Unknown";
+            break;
+        }
+
+        if (!dimensionData.has(dimensionValue)) {
+          dimensionData.set(dimensionValue, new Array(11).fill(0));
+        }
+
+        const ratings = dimensionData.get(dimensionValue)!;
+        if (answer >= 0 && answer <= 10) {
+          ratings[answer]++;
+        }
+      });
+
+      return Array.from(dimensionData.entries()).map(([dimension, ratings]) => ({
+        dimension,
+        ratings: ratings.map((count, rating) => ({ rating, count }))
+      })) as NpsData[];
+    }
+
+    const dimensionData = new Map<string, HeatMapData>();
 
     responses.forEach((response) => {
-      const score = response.answers[questionName]?.answer;
-      let groupKey = "Unknown";
+      const questionData = response.answers[questionName];
+      if (!questionData || typeof questionData.answer !== "number") return;
 
-      // Get the group key based on the dimension
+      const answer = questionData.answer;
+      let dimensionValue = "Unknown";
+
       switch (dimension) {
         case "sbu":
-          groupKey = response.respondent.sbu?.name || "No SBU";
+          dimensionValue = response.respondent.sbu?.name || "Unknown";
           break;
         case "gender":
-          groupKey = response.respondent.gender || "Not Specified";
+          dimensionValue = response.respondent.gender || "Unknown";
           break;
         case "location":
-          groupKey = response.respondent.location?.name || "No Location";
+          dimensionValue = response.respondent.location?.name || "Unknown";
           break;
         case "employment_type":
-          groupKey = response.respondent.employment_type?.name || "Not Specified";
+          dimensionValue = response.respondent.employment_type?.name || "Unknown";
           break;
       }
 
-      if (!groupedData[groupKey]) {
-        groupedData[groupKey] = {
-          promoters: 0,
-          passives: 0,
-          detractors: 0,
-          total: 0,
-        };
+      if (!dimensionData.has(dimensionValue)) {
+        dimensionData.set(dimensionValue, {
+          dimension: dimensionValue,
+          unsatisfied: 0,
+          neutral: 0,
+          satisfied: 0,
+          total: 0
+        });
       }
 
-      if (typeof score === "number") {
-        if (score <= 6) {
-          groupedData[groupKey].detractors++;
-        } else if (score <= 8) {
-          groupedData[groupKey].passives++;
-        } else {
-          groupedData[groupKey].promoters++;
-        }
-        groupedData[groupKey].total++;
+      const group = dimensionData.get(dimensionValue)!;
+      group.total += 1;
+
+      if (answer <= 3) {
+        group.unsatisfied += 1;
+      } else if (answer === 4) {
+        group.neutral += 1;
+      } else {
+        group.satisfied += 1;
       }
     });
 
-    // Calculate NPS for each group
-    return Object.entries(groupedData).map(([name, data]) => ({
-      name,
-      value: Math.round(
-        ((data.promoters - data.detractors) / data.total) * 100
-      ),
-    }));
+    return Array.from(dimensionData.values());
   };
 
-  const data = processData();
+  const data = processResponses();
+  
+  if (data.length === 0) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>No data available</CardTitle>
+        </CardHeader>
+      </Card>
+    );
+  }
+
+  if (isNps) {
+    return (
+      <div className={layout === 'grid' ? 'grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4' : 'space-y-4'}>
+        {(data as NpsData[]).map((groupData) => (
+          <Card key={groupData.dimension}>
+            <CardHeader>
+              <CardTitle className="text-lg">{groupData.dimension}</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <NpsChart data={groupData.ratings} />
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    );
+  }
 
   return (
-    <Card className="p-4">
-      <BarChart 
-        data={data}
-        colors={["#3b82f6"]} // Use blue as the primary color
-      />
-      <div className="mt-4 text-sm text-center text-muted-foreground">
-        NPS Score by {dimension.replace('_', ' ').toUpperCase()}
-      </div>
+    <Card>
+      <CardHeader>
+        <CardTitle>{getDimensionTitle(dimension)}</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <HeatMapChart data={data as HeatMapData[]} />
+      </CardContent>
     </Card>
   );
 }
