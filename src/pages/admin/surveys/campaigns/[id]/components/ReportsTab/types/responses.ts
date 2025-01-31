@@ -47,4 +47,5 @@ export interface SatisfactionData {
   neutral: number;
   satisfied: number;
   total: number;
+  median: number;
 }
