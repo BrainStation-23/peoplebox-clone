@@ -4,6 +4,7 @@ import { BooleanCharts } from "../../ReportsTab/charts/BooleanCharts";
 import { NpsChart } from "../../ReportsTab/charts/NpsChart";
 import { WordCloud } from "../../ReportsTab/charts/WordCloud";
 import { SatisfactionDonutChart } from "../../ReportsTab/charts/SatisfactionDonutChart";
+import { HeatMapChart } from "../../ReportsTab/charts/HeatMapChart";
 import { usePresentationResponses } from "../hooks/usePresentationResponses";
 import { ComparisonDimension } from "../../ReportsTab/types/comparison";
 import { BooleanResponseData, RatingResponseData, TextResponseData } from "../types/responses";
@@ -27,6 +28,14 @@ interface NpsComparisonData {
   detractors: number;
   passives: number;
   promoters: number;
+  total: number;
+}
+
+interface HeatMapData {
+  dimension: string;
+  unsatisfied: number;
+  neutral: number;
+  satisfied: number;
   total: number;
 }
 
@@ -229,8 +238,12 @@ export function QuestionSlide({
     return data && 'unsatisfied' in data && 'neutral' in data && 'satisfied' in data && 'total' in data;
   };
 
-  const isSatisfactionDataArray = (data: any): data is SatisfactionData[] => {
-    return Array.isArray(data) && data.length > 0 && isSatisfactionData(data[0]);
+  const isSatisfactionDataArray = (data: any): data is HeatMapData[] => {
+    return Array.isArray(data) && data.length > 0 && 'dimension' in data[0] && 'unsatisfied' in data[0];
+  };
+
+  const isNpsComparisonData = (data: any): data is NpsComparisonData[] => {
+    return Array.isArray(data) && data.length > 0 && 'dimension' in data[0] && 'detractors' in data[0];
   };
 
   return (
@@ -283,15 +296,26 @@ export function QuestionSlide({
           ) : (
             <div className="w-full max-w-[1400px]">
               {isNps ? (
-                <NpsChart 
-                  data={processedData as RatingResponseData} 
-                  showComparison={true}
-                />
+                isNpsComparisonData(processedData) && (
+                  <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                    {processedData.map((groupData) => (
+                      <div key={groupData.dimension} className="bg-white rounded-lg shadow p-4">
+                        <h3 className="text-lg font-semibold mb-4">{groupData.dimension}</h3>
+                        <NpsChart 
+                          data={[
+                            { rating: 0, count: groupData.detractors },
+                            { rating: 7, count: groupData.passives },
+                            { rating: 9, count: groupData.promoters }
+                          ]} 
+                        />
+                      </div>
+                    ))}
+                  </div>
+                )
               ) : (
                 isSatisfactionDataArray(processedData) && (
-                  <SatisfactionDonutChart 
-                    data={processedData[0]} 
-                    showComparison={true}
+                  <HeatMapChart 
+                    data={processedData}
                     title={getDimensionTitle(slideType)}
                   />
                 )
