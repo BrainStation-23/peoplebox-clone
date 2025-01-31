@@ -21,6 +21,7 @@ interface SatisfactionData {
   neutral: number;
   satisfied: number;
   total: number;
+  median: number;
 }
 
 interface NpsComparisonData {
@@ -96,11 +97,22 @@ export function QuestionSlide({
               (rating) => typeof rating === "number" && rating >= 1 && rating <= 5
             );
             
+            const calculateMedian = (ratings: number[]) => {
+              const sorted = [...ratings].sort((a, b) => a - b);
+              const middle = Math.floor(sorted.length / 2);
+              
+              if (sorted.length % 2 === 0) {
+                return (sorted[middle - 1] + sorted[middle]) / 2;
+              }
+              return sorted[middle];
+            };
+
             const result: SatisfactionData = {
               unsatisfied: validAnswers.filter((r) => r <= 2).length,
               neutral: validAnswers.filter((r) => r === 3).length,
               satisfied: validAnswers.filter((r) => r >= 4).length,
               total: validAnswers.length,
+              median: calculateMedian(validAnswers)
             };
             return result;
           }
@@ -209,7 +221,8 @@ export function QuestionSlide({
               unsatisfied: 0,
               neutral: 0,
               satisfied: 0,
-              total: 0
+              total: 0,
+              median: 0
             });
           }
 
@@ -235,7 +248,7 @@ export function QuestionSlide({
   const isNps = question?.type === 'rating' && question?.rateCount === 10;
 
   const isSatisfactionData = (data: any): data is SatisfactionData => {
-    return data && 'unsatisfied' in data && 'neutral' in data && 'satisfied' in data && 'total' in data;
+    return data && 'unsatisfied' in data && 'neutral' in data && 'satisfied' in data && 'total' in data && 'median' in data;
   };
 
   const isSatisfactionDataArray = (data: any): data is HeatMapData[] => {
