@@ -18,16 +18,88 @@ export function NpsComparison({
   isNps,
   layout = 'vertical'
 }: NpsComparisonProps) {
+  const getDimensionTitle = (dim: string) => {
+    const titles: Record<string, string> = {
+      sbu: "By Department",
+      gender: "By Gender",
+      location: "By Location",
+      employment_type: "By Employment Type"
+    };
+    return titles[dim] || dim;
+  };
+
   const processResponses = () => {
-    const groupedData = new Map();
+    if (isNps) {
+      const dimensionData = new Map<string, {
+        dimension: string;
+        unsatisfied: number;
+        neutral: number;
+        satisfied: number;
+        total: number;
+      }>();
+
+      responses.forEach((response) => {
+        const questionData = response.answers[questionName];
+        if (!questionData || typeof questionData.answer !== "number") return;
+
+        const answer = questionData.answer;
+        let dimensionValue = "Unknown";
+
+        switch (dimension) {
+          case "sbu":
+            dimensionValue = response.respondent.sbu?.name || "Unknown";
+            break;
+          case "gender":
+            dimensionValue = response.respondent.gender || "Unknown";
+            break;
+          case "location":
+            dimensionValue = response.respondent.location?.name || "Unknown";
+            break;
+          case "employment_type":
+            dimensionValue = response.respondent.employment_type?.name || "Unknown";
+            break;
+        }
+
+        if (!dimensionData.has(dimensionValue)) {
+          dimensionData.set(dimensionValue, {
+            dimension: dimensionValue,
+            unsatisfied: 0,
+            neutral: 0,
+            satisfied: 0,
+            total: 0
+          });
+        }
+
+        const group = dimensionData.get(dimensionValue)!;
+        group.total += 1;
+
+        if (answer <= 3) {
+          group.unsatisfied += 1;
+        } else if (answer === 4) {
+          group.neutral += 1;
+        } else {
+          group.satisfied += 1;
+        }
+      });
+
+      return Array.from(dimensionData.values());
+    }
+
+    const dimensionData = new Map<string, {
+      dimension: string;
+      unsatisfied: number;
+      neutral: number;
+      satisfied: number;
+      total: number;
+    }>();
 
     responses.forEach((response) => {
       const questionData = response.answers[questionName];
       if (!questionData || typeof questionData.answer !== "number") return;
 
       const answer = questionData.answer;
-
       let dimensionValue = "Unknown";
+
       switch (dimension) {
         case "sbu":
           dimensionValue = response.respondent.sbu?.name || "Unknown";
@@ -43,34 +115,29 @@ export function NpsComparison({
           break;
       }
 
-      if (!groupedData.has(dimensionValue)) {
-        groupedData.set(dimensionValue, {
+      if (!dimensionData.has(dimensionValue)) {
+        dimensionData.set(dimensionValue, {
           dimension: dimensionValue,
           unsatisfied: 0,
           neutral: 0,
           satisfied: 0,
-          total: 0,
-          ratings: [],
-          isNps: isNps
+          total: 0
         });
       }
 
-      const group = groupedData.get(dimensionValue);
+      const group = dimensionData.get(dimensionValue)!;
       group.total += 1;
-      group.ratings.push(answer);
 
-      if (!isNps) {
-        if (answer <= 3) {
-          group.unsatisfied += 1;
-        } else if (answer === 4) {
-          group.neutral += 1;
-        } else {
-          group.satisfied += 1;
-        }
+      if (answer <= 3) {
+        group.unsatisfied += 1;
+      } else if (answer === 4) {
+        group.neutral += 1;
+      } else {
+        group.satisfied += 1;
       }
     });
 
-    return Array.from(groupedData.values());
+    return Array.from(dimensionData.values());
   };
 
   const data = processResponses();
@@ -85,36 +152,37 @@ export function NpsComparison({
     );
   }
 
+  if (isNps) {
+    return (
+      <div className={layout === 'grid' ? 'grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4' : 'space-y-4'}>
+        {data.map((groupData) => (
+          <Card key={groupData.dimension}>
+            <CardHeader>
+              <CardTitle className="text-lg">{groupData.dimension}</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <NpsChart 
+                data={groupData.ratings.map(rating => ({ 
+                  rating, 
+                  count: 1,
+                  group: groupData.dimension 
+                }))} 
+              />
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    );
+  }
+
   return (
-    <div className={
-      layout === 'grid' 
-        ? 'grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 p-4' 
-        : 'space-y-4'
-    }>
-      {data.map((groupData) => (
-        <Card key={groupData.dimension}>
-          <CardHeader>
-            <CardTitle className="text-lg">{groupData.dimension}</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {isNps ? (
-              <div className="h-[280px]">
-                <NpsChart 
-                  data={groupData.ratings.map(rating => ({ 
-                    rating, 
-                    count: 1,
-                    group: groupData.dimension 
-                  }))} 
-                />
-              </div>
-            ) : (
-              <div className="h-[280px]">
-                <HeatMapChart data={[groupData]} />
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      ))}
-    </div>
+    <Card>
+      <CardHeader>
+        <CardTitle>{getDimensionTitle(dimension)}</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <HeatMapChart data={data} />
+      </CardContent>
+    </Card>
   );
 }
