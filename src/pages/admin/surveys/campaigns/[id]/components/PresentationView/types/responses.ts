@@ -2,9 +2,10 @@ export interface Question {
   name: string;
   title: string;
   type: string;
+  rateCount?: number;
 }
 
-export interface ProcessedResponse {
+export type ProcessedResponse = {
   id: string;
   respondent: {
     name: string;
@@ -31,12 +32,30 @@ export interface ProcessedResponse {
   }>;
 }
 
-export type QuestionResponseData = 
-  | { type: 'boolean'; data: { yes: number; no: number; } }
-  | { type: 'rating'; data: { rating: number; count: number; }[] }
-  | { type: 'text'; data: { text: string; value: number; }[] };
+export type BooleanResponseData = {
+  yes: number;
+  no: number;
+};
 
-export interface ProcessedData {
+export type RatingResponseData = {
+  rating: number;
+  count: number;
+  group?: string;
+}[];
+
+export type SatisfactionResponseData = {
+  unsatisfied: number;
+  neutral: number;
+  satisfied: number;
+  total: number;
+};
+
+export type TextResponseData = {
+  text: string;
+  value: number;
+}[];
+
+export type ProcessedData = {
   questions: Question[];
   responses: ProcessedResponse[];
 }

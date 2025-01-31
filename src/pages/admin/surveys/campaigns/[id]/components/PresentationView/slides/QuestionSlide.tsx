@@ -5,6 +5,7 @@ import { NpsChart } from "../../ReportsTab/charts/NpsChart";
 import { WordCloud } from "../../ReportsTab/charts/WordCloud";
 import { SatisfactionDonutChart } from "../../ReportsTab/charts/SatisfactionDonutChart";
 import { usePresentationResponses } from "../hooks/usePresentationResponses";
+import { BooleanResponseData, RatingResponseData, SatisfactionResponseData, TextResponseData } from "../types/responses";
 
 interface QuestionSlideProps extends SlideProps {
   questionName: string;
@@ -21,7 +22,7 @@ export function QuestionSlide({
 }: QuestionSlideProps) {
   const { data } = usePresentationResponses(campaign.id, campaign.instance?.id);
   
-  const processAnswers = () => {
+  const processAnswers = (): BooleanResponseData | RatingResponseData | SatisfactionResponseData | TextResponseData | null => {
     if (!data?.responses) return null;
 
     const responses = data.responses;
@@ -54,7 +55,10 @@ export function QuestionSlide({
             }
           });
 
-          return ratingCounts.map((count, rating) => ({ rating, count }));
+          return ratingCounts.map((count, rating) => ({ 
+            rating, 
+            count,
+          }));
         } else {
           // Process as satisfaction (1-5)
           const validAnswers = answers.filter(
@@ -128,18 +132,18 @@ export function QuestionSlide({
           {processedData && (
             <div className="w-full max-w-4xl">
               {questionType === "boolean" && (
-                <BooleanCharts data={processedData} />
+                <BooleanCharts data={processedData as BooleanResponseData} />
               )}
               {questionType === "rating" && (
                 isNpsQuestion ? (
-                  <NpsChart data={processedData} />
+                  <NpsChart data={processedData as RatingResponseData} />
                 ) : (
-                  <SatisfactionDonutChart data={processedData} />
+                  <SatisfactionDonutChart data={processedData as SatisfactionResponseData} />
                 )
               )}
               {(questionType === "text" || questionType === "comment") && (
                 <div className="min-h-[400px]">
-                  <WordCloud words={processedData} />
+                  <WordCloud words={processedData as TextResponseData} />
                 </div>
               )}
             </div>
