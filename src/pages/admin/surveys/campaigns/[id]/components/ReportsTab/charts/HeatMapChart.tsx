@@ -24,9 +24,15 @@ export function HeatMapChart({ data = [], title }: HeatMapChartProps) {
   }
 
   const getColorIntensity = (percentage: number) => {
-    const opacity = Math.round((percentage / 100) * 255).toString(16).padStart(2, '0');
-    return opacity;
-  };
+    // Minimum opacity of 0.1 (10%)
+    const minOpacity = 0.1;
+    // Scale the remaining 90% based on the percentage
+    const opacity = minOpacity + ((1 - minOpacity) * (percentage / 100));
+    // Convert to hex
+    const hexOpacity = Math.round(opacity * 255).toString(16).padStart(2, '0');
+    return hexOpacity;
+};
+
 
   const getPercentage = (value: number, total: number) => {
     return total > 0 ? Math.round((value / total) * 100) : 0;
